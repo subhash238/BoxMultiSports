@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+/* ==================================================
+   BOX MULTISPORTS DESIGN SYSTEM
+================================================== */
+
+:root{
+
+  /* Brand Colors */
+
+  --primary:#f97316;
+  --primary-dark:#ea580c;
+
+  --secondary:#0f172a;
+
+  --background:#ffffff;
+
+  --surface:#f8fafc;
+
+  --text:#1e293b;
+
+  --text-light:#64748b;
+
+  --border:#e2e8f0;
+
+  --success:#22c55e;
+
+  --danger:#ef4444;
+
+  --radius:14px;
+
+}
