@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import HeroSports from "./HeroSports";
 import { fadeUp, fadeIn, floating } from "@/animations/hero.animation";
 export default function Hero() {
   return (
@@ -16,7 +17,7 @@ export default function Hero() {
       <div className="relative z-10 mx-auto flex min-h-screen max-w-7xl flex-col items-center justify-center px-6 text-center text-white">
 
         {/* Premium Badge */}
-        <span className="rounded-full border border-orange-500 bg-orange-500/10 px-6 py-2 text-sm font-semibold uppercase tracking-[4px] text-orange-400">
+        <span className="rounded-full border border-text-lime-400 bg-text-lime-400/10 px-6 py-2 text-sm font-semibold uppercase tracking-[4px] text-text-lime-400">
           Premium Multi-Sports Arena
         </span>
 
@@ -28,7 +29,7 @@ export default function Hero() {
         </h1>
 
         {/* Tagline */}
-        <h2 className="mt-6 text-xl font-semibold tracking-[6px] text-orange-400 md:text-2xl">
+        <h2 className="mt-6 text-xl font-semibold tracking-[6px] text-text-lime-400 md:text-2xl">
           PLAY • TRAIN • COMPETE
         </h2>
 
@@ -41,50 +42,26 @@ export default function Hero() {
         {/* Buttons */}
         <div className="mt-12 flex flex-wrap justify-center gap-5">
 
-          <button className="rounded-xl bg-orange-500 px-8 py-4 text-lg font-semibold transition-all duration-300 hover:scale-105 hover:bg-orange-600">
+          <button className="rounded-xl bg-text-lime-400 px-8 py-4 text-lg font-semibold transition-all duration-300 hover:scale-105 hover:bg-text-lime-300">
             Book Your Slot
           </button>
 
-          <button className="rounded-xl border border-white px-8 py-4 text-lg font-semibold transition-all duration-300 hover:bg-white hover:text-black">
+          <button className="rounded-xl border border-text-lime-400 px-8 py-4 text-lg font-semibold transition-all duration-300 hover:bg-text-lime-400 hover:text-black">
             Explore Arena
           </button>
 
         </div>
-
+        <div>
         {/* Sports */}
-        <div className="mt-16 flex flex-wrap justify-center gap-4">
-
-          <span className="rounded-full bg-white/10 px-5 py-3 backdrop-blur">
-            ⚽ Football
-          </span>
-
-          <span className="rounded-full bg-white/10 px-5 py-3 backdrop-blur">
-            🏏 Box Cricket
-          </span>
-
-          <span className="rounded-full bg-white/10 px-5 py-3 backdrop-blur">
-            🏸 Badminton
-          </span>
-
-          <span className="rounded-full bg-white/10 px-5 py-3 backdrop-blur">
-            🏀 Basketball
-          </span>
-
-          <span className="rounded-full bg-white/10 px-5 py-3 backdrop-blur">
-            🏉 Rugby
-          </span>
-
-          <span className="rounded-full bg-white/10 px-5 py-3 backdrop-blur">
-            ⚾ Baseball
-          </span>
-
+        <HeroSports />
+          
         </div>
 
         {/* Statistics */}
         <div className="mt-20 grid w-full max-w-5xl grid-cols-2 gap-8 border-t border-white/20 pt-10 md:grid-cols-4">
 
           <div>
-            <h3 className="text-4xl font-bold text-orange-500">
+            <h3 className="text-4xl font-bold text-text-lime-400">
               ★★★★★
             </h3>
             <p className="mt-2 text-gray-300">
@@ -93,7 +70,7 @@ export default function Hero() {
           </div>
 
           <div>
-            <h3 className="text-4xl font-bold text-orange-500">
+            <h3 className="text-4xl font-bold text-text-lime-400">
               5000+
             </h3>
             <p className="mt-2 text-gray-300">
@@ -102,7 +79,7 @@ export default function Hero() {
           </div>
 
           <div>
-            <h3 className="text-4xl font-bold text-orange-500">
+            <h3 className="text-4xl font-bold text-text-lime-400">
               8+
             </h3>
             <p className="mt-2 text-gray-300">
@@ -111,7 +88,7 @@ export default function Hero() {
           </div>
 
           <div>
-            <h3 className="text-4xl font-bold text-orange-500">
+            <h3 className="text-4xl font-bold text-text-lime-400">
               365
             </h3>
             <p className="mt-2 text-gray-300">

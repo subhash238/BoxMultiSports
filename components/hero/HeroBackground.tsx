@@ -2,24 +2,25 @@ import { ReactNode } from "react";
 
 interface HeroBackgroundProps {
   children: ReactNode;
+  image: string;
+  overlay?: string;
 }
 
 export default function HeroBackground({
   children,
+  image,
+  overlay = "bg-black/60",
 }: HeroBackgroundProps) {
   return (
     <section
-      className="relative min-h-screen w-full overflow-hidden bg-cover bg-center bg-no-repeat"
+      className="relative min-h-screen overflow-hidden bg-cover bg-center"
       style={{
-        backgroundImage:
-          "url('https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=1920&q=80')",
+        backgroundImage: `url(${image})`,
       }}
     >
-      {/* Dark Overlay */}
-      <div className="absolute inset-0 bg-black/70"></div>
+      <div className={`absolute inset-0 ${overlay}`}></div>
 
-      {/* Content */}
-      <div className="relative z-10 flex min-h-screen items-center justify-center">
+      <div className="relative z-10">
         {children}
       </div>
     </section>
