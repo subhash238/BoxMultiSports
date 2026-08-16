@@ -1,0 +1,266 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// USER
+// ==========================================
+
+model User {
+  id        String   @id @default(cuid())
+  name      String   @db.VarChar(100)
+  email     String   @unique @db.VarChar(255)
+  mobile    String   @unique @db.VarChar(15)
+  password  String
+  role      Role     @default(CUSTOMER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bookings Booking[]
+
+  bookingStatusChanges BookingStatusHistory[] @relation("BookingStatusChangedBy")
+
+  @@map("users")
+}
+
+// ==========================================
+// SPORT
+// ==========================================
+
+model Sport {
+  id          String   @id @default(cuid())
+  name        String   @unique @db.VarChar(100)
+  slug        String   @unique @db.VarChar(100)
+  description String?
+
+  // KEEP TEMPORARILY.
+  // Existing sports may already have this value.
+  // We will migrate it into SportPricing later.
+  pricePerHour Decimal @db.Decimal(10, 2)
+
+  // Maximum players allowed for this sport.
+  maxPlayers Int
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  imageUrl  String?
+
+  bookings Booking[]
+
+  pricing SportPricing[]
+
+  @@map("sports")
+}
+
+// ==========================================
+// SPORT PRICING
+// ==========================================
+//
+// Price depends on SPORT + DURATION.
+//
+// Current pricing:
+//
+// 1 Hour  = ₹1000
+// 2 Hours = ₹1800
+// 3 Hours = ₹2700
+// 4 Hours = ₹3500
+// 5 Hours = ₹4500
+// 12 Hours = ₹9000
+//
+// Players do NOT affect price.
+// ==========================================
+
+model SportPricing {
+  id String @id @default(cuid())
+
+  sportId String
+
+  // Duration in complete hours.
+  //
+  // Supported durations:
+  //
+  // 1, 2, 3, 4, 5, 12
+  duration Int
+
+  // Fixed price for this duration.
+  price Decimal @db.Decimal(10, 2)
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sport Sport @relation(fields: [sportId], references: [id], onDelete: Cascade)
+
+  // Prevent duplicate pricing for
+  // the same sport and duration.
+  //
+  // Example:
+  //
+  // Cricket + 1 hour
+  // Cricket + 2 hours
+  // Cricket + 3 hours
+  // Cricket + 4 hours
+  // Cricket + 5 hours
+  // Cricket + 12 hours
+  //
+  @@unique([sportId, duration])
+
+  @@index([sportId])
+
+  @@map("sport_pricing")
+}
+
+// ==========================================
+// BOOKING
+// ==========================================
+
+model Booking {
+  id            String        @id @default(cuid())
+  bookingNumber String        @unique @db.VarChar(30)
+
+  bookingDate DateTime @db.Date
+
+  startTime DateTime @db.Timestamptz(6)
+  endTime   DateTime @db.Timestamptz(6)
+
+  duration        Int
+  numberOfPlayers Int      @default(1)
+  totalAmount     Decimal  @db.Decimal(10, 2)
+
+  status BookingStatus @default(PENDING)
+
+  userId  String
+  sportId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sport Sport @relation(fields: [sportId], references: [id])
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  statusHistory BookingStatusHistory[]
+
+  payment Payment?
+
+  @@index([bookingDate])
+  @@index([status])
+  @@index([userId])
+  @@index([sportId])
+  @@index([bookingDate, status])
+
+  @@map("bookings")
+}
+
+// ==========================================
+// BOOKING STATUS HISTORY
+// ==========================================
+
+model BookingStatusHistory {
+  id          String        @id @default(cuid())
+  bookingId   String
+  fromStatus  BookingStatus?
+  toStatus    BookingStatus
+  changedById String
+  createdAt   DateTime      @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  changedBy User @relation("BookingStatusChangedBy", fields: [changedById], references: [id])
+
+  @@index([bookingId])
+  @@index([changedById])
+  @@index([createdAt])
+
+  @@map("booking_status_history")
+}
+
+// ==========================================
+// PAYMENT
+// ==========================================
+
+model Payment {
+  id String @id @default(cuid())
+
+  bookingId String @unique
+
+  razorpayOrderId   String? @unique
+  razorpayPaymentId String? @unique
+  razorpaySignature String?
+
+  amount   Decimal @db.Decimal(10, 2)
+  currency String  @default("INR") @db.VarChar(3)
+
+  status PaymentStatus @default(PENDING)
+
+  failureCode    String?
+  failureMessage String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([razorpayOrderId])
+  @@index([razorpayPaymentId])
+
+  @@map("payments")
+}
+
+// ==========================================
+// ROLE
+// ==========================================
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+// ==========================================
+// BOOKING STATUS
+// ==========================================
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+// ==========================================
+// PAYMENT STATUS
+// ==========================================
+
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  CAPTURED
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+// ==========================================
+// BOOKING COUNTER
+// ==========================================
+
+model BookingCounter {
+  id Int @id @default(autoincrement())
+
+  bookingDate DateTime @unique @db.Date
+
+  lastNumber Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("booking_counters")
+}
