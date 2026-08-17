@@ -136,11 +136,6 @@ export default function RazorpayPayButton({
           response
         ) => {
           try {
-            console.log(
-              "Razorpay payment response:",
-              response
-            );
-
             // ==================================
             // STEP 5
             // Send Payment To Server
@@ -196,11 +191,6 @@ export default function RazorpayPayButton({
             // ==================================
             // Payment Fully Verified
             // ==================================
-
-            console.log(
-              "Payment verified successfully:",
-              verifyResult
-            );
 
             /*
              * IMPORTANT:

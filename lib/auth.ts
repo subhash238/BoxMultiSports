@@ -28,20 +28,6 @@ export function verifyToken(token: string): AuthPayload | null {
 export function getAuthPayload(request: NextRequest): AuthPayload {
   const token = request.cookies.get("auth_token")?.value;
 
-if (process.env.NODE_ENV === "development") {
-  console.log("========== AUTH DEBUG ==========");
-  console.log("Cookie Token:", token);
-  console.log(
-    "All Cookies:",
-    request.cookies.getAll()
-  );
-}
-
-console.log(
-  "All Cookies:",
-  request.cookies.getAll()
-);
-
   if (!token) {
     throw new AppError("Authentication required.", 401);
   }
