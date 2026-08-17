@@ -17,7 +17,6 @@ import {
 import { BOOKING_MESSAGES } from "./booking.responses";
 
 import { BookingValidationService } from "./booking-validation.service";
-import { BookingConflictService } from "./booking-conflict.service";
 import { BookingPricingService } from "./booking-pricing.service";
 import { BookingTransactionService } from "./booking-transaction.service";
 import { BookingQueryService } from "./booking-query.service";
@@ -45,15 +44,6 @@ export class BookingService {
       await BookingValidationService.validate(
         data
       );
-
-    // -----------------------------------------
-    // Check Booking Conflict
-    // -----------------------------------------
-
-    await BookingConflictService.check(
-      data.sportId,
-      bookingTime
-    );
 
     // -----------------------------------------
     // Calculate Pricing

@@ -1,4 +1,7 @@
+import { Prisma } from "@prisma/client";
+
 import { prisma } from "@/lib/prisma";
+import { AppError } from "@/lib/errors";
 
 import {
   CreateBookingContext,
@@ -8,6 +11,8 @@ import {
 import {
   BookingNumberService,
 } from "./booking-number.service";
+
+import { BookingConflictService } from "./booking-conflict.service";
 
 import { BOOKING_CONFIG } from "./booking.config";
 import {
@@ -38,8 +43,19 @@ export class BookingTransactionService {
             guestPaymentToken
           );
 
-    return prisma.$transaction(
-      async (tx) => {
+    const maxAttempts = 3;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        return await prisma.$transaction(
+          async (tx) => {
+            await BookingConflictService.check(
+              tx,
+              context.sport,
+              context.bookingTime,
+              context.numberOfPlayers
+            );
+
         // -----------------------------------------
         // Generate Booking Number
         // -----------------------------------------
@@ -128,7 +144,33 @@ export class BookingTransactionService {
           booking: finalBooking,
           guestPaymentToken,
         };
+          },
+          {
+            isolationLevel:
+              Prisma.TransactionIsolationLevel.Serializable,
+          }
+        );
+      } catch (error) {
+        const isSerializationConflict =
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === "P2034";
+
+        if (!isSerializationConflict) {
+          throw error;
+        }
+
+        if (attempt === maxAttempts) {
+          throw new AppError(
+            "Booking availability changed. Please try again.",
+            409
+          );
+        }
       }
+    }
+
+    throw new AppError(
+      "Booking availability changed. Please try again.",
+      409
     );
   }
 }
