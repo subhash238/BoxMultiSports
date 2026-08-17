@@ -139,6 +139,9 @@ model Booking {
   customerName   String
   customerMobile String
 
+  guestPaymentTokenHash      String?   @unique @db.VarChar(64)
+  guestPaymentTokenExpiresAt DateTime?
+
   userId  String?
   sportId String
 
