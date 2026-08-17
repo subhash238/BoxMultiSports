@@ -69,6 +69,8 @@ export type CreateBookingContext = {
   bookingTime: BookingTimeResult;
   pricing: BookingPricingResult;
   numberOfPlayers: number;
+  customerName: string;
+  customerMobile: string;
 };
 
 /**

@@ -306,6 +306,12 @@ export default function BookingForm({
 
             numberOfPlayers:
               bookingData.players,
+
+            fullName:
+              bookingData.fullName.trim(),
+
+            mobile:
+              bookingData.mobile.replace(/\D/g, ""),
           }),
         }
       );

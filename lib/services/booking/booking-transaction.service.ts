@@ -60,6 +60,12 @@ export class BookingTransactionService {
             totalAmount:
               context.pricing.totalAmount,
 
+            customerName:
+              context.customerName,
+
+            customerMobile:
+              context.customerMobile,
+
             status: "PENDING",
 
             userId:
