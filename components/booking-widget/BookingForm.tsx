@@ -1,7 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { ChevronDown, ShieldCheck } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 
 import BookingField from "./BookingField";
 
@@ -26,6 +31,14 @@ interface Sport {
   imageUrl?: string | null;
   isActive?: boolean;
 }
+
+const SHARED_BOOKING_SPORT_SLUGS = [
+  "cricket",
+  "football",
+  "pickleball",
+  "badminton",
+  "net-practice",
+];
 
 // ==========================================
 // Props
@@ -164,6 +177,15 @@ export default function BookingForm({
   const [sportsLoading, setSportsLoading] =
     useState(true);
 
+  const searchParams =
+    useSearchParams();
+
+  const requestedSportSlug =
+    searchParams.get("sport");
+
+  const hasAppliedSportPreselection =
+    useRef(false);
+
   const [sportsError, setSportsError] =
     useState("");
 
@@ -214,9 +236,15 @@ export default function BookingForm({
           );
         }
 
-        setSports(
-          result.sports ?? []
-        );
+        const sharedSports =
+          (result.sports ?? []).filter(
+            (sport: Sport) =>
+              SHARED_BOOKING_SPORT_SLUGS.includes(
+                sport.slug
+              )
+          );
+
+        setSports(sharedSports);
       } catch (error) {
         console.error(
           "Fetch sports error:",
@@ -235,6 +263,47 @@ export default function BookingForm({
 
     fetchSports();
   }, []);
+
+  useEffect(() => {
+    if (
+      sportsLoading ||
+      hasAppliedSportPreselection.current
+    ) {
+      return;
+    }
+
+    hasAppliedSportPreselection.current =
+      true;
+
+    if (
+      !requestedSportSlug ||
+      !SHARED_BOOKING_SPORT_SLUGS.includes(
+        requestedSportSlug
+      )
+    ) {
+      return;
+    }
+
+    const matchedSport =
+      sports.find(
+        (sport) =>
+          sport.slug === requestedSportSlug
+      );
+
+    if (!matchedSport) {
+      return;
+    }
+
+    setBookingData((current) => ({
+      ...current,
+      sport: matchedSport.id,
+    }));
+  }, [
+    requestedSportSlug,
+    setBookingData,
+    sports,
+    sportsLoading,
+  ]);
 
   // ==========================================
   // Continue Booking
