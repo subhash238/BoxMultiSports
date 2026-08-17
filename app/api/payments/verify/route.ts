@@ -3,6 +3,7 @@ import {
   NextResponse,
 } from "next/server";
 
+import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { AppError } from "@/lib/errors";
 
@@ -19,13 +20,6 @@ export async function POST(
 ) {
   try {
     // ==========================================
-    // Get Current User
-    // ==========================================
-
-    const user =
-      await getCurrentUser(request);
-
-    // ==========================================
     // Read Request Body
     // ==========================================
 
@@ -40,6 +34,9 @@ export async function POST(
 
     const razorpaySignature =
       body?.razorpay_signature;
+
+    const guestPaymentToken =
+      body?.guestPaymentToken;
 
     // ==========================================
     // Validate Input
@@ -65,6 +62,83 @@ export async function POST(
       );
     }
 
+    const payment =
+      await prisma.payment.findUnique({
+        where: {
+          razorpayOrderId,
+        },
+        select: {
+          booking: {
+            select: {
+              userId: true,
+            },
+          },
+        },
+      });
+
+    if (!payment) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "Payment not found.",
+        },
+        {
+          status: 404,
+        }
+      );
+    }
+
+    let authorization;
+
+    if (payment.booking.userId !== null) {
+      const user =
+        await getCurrentUser(request);
+
+      if (
+        payment.booking.userId !==
+        user.id
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            message:
+              "You are not authorized to verify this payment.",
+          },
+          {
+            status: 403,
+          }
+        );
+      }
+
+      authorization = {
+        type: "AUTHENTICATED" as const,
+        userId: user.id,
+      };
+    } else {
+      if (
+        typeof guestPaymentToken !==
+          "string" ||
+        !guestPaymentToken.trim()
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            message:
+              "You are not authorized to verify this payment.",
+          },
+          {
+            status: 403,
+          }
+        );
+      }
+
+      authorization = {
+        type: "GUEST" as const,
+        guestPaymentToken,
+      };
+    }
+
     // ==========================================
     // Verify Payment
     // ==========================================
@@ -74,7 +148,7 @@ export async function POST(
         razorpayOrderId,
         razorpayPaymentId,
         razorpaySignature,
-        user.id
+        authorization
       );
 
     // ==========================================
@@ -88,11 +162,21 @@ export async function POST(
         message:
           "Payment verified and booking confirmed successfully.",
 
-        payment:
-          result.payment,
+        payment: {
+          status:
+            result.payment.status,
+        },
 
-        booking:
-          result.booking,
+        booking: {
+          id:
+            result.booking.id,
+
+          bookingNumber:
+            result.booking.bookingNumber,
+
+          status:
+            result.booking.status,
+        },
       },
       {
         status: 200,

@@ -166,6 +166,8 @@ export default function RazorpayPayButton({
 
                     razorpay_signature:
                       response.razorpay_signature,
+
+                    guestPaymentToken,
                   }),
                 }
               );

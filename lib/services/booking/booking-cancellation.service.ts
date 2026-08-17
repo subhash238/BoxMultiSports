@@ -26,8 +26,6 @@ export class BookingCancellationService {
     },
   });
 
-  console.log("Updated Booking:", booking);
-
   return booking;
 }
 

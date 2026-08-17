@@ -193,9 +193,24 @@ export async function POST(
         message:
           "Razorpay order created successfully.",
 
-        payment: result.payment,
+        payment: {
+          status:
+            result.payment.status,
+        },
 
-        order: result.order,
+        order: {
+          id:
+            result.order.id,
+
+          amount:
+            result.order.amount,
+
+          currency:
+            result.order.currency,
+
+          receipt:
+            result.order.receipt,
+        },
       },
       {
         status: 200,

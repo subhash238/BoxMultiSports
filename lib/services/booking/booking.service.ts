@@ -493,11 +493,6 @@ export class BookingService {
         },
       });
 
-    console.log(
-      "Booking from DB:",
-      booking
-    );
-
     if (!booking) {
       throw new AppError(
         BOOKING_MESSAGES.BOOKING_NOT_FOUND,
