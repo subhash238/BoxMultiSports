@@ -1,14 +1,19 @@
 import { prisma } from "@/lib/prisma";
 
-import { Booking } from "@prisma/client";
-
 import {
   CreateBookingContext,
+  CreateBookingResult,
 } from "./booking.types";
 
 import {
   BookingNumberService,
 } from "./booking-number.service";
+
+import { BOOKING_CONFIG } from "./booking.config";
+import {
+  generateGuestPaymentToken,
+  hashGuestPaymentToken,
+} from "../payment/guest-payment-token";
 
 export class BookingTransactionService {
   /**
@@ -18,7 +23,21 @@ export class BookingTransactionService {
    */
   static async create(
     context: CreateBookingContext
-  ): Promise<Booking> {
+  ): Promise<CreateBookingResult> {
+    const isGuest =
+      context.userId === null;
+
+    const guestPaymentToken = isGuest
+      ? generateGuestPaymentToken()
+      : null;
+
+    const guestPaymentTokenHash =
+      guestPaymentToken === null
+        ? null
+        : hashGuestPaymentToken(
+            guestPaymentToken
+          );
+
     return prisma.$transaction(
       async (tx) => {
         // -----------------------------------------
@@ -35,7 +54,8 @@ export class BookingTransactionService {
         // Create Booking
         // -----------------------------------------
 
-        return tx.booking.create({
+        const createdBooking =
+          await tx.booking.create({
           data: {
             bookingNumber,
 
@@ -71,10 +91,43 @@ export class BookingTransactionService {
             userId:
               context.userId,
 
+            guestPaymentTokenHash,
+
+            guestPaymentTokenExpiresAt:
+              null,
+
             sportId:
               context.sport.id,
           },
-        });
+          });
+
+        let finalBooking =
+          createdBooking;
+
+        if (isGuest) {
+          const guestPaymentTokenExpiresAt =
+            new Date(
+              createdBooking.createdAt.getTime() +
+                BOOKING_CONFIG.PAYMENT_HOLD_MINUTES *
+                  60 *
+                  1000
+            );
+
+          finalBooking =
+            await tx.booking.update({
+              where: {
+                id: createdBooking.id,
+              },
+              data: {
+                guestPaymentTokenExpiresAt,
+              },
+            });
+        }
+
+        return {
+          booking: finalBooking,
+          guestPaymentToken,
+        };
       }
     );
   }

@@ -50,6 +50,11 @@ export default function BookingWidget() {
   const [createdBooking, setCreatedBooking] =
     useState<CreatedBooking | null>(null);
 
+  const [
+    guestPaymentToken,
+    setGuestPaymentToken,
+  ] = useState<string | null>(null);
+
   const [paymentOpen, setPaymentOpen] =
     useState(false);
 
@@ -64,9 +69,15 @@ export default function BookingWidget() {
   // ==========================================
 
   const handleBookingCreated = (
-    booking: CreatedBooking
+    result: {
+      booking: CreatedBooking;
+      guestPaymentToken: string | null;
+    }
   ) => {
-    setCreatedBooking(booking);
+    setCreatedBooking(result.booking);
+    setGuestPaymentToken(
+      result.guestPaymentToken
+    );
     setBookingError(null);
     setPaymentOpen(true);
   };
@@ -86,6 +97,7 @@ export default function BookingWidget() {
   // ==========================================
 
   const handlePaymentSuccess = () => {
+    setGuestPaymentToken(null);
     setPaymentOpen(false);
   };
 
@@ -657,6 +669,9 @@ export default function BookingWidget() {
             <PaymentModal
               booking={createdBooking}
               bookingData={bookingData}
+              guestPaymentToken={
+                guestPaymentToken
+              }
               loading={bookingLoading}
               onClose={() => {
                 setPaymentOpen(false);

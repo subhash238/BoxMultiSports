@@ -39,7 +39,10 @@ interface BookingFormProps {
   >;
 
   onBookingCreated: (
-    booking: CreatedBooking
+    result: {
+      booking: CreatedBooking;
+      guestPaymentToken: string | null;
+    }
   ) => void;
 
   onBookingError: (
@@ -341,7 +344,7 @@ export default function BookingForm({
       // Validate Booking Response
       // ---------------------------------------
 
-      if (!result.data?.id) {
+      if (!result.data?.booking?.id) {
         throw new Error(
           "Booking was created but booking information was not returned."
         );
@@ -352,7 +355,7 @@ export default function BookingForm({
       // ---------------------------------------
 
       const booking =
-        result.data;
+        result.data.booking;
 
       const createdBooking:
         CreatedBooking = {
@@ -380,17 +383,21 @@ export default function BookingForm({
           booking.status,
       };
 
-      console.log(
-        "Booking created successfully:",
-        createdBooking
-      );
+      const guestPaymentToken =
+        typeof result.data.guestPaymentToken ===
+        "string"
+          ? result.data.guestPaymentToken
+          : null;
 
       // ---------------------------------------
       // Open Payment Modal
       // ---------------------------------------
 
       onBookingCreated(
-        createdBooking
+        {
+          booking: createdBooking,
+          guestPaymentToken,
+        }
       );
     } catch (error) {
       const message =

@@ -1,4 +1,4 @@
-import { Sport } from "@prisma/client";
+import { Booking, Sport } from "@prisma/client";
 
 /**
  * ==========================================
@@ -71,6 +71,11 @@ export type CreateBookingContext = {
   numberOfPlayers: number;
   customerName: string;
   customerMobile: string;
+};
+
+export type CreateBookingResult = {
+  booking: Booking;
+  guestPaymentToken: string | null;
 };
 
 /**

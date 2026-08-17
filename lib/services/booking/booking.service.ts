@@ -11,6 +11,7 @@ import { CreateBookingInput } from "@/lib/validators/booking";
 import {
   BookingListQuery,
   CreateBookingContext,
+  CreateBookingResult,
 } from "./booking.types";
 
 import { BOOKING_MESSAGES } from "./booking.responses";
@@ -31,7 +32,7 @@ export class BookingService {
   static async createBooking(
     userId: string | null,
     data: CreateBookingInput
-  ): Promise<Booking> {
+  ): Promise<CreateBookingResult> {
     // -----------------------------------------
     // Validate Booking
     // -----------------------------------------

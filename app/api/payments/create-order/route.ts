@@ -15,13 +15,6 @@ export async function POST(
 ) {
   try {
     // ==========================================
-    // Get Current User
-    // ==========================================
-
-    const user =
-      await getCurrentUser(request);
-
-    // ==========================================
     // Read Request Body
     // ==========================================
 
@@ -30,6 +23,9 @@ export async function POST(
 
     const bookingId =
       body?.bookingId;
+
+    const guestPaymentToken =
+      body?.guestPaymentToken;
 
     // ==========================================
     // Validate Booking ID
@@ -87,21 +83,59 @@ export async function POST(
       );
     }
 
-    // ==========================================
-    // Check Booking Ownership
-    // ==========================================
+    let authorization;
 
-    if (booking.userId !== user.id) {
-      return NextResponse.json(
-        {
-          success: false,
-          message:
-            "You are not authorized to pay for this booking.",
-        },
-        {
-          status: 403,
-        }
-      );
+    if (booking.userId !== null) {
+      // ========================================
+      // Authenticated Booking Authorization
+      // ========================================
+
+      const user =
+        await getCurrentUser(request);
+
+      if (booking.userId !== user.id) {
+        return NextResponse.json(
+          {
+            success: false,
+            message:
+              "You are not authorized to pay for this booking.",
+          },
+          {
+            status: 403,
+          }
+        );
+      }
+
+      authorization = {
+        type: "AUTHENTICATED" as const,
+        userId: user.id,
+      };
+    } else {
+      // ========================================
+      // Guest Booking Authorization
+      // ========================================
+
+      if (
+        typeof guestPaymentToken !==
+          "string" ||
+        !guestPaymentToken.trim()
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            message:
+              "You are not authorized to pay for this booking.",
+          },
+          {
+            status: 403,
+          }
+        );
+      }
+
+      authorization = {
+        type: "GUEST" as const,
+        guestPaymentToken,
+      };
     }
 
     // ==========================================
@@ -144,7 +178,8 @@ export async function POST(
 
     const result =
       await PaymentService.createRazorpayOrder(
-        booking.id
+        booking.id,
+        authorization
       );
 
     // ==========================================

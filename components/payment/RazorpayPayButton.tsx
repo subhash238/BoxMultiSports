@@ -16,6 +16,7 @@ import {
 
 interface RazorpayPayButtonProps {
   bookingId: string;
+  guestPaymentToken: string | null;
   customerName?: string;
   customerEmail?: string;
   customerMobile?: string;
@@ -34,6 +35,7 @@ interface RazorpayPayButtonProps {
 
 export default function RazorpayPayButton({
   bookingId,
+  guestPaymentToken,
   customerName,
   customerEmail,
   customerMobile,
@@ -59,7 +61,8 @@ export default function RazorpayPayButton({
 
       const result =
         await createRazorpayOrder(
-          bookingId
+          bookingId,
+          guestPaymentToken
         );
 
       if (!result.order?.id) {

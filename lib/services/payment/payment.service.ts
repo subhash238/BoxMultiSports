@@ -14,8 +14,21 @@ import {
 } from "./payment.types";
 
 import { PAYMENT_MESSAGES } from "./payment.responses";
+import {
+  verifyGuestPaymentToken,
+} from "./guest-payment-token";
 
 import { BOOKING_CONFIG } from "../booking/booking.config";
+
+type CreateOrderAuthorization =
+  | {
+      type: "AUTHENTICATED";
+      userId: string;
+    }
+  | {
+      type: "GUEST";
+      guestPaymentToken: string;
+    };
 
 export class PaymentService {
   /**
@@ -124,7 +137,8 @@ export class PaymentService {
    * to the internal payment record.
    */
   static async createRazorpayOrder(
-    bookingId: string
+    bookingId: string,
+    authorization: CreateOrderAuthorization
   ) {
     // -----------------------------------------
     // Find Booking
@@ -141,6 +155,9 @@ export class PaymentService {
           bookingNumber: true,
           totalAmount: true,
           status: true,
+          userId: true,
+          guestPaymentTokenHash: true,
+          guestPaymentTokenExpiresAt: true,
         },
       });
 
@@ -168,6 +185,62 @@ export class PaymentService {
         400
       );
     }
+
+    // -----------------------------------------
+    // Authorize Booking Payment
+    // -----------------------------------------
+
+    if (
+      authorization.type ===
+      "AUTHENTICATED"
+    ) {
+      if (
+        booking.userId === null ||
+        booking.userId !==
+          authorization.userId
+      ) {
+        throw new AppError(
+          "You are not authorized to pay for this booking.",
+          403
+        );
+      }
+    } else {
+      const guestAuthorizationError =
+        new AppError(
+          "You are not authorized to pay for this booking.",
+          403
+        );
+
+      if (
+        booking.userId !== null ||
+        !booking.guestPaymentTokenHash ||
+        !booking.guestPaymentTokenExpiresAt
+      ) {
+        throw guestAuthorizationError;
+      }
+
+      if (
+        new Date() >=
+        booking.guestPaymentTokenExpiresAt
+      ) {
+        throw new AppError(
+          "Guest payment authorization has expired.",
+          403
+        );
+      }
+
+      if (
+        !verifyGuestPaymentToken(
+          authorization.guestPaymentToken,
+          booking.guestPaymentTokenHash
+        )
+      ) {
+        throw guestAuthorizationError;
+      }
+    }
+
+    const isGuestAuthorization =
+      authorization.type === "GUEST";
 
     // -----------------------------------------
     // Validate Booking Amount
@@ -245,6 +318,11 @@ export class PaymentService {
         },
       });
 
+    const guestAuthorizedAt =
+      isGuestAuthorization
+        ? new Date()
+        : null;
+
     // -----------------------------------------
     // Create / Update Internal Payment
     // -----------------------------------------
@@ -262,6 +340,8 @@ export class PaymentService {
           data: {
             razorpayOrderId:
               razorpayOrder.id,
+
+            guestAuthorizedAt,
           },
         });
     } else {
@@ -282,6 +362,8 @@ export class PaymentService {
 
             razorpayOrderId:
               razorpayOrder.id,
+
+            guestAuthorizedAt,
           },
         });
     }

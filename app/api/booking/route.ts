@@ -39,10 +39,23 @@ export async function POST(request: NextRequest) {
     // Create booking
     // -----------------------------------------
 
-    const booking = await BookingService.createBooking(
+    const result = await BookingService.createBooking(
       user?.id ?? null,
       data
     );
+
+    const booking = result.booking;
+
+    const publicBooking = {
+      id: booking.id,
+      bookingNumber: booking.bookingNumber,
+      bookingDate: booking.bookingDate,
+      startTime: booking.startTime,
+      endTime: booking.endTime,
+      duration: booking.duration,
+      totalAmount: booking.totalAmount,
+      status: booking.status,
+    };
 
     // -----------------------------------------
     // Success
@@ -52,7 +65,10 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         message: "Booking created successfully.",
-        data: booking,
+        data: {
+          booking: publicBooking,
+          guestPaymentToken: result.guestPaymentToken,
+        },
       },
       {
         status: 201,

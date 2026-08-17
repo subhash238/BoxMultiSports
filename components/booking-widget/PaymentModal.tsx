@@ -12,6 +12,7 @@ import {
 interface PaymentModalProps {
   booking: CreatedBooking;
   bookingData: BookingData;
+  guestPaymentToken: string | null;
   loading?: boolean;
   onClose: () => void;
   onSuccess: () => void;
@@ -20,6 +21,7 @@ interface PaymentModalProps {
 export default function PaymentModal({
   booking,
   bookingData,
+  guestPaymentToken,
   loading,
   onClose,
   onSuccess,
@@ -215,6 +217,10 @@ export default function PaymentModal({
               <RazorpayPayButton
                 bookingId={
                   booking.id
+                }
+
+                guestPaymentToken={
+                  guestPaymentToken
                 }
 
                 customerName={
