@@ -716,6 +716,9 @@ export class PaymentService {
                 toStatus:
                   "CANCELLED",
 
+                actorType:
+                  "SYSTEM",
+
                 changedById:
                   userId,
               },
@@ -789,6 +792,9 @@ export class PaymentService {
 
               toStatus:
                 "CONFIRMED",
+
+              actorType:
+                "PAYMENT",
 
               changedById:
                 userId,

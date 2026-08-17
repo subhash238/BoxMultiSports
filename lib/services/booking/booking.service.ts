@@ -444,6 +444,7 @@ export class BookingService {
               bookingId: booking.id,
               fromStatus: booking.status,
               toStatus: newStatus,
+              actorType: "ADMIN",
               changedById,
             },
           });
