@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   ShieldCheck,
@@ -64,6 +64,33 @@ export default function BookingWidget() {
   const [bookingError, setBookingError] =
     useState<string | null>(null);
 
+  useEffect(() => {
+    if (
+      typeof window === "undefined" ||
+      window.location.hash !== "#booking"
+    ) {
+      return;
+    }
+
+    const frame = window.requestAnimationFrame(() => {
+      const bookingSection =
+        document.getElementById("booking");
+
+      if (!bookingSection) {
+        return;
+      }
+
+      bookingSection.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+    };
+  }, []);
+
   // ==========================================
   // Booking Created
   // ==========================================
@@ -108,6 +135,7 @@ export default function BookingWidget() {
         relative
         isolate
         overflow-hidden
+        scroll-mt-32
         bg-[#050705]
         px-4
         py-20
