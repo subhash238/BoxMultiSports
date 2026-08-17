@@ -28,6 +28,18 @@ export class SportQueryService {
         isActive: true,
         createdAt: true,
         updatedAt: true,
+        pricing: {
+          where: {
+            isActive: true,
+          },
+          orderBy: {
+            duration: "asc",
+          },
+          select: {
+            duration: true,
+            price: true,
+          },
+        },
       },
     });
   }
