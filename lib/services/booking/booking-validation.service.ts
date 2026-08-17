@@ -61,7 +61,8 @@ export class BookingValidationService {
     );
 
     this.validateBusinessHours(
-      bookingTime
+      bookingTime,
+      sport.slug
     );
 
     return {
@@ -242,14 +243,20 @@ export class BookingValidationService {
    * ==========================================
    */
   private static validateBusinessHours(
-    bookingTime: BookingTimeResult
+    bookingTime: BookingTimeResult,
+    sportSlug: string
   ): void {
+    const isYoga =
+      sportSlug === "yoga";
+
     const {
       openingTime,
       closingTime,
     } =
       this.buildBusinessHours(
-        bookingTime.bookingDate
+        bookingTime.bookingDate,
+        isYoga ? "05:00" : undefined,
+        isYoga ? "07:00" : undefined
       );
 
     if (
@@ -259,7 +266,9 @@ export class BookingValidationService {
         closingTime
     ) {
       throw new AppError(
-        BOOKING_MESSAGES.BUSINESS_HOURS,
+        isYoga
+          ? "Yoga bookings are allowed only between 05:00 AM and 07:00 AM."
+          : BOOKING_MESSAGES.BUSINESS_HOURS,
         400
       );
     }
@@ -271,8 +280,18 @@ export class BookingValidationService {
    * ==========================================
    */
   private static buildBusinessHours(
-    bookingDate: Date
+    bookingDate: Date,
+    configuredOpeningTime?: string,
+    configuredClosingTime?: string
   ) {
+    const openingTimeValue =
+      configuredOpeningTime ??
+      BOOKING_CONFIG.OPENING_TIME;
+
+    const closingTimeValue =
+      configuredClosingTime ??
+      BOOKING_CONFIG.CLOSING_TIME;
+
     const openingTime =
       new Date(
         bookingDate
@@ -280,11 +299,11 @@ export class BookingValidationService {
 
     openingTime.setHours(
       Number(
-        BOOKING_CONFIG.OPENING_TIME
+        openingTimeValue
           .split(":")[0]
       ),
       Number(
-        BOOKING_CONFIG.OPENING_TIME
+        openingTimeValue
           .split(":")[1]
       ),
       0,
@@ -298,11 +317,11 @@ export class BookingValidationService {
 
     closingTime.setHours(
       Number(
-        BOOKING_CONFIG.CLOSING_TIME
+        closingTimeValue
           .split(":")[0]
       ),
       Number(
-        BOOKING_CONFIG.CLOSING_TIME
+        closingTimeValue
           .split(":")[1]
       ),
       0,
