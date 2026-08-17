@@ -1,6 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import {
+  motion,
+  useReducedMotion,
+} from "framer-motion";
 
 import PaymentModal from "@/components/booking-widget/PaymentModal";
 import {
@@ -11,6 +15,7 @@ import {
 import YogaBookingForm from "./YogaBookingForm";
 
 export default function YogaBookingWidget() {
+  const prefersReducedMotion = useReducedMotion();
   const [createdBooking, setCreatedBooking] =
     useState<CreatedBooking | null>(null);
   const [bookingData, setBookingData] =
@@ -46,10 +51,27 @@ export default function YogaBookingWidget() {
   };
 
   return (
-    <section className="mt-12 rounded-3xl border border-white/10 bg-white/[0.03] p-6 text-white shadow-2xl md:p-10">
-      <div className="mx-auto max-w-xl">
+    <motion.section
+      initial={
+        prefersReducedMotion
+          ? false
+          : { opacity: 0, y: 18 }
+      }
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: prefersReducedMotion ? 0 : 0.45 }}
+      className="rounded-3xl border border-white/10 bg-[#11100d]/70 p-6 text-white shadow-[0_20px_80px_rgba(0,0,0,0.25)] md:p-10"
+    >
+      <div className="mx-auto max-w-2xl">
         {paymentSuccess ? (
-          <div className="rounded-2xl border border-[#B6F000]/20 bg-[#B6F000]/[0.06] p-6 text-center">
+          <motion.div
+            initial={
+              prefersReducedMotion
+                ? false
+                : { opacity: 0, y: 10 }
+            }
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-2xl border border-[#B6F000]/20 bg-[#B6F000]/[0.06] p-6 text-center"
+          >
             <h2 className="text-2xl font-bold text-[#B6F000]">
               Yoga Booking Confirmed
             </h2>
@@ -61,7 +83,7 @@ export default function YogaBookingWidget() {
                 Booking Number: {createdBooking.bookingNumber}
               </p>
             )}
-          </div>
+          </motion.div>
         ) : (
           <YogaBookingForm
             onBookingCreated={handleBookingCreated}
@@ -85,6 +107,6 @@ export default function YogaBookingWidget() {
           />
         )}
       </div>
-    </section>
+    </motion.section>
   );
 }

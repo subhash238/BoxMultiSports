@@ -1,6 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  motion,
+  useReducedMotion,
+} from "framer-motion";
 
 import {
   BookingData,
@@ -69,6 +73,7 @@ export default function YogaBookingForm({
   onBookingError,
   setBookingLoading,
 }: YogaBookingFormProps) {
+  const prefersReducedMotion = useReducedMotion();
   const [yogaSport, setYogaSport] =
     useState<YogaSport | null>(null);
   const [loadingSport, setLoadingSport] =
@@ -271,9 +276,19 @@ export default function YogaBookingForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <motion.form
+      onSubmit={handleSubmit}
+      initial={
+        prefersReducedMotion
+          ? false
+          : { opacity: 0, y: 10 }
+      }
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: prefersReducedMotion ? 0 : 0.4 }}
+      className="space-y-6"
+    >
       <div>
-        <label className="mb-2 block text-sm text-white/70">
+        <label className="mb-2 block text-sm font-semibold uppercase tracking-[0.16em] text-white/65">
           Date
         </label>
         <input
@@ -284,39 +299,41 @@ export default function YogaBookingForm({
           onChange={(event) =>
             setBookingDate(event.target.value)
           }
-          className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-white color-scheme-dark"
+          className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3.5 text-white outline-none transition focus:border-amber-200/60 focus:ring-2 focus:ring-amber-100/10 color-scheme-dark"
         />
       </div>
 
       <div>
-        <label className="mb-2 block text-sm text-white/70">
+        <label className="mb-3 block text-sm font-semibold uppercase tracking-[0.16em] text-white/65">
           Session Time
         </label>
-        <select
-          required
-          value={selectedSlotId}
-          onChange={(event) =>
-            setSelectedSlotId(event.target.value)
-          }
-          className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-white"
-        >
-          <option value="" className="bg-[#11130F]">
-            Select a session
-          </option>
+        <div className="grid gap-3 sm:grid-cols-3">
           {YOGA_TIME_SLOTS.map((slot) => (
-            <option
+            <motion.button
+              type="button"
               key={slot.id}
-              value={slot.id}
-              className="bg-[#11130F]"
+              onClick={() => setSelectedSlotId(slot.id)}
+              whileHover={
+                prefersReducedMotion
+                  ? undefined
+                  : { y: -2 }
+              }
+              className={`rounded-2xl border p-4 text-left transition duration-200 ${
+                selectedSlotId === slot.id
+                  ? "border-amber-200/70 bg-amber-100/[0.1] shadow-[0_10px_30px_rgba(242,184,92,0.1)]"
+                  : "border-white/10 bg-white/[0.03] hover:border-amber-100/30"
+              }`}
             >
-              {slot.label}
-            </option>
+              <span className="block text-sm uppercase tracking-[0.14em] text-amber-200/75">Morning session</span>
+              <span className="mt-2 block text-base font-semibold text-white">{slot.label}</span>
+              <span className="mt-3 block text-sm text-white/55">₹399 / person / day</span>
+            </motion.button>
           ))}
-        </select>
+        </div>
       </div>
 
       <div>
-        <label className="mb-2 block text-sm text-white/70">
+        <label className="mb-2 block text-sm font-semibold uppercase tracking-[0.16em] text-white/65">
           Participants
         </label>
         <input
@@ -328,12 +345,12 @@ export default function YogaBookingForm({
           onChange={(event) =>
             setNumberOfPlayers(Number(event.target.value))
           }
-          className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-white"
+          className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3.5 text-white outline-none transition focus:border-amber-200/60 focus:ring-2 focus:ring-amber-100/10"
         />
       </div>
 
       <div>
-        <label className="mb-2 block text-sm text-white/70">
+        <label className="mb-2 block text-sm font-semibold uppercase tracking-[0.16em] text-white/65">
           Full Name
         </label>
         <input
@@ -343,12 +360,12 @@ export default function YogaBookingForm({
           onChange={(event) =>
             setFullName(event.target.value)
           }
-          className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-white"
+          className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3.5 text-white outline-none transition focus:border-amber-200/60 focus:ring-2 focus:ring-amber-100/10"
         />
       </div>
 
       <div>
-        <label className="mb-2 block text-sm text-white/70">
+        <label className="mb-2 block text-sm font-semibold uppercase tracking-[0.16em] text-white/65">
           Mobile Number
         </label>
         <input
@@ -359,16 +376,16 @@ export default function YogaBookingForm({
           onChange={(event) =>
             setMobile(event.target.value)
           }
-          className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-white"
+          className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3.5 text-white outline-none transition focus:border-amber-200/60 focus:ring-2 focus:ring-amber-100/10"
         />
       </div>
 
-      <div className="rounded-xl border border-[#B6F000]/20 bg-[#B6F000]/[0.06] p-4 text-white">
-        <p className="text-sm text-white/60">Price Estimate</p>
-        <p className="mt-1 text-lg font-semibold text-[#B6F000]">
+      <div className="rounded-2xl border border-amber-200/20 bg-gradient-to-br from-amber-100/[0.09] to-[#B6F000]/[0.04] p-5 text-white">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-200/70">Estimated price</p>
+        <p className="mt-2 text-lg font-semibold text-[#B6F000]">
           ₹399 × {numberOfPlayers} participants
         </p>
-        <p className="mt-1 text-xl font-bold">
+        <p className="mt-2 text-3xl font-bold tracking-tight">
           Estimated Total: ₹{estimatedTotal.toLocaleString("en-IN")}
         </p>
       </div>
@@ -379,10 +396,10 @@ export default function YogaBookingForm({
 
       <button
         type="submit"
-        className="w-full rounded-xl bg-[#B6F000] px-5 py-3 font-bold text-black transition hover:brightness-110"
+        className="min-h-12 w-full rounded-2xl bg-amber-200 px-5 py-3 font-bold text-[#21170e] shadow-[0_10px_30px_rgba(242,184,92,0.15)] transition duration-200 hover:-translate-y-0.5 hover:bg-amber-100 hover:shadow-[0_14px_36px_rgba(242,184,92,0.22)] active:translate-y-0 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-amber-200 focus:ring-offset-2 focus:ring-offset-[#11100d]"
       >
         Continue to Payment
       </button>
-    </form>
+    </motion.form>
   );
 }
