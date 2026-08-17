@@ -16,7 +16,12 @@ export async function POST(request: NextRequest) {
     // Authentication
     // -----------------------------------------
 
-    const user = await getCurrentUser(request);
+    const authToken =
+      request.cookies.get("auth_token")?.value;
+
+    const user = authToken
+      ? await getCurrentUser(request)
+      : null;
 
     // -----------------------------------------
     // Read request body
@@ -35,7 +40,7 @@ export async function POST(request: NextRequest) {
     // -----------------------------------------
 
     const booking = await BookingService.createBooking(
-      user.id,
+      user?.id ?? null,
       data
     );
 

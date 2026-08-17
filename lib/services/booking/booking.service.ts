@@ -29,7 +29,7 @@ export class BookingService {
    * ==========================================
    */
   static async createBooking(
-    userId: string,
+    userId: string | null,
     data: CreateBookingInput
   ): Promise<Booking> {
     // -----------------------------------------

@@ -64,7 +64,7 @@ export type BookingValidationResult = {
  */
 
 export type CreateBookingContext = {
-  userId: string;
+  userId: string | null;
   sport: Sport;
   bookingTime: BookingTimeResult;
   pricing: BookingPricingResult;
