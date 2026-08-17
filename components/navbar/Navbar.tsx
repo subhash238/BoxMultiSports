@@ -4,12 +4,12 @@ import Image from "next/image";
 import Link from "next/link";
 
 const navItems = [
-  { name: "Home", href: "#" },
-  { name: "Sports", href: "#sports" },
-  { name: "Facilities", href: "#facilities" },
-  { name: "Gallery", href: "#gallery" },
-  { name: "Pricing", href: "#pricing" },
-  { name: "Contact", href: "#contact" },
+  { name: "Home", href: "/" },
+  { name: "Sports", href: "/sports" },
+  { name: "Yoga", href: "/yoga" },
+  { name: "Gym", href: "/gym" },
+  { name: "Gallery", href: "/gallery" },
+  { name: "Contact", href: "/contact" },
 ];
 
 export default function Navbar() {
@@ -90,7 +90,7 @@ export default function Navbar() {
           {/* ================= CTA ================= */}
 
           <Link
-            href="#booking"
+            href="/booking"
             className="
               rounded-2xl
               bg-[#B6F000]
