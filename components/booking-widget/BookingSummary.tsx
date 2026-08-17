@@ -16,6 +16,7 @@ import { BookingData } from "./BookingWidget";
 interface Sport {
   id: string;
   name: string;
+  slug: string;
   pricing?: {
     duration: number;
     price: number | string;
@@ -142,9 +143,11 @@ export default function BookingSummary({
         pricing.duration === durationHours
     );
 
-  const estimatedPrice = Number(
-    selectedPricing?.price ?? 0
-  );
+  const estimatedPrice =
+    selectedSport?.slug === "yoga" ||
+    selectedSport?.slug === "gym"
+      ? 399 * bookingData.players
+      : Number(selectedPricing?.price ?? 0);
 
   // ==========================================
   // Selected State

@@ -61,7 +61,9 @@ export class BookingService {
     const pricing =
       await BookingPricingService.calculate(
         data.sportId,
-        bookingTime
+        bookingTime,
+        sport.slug,
+        numberOfPlayers
       );
 
     // -----------------------------------------
