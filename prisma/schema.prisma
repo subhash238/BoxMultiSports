@@ -136,7 +136,10 @@ model Booking {
 
   status BookingStatus @default(PENDING)
 
-  userId  String
+  customerName   String
+  customerMobile String
+
+  userId  String?
   sportId String
 
   createdAt DateTime @default(now())
@@ -144,7 +147,7 @@ model Booking {
 
   sport Sport @relation(fields: [sportId], references: [id])
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   statusHistory BookingStatusHistory[]
 
