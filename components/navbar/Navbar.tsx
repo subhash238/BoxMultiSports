@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const navItems = [
   { name: "Home", href: "/" },
@@ -13,6 +14,15 @@ const navItems = [
 ];
 
 export default function Navbar() {
+  const pathname = usePathname();
+
+  if (
+    pathname.startsWith("/admin") ||
+    pathname === "/login"
+  ) {
+    return null;
+  }
+
   return (
     <header className="fixed top-5 left-1/2 z-50 w-[95%] max-w-7xl -translate-x-1/2">
       <nav
