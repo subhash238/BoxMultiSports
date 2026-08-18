@@ -153,11 +153,6 @@ export async function GET(
       }
     );
   } catch (error) {
-    console.error(
-      "Admin booking details error:",
-      error
-    );
-
     return NextResponse.json(
       {
         success: false,
@@ -312,11 +307,6 @@ export async function PATCH(
     // ==========================================
     // Unknown Error
     // ==========================================
-
-    console.error(
-      "Admin booking status update error:",
-      error
-    );
 
     return NextResponse.json(
       {

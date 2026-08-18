@@ -11,8 +11,6 @@ export async function GET(request: NextRequest) {
       user,
     });
   } catch (error) {
-    console.error("Get Current User Error:", error);
-
     if (error instanceof AppError) {
       return NextResponse.json(
         {

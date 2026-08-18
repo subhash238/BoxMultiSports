@@ -11,12 +11,12 @@ import { CreateBookingInput } from "@/lib/validators/booking";
 import {
   BookingListQuery,
   CreateBookingContext,
+  CreateBookingResult,
 } from "./booking.types";
 
 import { BOOKING_MESSAGES } from "./booking.responses";
 
 import { BookingValidationService } from "./booking-validation.service";
-import { BookingConflictService } from "./booking-conflict.service";
 import { BookingPricingService } from "./booking-pricing.service";
 import { BookingTransactionService } from "./booking-transaction.service";
 import { BookingQueryService } from "./booking-query.service";
@@ -29,9 +29,9 @@ export class BookingService {
    * ==========================================
    */
   static async createBooking(
-    userId: string,
+    userId: string | null,
     data: CreateBookingInput
-  ): Promise<Booking> {
+  ): Promise<CreateBookingResult> {
     // -----------------------------------------
     // Validate Booking
     // -----------------------------------------
@@ -46,22 +46,15 @@ export class BookingService {
       );
 
     // -----------------------------------------
-    // Check Booking Conflict
-    // -----------------------------------------
-
-    await BookingConflictService.check(
-      data.sportId,
-      bookingTime
-    );
-
-    // -----------------------------------------
     // Calculate Pricing
     // -----------------------------------------
 
     const pricing =
       await BookingPricingService.calculate(
         data.sportId,
-        bookingTime
+        bookingTime,
+        sport.slug,
+        numberOfPlayers
       );
 
     // -----------------------------------------
@@ -74,6 +67,8 @@ export class BookingService {
       bookingTime,
       pricing,
       numberOfPlayers,
+      customerName: data.fullName,
+      customerMobile: data.mobile,
     };
 
     // -----------------------------------------
@@ -137,36 +132,20 @@ export class BookingService {
     userId: string,
     bookingId: string
   ) {
-    console.log(
-      "1. Before findBooking"
-    );
-
     const booking =
       await this.findBookingOrThrow(
         userId,
         bookingId
       );
 
-    console.log(
-      "2. After findBooking"
-    );
-
     BookingCancellationService.validate(
       booking
-    );
-
-    console.log(
-      "3. After validate"
     );
 
     const result =
       await BookingCancellationService.cancel(
         bookingId
       );
-
-    console.log(
-      "4. After cancel"
-    );
 
     return result;
   }
@@ -440,6 +419,7 @@ export class BookingService {
               bookingId: booking.id,
               fromStatus: booking.status,
               toStatus: newStatus,
+              actorType: "ADMIN",
               changedById,
             },
           });
@@ -464,11 +444,6 @@ export class BookingService {
     userId: string,
     bookingId: string
   ) {
-    console.log(
-      "Route bookingId:",
-      bookingId
-    );
-
     const booking =
       await prisma.booking.findUnique({
         where: {
@@ -487,27 +462,12 @@ export class BookingService {
         },
       });
 
-    console.log(
-      "Booking from DB:",
-      booking
-    );
-
     if (!booking) {
       throw new AppError(
         BOOKING_MESSAGES.BOOKING_NOT_FOUND,
         404
       );
     }
-
-    console.log(
-      "Booking.userId:",
-      booking.userId
-    );
-
-    console.log(
-      "Current userId:",
-      userId
-    );
 
     if (booking.userId !== userId) {
       throw new AppError(

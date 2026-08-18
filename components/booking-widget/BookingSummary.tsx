@@ -16,7 +16,11 @@ import { BookingData } from "./BookingWidget";
 interface Sport {
   id: string;
   name: string;
-  pricePerHour?: number | string;
+  slug: string;
+  pricing?: {
+    duration: number;
+    price: number | string;
+  }[];
   maxPlayers?: number | null;
 }
 
@@ -100,11 +104,8 @@ export default function BookingSummary({
         if (mounted) {
           setSports(result.sports ?? []);
         }
-      } catch (error) {
-        console.error(
-          "Booking summary sport fetch error:",
-          error
-        );
+      } catch {
+        // Keep the summary usable when sport metadata is unavailable.
       }
     }
 
@@ -133,12 +134,17 @@ export default function BookingSummary({
     bookingData.duration
   );
 
-  const pricePerHour = Number(
-    selectedSport?.pricePerHour ?? 0
-  );
+  const selectedPricing =
+    selectedSport?.pricing?.find(
+      (pricing) =>
+        pricing.duration === durationHours
+    );
 
   const estimatedPrice =
-    pricePerHour * durationHours;
+    selectedSport?.slug === "yoga" ||
+    selectedSport?.slug === "gym"
+      ? 399 * bookingData.players
+      : Number(selectedPricing?.price ?? 0);
 
   // ==========================================
   // Selected State
@@ -377,11 +383,6 @@ export default function BookingSummary({
                   {formatCurrency(estimatedPrice)}
                 </p>
 
-                {pricePerHour > 0 && (
-                  <p className="mt-0.5 text-[10px] text-white/30">
-                    {formatCurrency(pricePerHour)} / hour
-                  </p>
-                )}
               </div>
             </div>
           </div>

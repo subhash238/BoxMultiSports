@@ -1,4 +1,4 @@
-import { Sport } from "@prisma/client";
+import { Booking, Sport } from "@prisma/client";
 
 /**
  * ==========================================
@@ -64,11 +64,18 @@ export type BookingValidationResult = {
  */
 
 export type CreateBookingContext = {
-  userId: string;
+  userId: string | null;
   sport: Sport;
   bookingTime: BookingTimeResult;
   pricing: BookingPricingResult;
   numberOfPlayers: number;
+  customerName: string;
+  customerMobile: string;
+};
+
+export type CreateBookingResult = {
+  booking: Booking;
+  guestPaymentToken: string | null;
 };
 
 /**

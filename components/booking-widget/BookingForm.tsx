@@ -1,9 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { ChevronDown, ShieldCheck } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 
 import BookingField from "./BookingField";
+import { SHARED_BOOKING_SPORT_SLUGS } from "./constants";
 
 import {
   BookingData,
@@ -34,12 +40,17 @@ interface Sport {
 interface BookingFormProps {
   bookingData: BookingData;
 
+  selectedSportSlug?: string | null;
+
   setBookingData: React.Dispatch<
     React.SetStateAction<BookingData>
   >;
 
   onBookingCreated: (
-    booking: CreatedBooking
+    result: {
+      booking: CreatedBooking;
+      guestPaymentToken: string | null;
+    }
   ) => void;
 
   onBookingError: (
@@ -146,6 +157,7 @@ function addDurationToTime(
 
 export default function BookingForm({
   bookingData,
+  selectedSportSlug = null,
   setBookingData,
   onBookingCreated,
   onBookingError,
@@ -160,6 +172,15 @@ export default function BookingForm({
 
   const [sportsLoading, setSportsLoading] =
     useState(true);
+
+  const searchParams =
+    useSearchParams();
+
+  const requestedSportSlug =
+    searchParams.get("sport");
+
+  const hasAppliedSportPreselection =
+    useRef(false);
 
   const [sportsError, setSportsError] =
     useState("");
@@ -211,15 +232,16 @@ export default function BookingForm({
           );
         }
 
-        setSports(
-          result.sports ?? []
-        );
-      } catch (error) {
-        console.error(
-          "Fetch sports error:",
-          error
-        );
+        const sharedSports =
+          (result.sports ?? []).filter(
+            (sport: Sport) =>
+              SHARED_BOOKING_SPORT_SLUGS.includes(
+                sport.slug as (typeof SHARED_BOOKING_SPORT_SLUGS)[number]
+              )
+          );
 
+        setSports(sharedSports);
+      } catch (error) {
         setSportsError(
           error instanceof Error
             ? error.message
@@ -232,6 +254,53 @@ export default function BookingForm({
 
     fetchSports();
   }, []);
+
+  useEffect(() => {
+    if (sportsLoading) {
+      return;
+    }
+
+    const requestedSlug =
+      selectedSportSlug ?? requestedSportSlug;
+
+    if (!selectedSportSlug) {
+      if (hasAppliedSportPreselection.current) {
+        return;
+      }
+
+      hasAppliedSportPreselection.current = true;
+    }
+
+    if (
+      !requestedSlug ||
+      !SHARED_BOOKING_SPORT_SLUGS.includes(
+        requestedSlug as (typeof SHARED_BOOKING_SPORT_SLUGS)[number]
+      )
+    ) {
+      return;
+    }
+
+    const matchedSport =
+      sports.find(
+        (sport) =>
+          sport.slug === requestedSlug
+      );
+
+    if (!matchedSport) {
+      return;
+    }
+
+    setBookingData((current) => ({
+      ...current,
+      sport: matchedSport.id,
+    }));
+  }, [
+    requestedSportSlug,
+    selectedSportSlug,
+    setBookingData,
+    sports,
+    sportsLoading,
+  ]);
 
   // ==========================================
   // Continue Booking
@@ -306,6 +375,12 @@ export default function BookingForm({
 
             numberOfPlayers:
               bookingData.players,
+
+            fullName:
+              bookingData.fullName.trim(),
+
+            mobile:
+              bookingData.mobile.replace(/\D/g, ""),
           }),
         }
       );
@@ -335,7 +410,7 @@ export default function BookingForm({
       // Validate Booking Response
       // ---------------------------------------
 
-      if (!result.data?.id) {
+      if (!result.data?.booking?.id) {
         throw new Error(
           "Booking was created but booking information was not returned."
         );
@@ -346,7 +421,7 @@ export default function BookingForm({
       // ---------------------------------------
 
       const booking =
-        result.data;
+        result.data.booking;
 
       const createdBooking:
         CreatedBooking = {
@@ -374,28 +449,27 @@ export default function BookingForm({
           booking.status,
       };
 
-      console.log(
-        "Booking created successfully:",
-        createdBooking
-      );
+      const guestPaymentToken =
+        typeof result.data.guestPaymentToken ===
+        "string"
+          ? result.data.guestPaymentToken
+          : null;
 
       // ---------------------------------------
       // Open Payment Modal
       // ---------------------------------------
 
       onBookingCreated(
-        createdBooking
+        {
+          booking: createdBooking,
+          guestPaymentToken,
+        }
       );
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
           : "Unable to create booking.";
-
-      console.error(
-        "Booking creation error:",
-        error
-      );
 
       onBookingError(message);
     } finally {

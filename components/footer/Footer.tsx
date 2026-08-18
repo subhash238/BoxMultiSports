@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -542,28 +543,28 @@ export default function Footer() {
 
             <ul className="space-y-3">
               <FooterLink
-                href="/sports/rugby/box-cricket"
+                href="/?sport=cricket#booking"
                 label="Box Cricket"
               />
 
               <FooterLink
-                href="/sports/rugby/football"
+                href="/?sport=football#booking"
                 label="Football"
               />
 
               <FooterLink
-                href="/sports/rugby/basketball"
-                label="Basketball"
+                href="/?sport=pickleball#booking"
+                label="Pickleball"
               />
 
               <FooterLink
-                href="/sports/rugby/badminton"
+                href="/?sport=badminton#booking"
                 label="Badminton"
               />
 
               <FooterLink
-                href="/sports/rugby/baseball"
-                label="Baseball"
+                href="/?sport=net-practice#booking"
+                label="Net Practice"
               />
             </ul>
           </div>
@@ -962,7 +963,7 @@ export default function Footer() {
                 text-white/20
               "
             >
-              Made for players
+              Made by Vishal Kumar Rai
 
               <span className="text-[#B6F000]">
                 ●

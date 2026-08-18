@@ -93,11 +93,6 @@ export async function POST(request: NextRequest) {
     // Unknown error
     // -----------------------------------------
 
-    console.error(
-      "Create sport API error:",
-      error
-    );
-
     return NextResponse.json(
       {
         success: false,

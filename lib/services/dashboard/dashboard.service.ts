@@ -82,7 +82,7 @@ static async getRecentBookings() {
     totalAmount: Number(booking.totalAmount),
     status: booking.status,
     user: {
-      name: booking.user.name,
+      name: booking.customerName,
     },
     sport: {
       name: booking.sport.name,

@@ -1,14 +1,24 @@
-import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
-import { Booking } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
+import { AppError } from "@/lib/errors";
 
 import {
   CreateBookingContext,
+  CreateBookingResult,
 } from "./booking.types";
 
 import {
   BookingNumberService,
 } from "./booking-number.service";
+
+import { BookingConflictService } from "./booking-conflict.service";
+
+import { BOOKING_CONFIG } from "./booking.config";
+import {
+  generateGuestPaymentToken,
+  hashGuestPaymentToken,
+} from "../payment/guest-payment-token";
 
 export class BookingTransactionService {
   /**
@@ -18,9 +28,34 @@ export class BookingTransactionService {
    */
   static async create(
     context: CreateBookingContext
-  ): Promise<Booking> {
-    return prisma.$transaction(
-      async (tx) => {
+  ): Promise<CreateBookingResult> {
+    const isGuest =
+      context.userId === null;
+
+    const guestPaymentToken = isGuest
+      ? generateGuestPaymentToken()
+      : null;
+
+    const guestPaymentTokenHash =
+      guestPaymentToken === null
+        ? null
+        : hashGuestPaymentToken(
+            guestPaymentToken
+          );
+
+    const maxAttempts = 3;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        return await prisma.$transaction(
+          async (tx) => {
+            await BookingConflictService.check(
+              tx,
+              context.sport,
+              context.bookingTime,
+              context.numberOfPlayers
+            );
+
         // -----------------------------------------
         // Generate Booking Number
         // -----------------------------------------
@@ -35,7 +70,8 @@ export class BookingTransactionService {
         // Create Booking
         // -----------------------------------------
 
-        return tx.booking.create({
+        const createdBooking =
+          await tx.booking.create({
           data: {
             bookingNumber,
 
@@ -60,16 +96,81 @@ export class BookingTransactionService {
             totalAmount:
               context.pricing.totalAmount,
 
+            customerName:
+              context.customerName,
+
+            customerMobile:
+              context.customerMobile,
+
             status: "PENDING",
 
             userId:
               context.userId,
 
+            guestPaymentTokenHash,
+
+            guestPaymentTokenExpiresAt:
+              null,
+
             sportId:
               context.sport.id,
           },
-        });
+          });
+
+        let finalBooking =
+          createdBooking;
+
+        if (isGuest) {
+          const guestPaymentTokenExpiresAt =
+            new Date(
+              createdBooking.createdAt.getTime() +
+                BOOKING_CONFIG.PAYMENT_HOLD_MINUTES *
+                  60 *
+                  1000
+            );
+
+          finalBooking =
+            await tx.booking.update({
+              where: {
+                id: createdBooking.id,
+              },
+              data: {
+                guestPaymentTokenExpiresAt,
+              },
+            });
+        }
+
+        return {
+          booking: finalBooking,
+          guestPaymentToken,
+        };
+          },
+          {
+            isolationLevel:
+              Prisma.TransactionIsolationLevel.Serializable,
+          }
+        );
+      } catch (error) {
+        const isSerializationConflict =
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === "P2034";
+
+        if (!isSerializationConflict) {
+          throw error;
+        }
+
+        if (attempt === maxAttempts) {
+          throw new AppError(
+            "Booking availability changed. Please try again.",
+            409
+          );
+        }
       }
+    }
+
+    throw new AppError(
+      "Booking availability changed. Please try again.",
+      409
     );
   }
 }

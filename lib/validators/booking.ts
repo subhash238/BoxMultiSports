@@ -24,6 +24,21 @@ export const createBookingSchema = z.object({
     .number()
     .int("Number of players must be a whole number.")
     .min(1, "At least 1 player is required."),
+
+  fullName: z
+    .string()
+    .trim()
+    .min(3, "Full name must be at least 3 characters.")
+    .max(100, "Full name must be at most 100 characters."),
+
+  mobile: z
+    .string()
+    .trim()
+    .length(10, "Mobile number must be exactly 10 digits.")
+    .regex(
+      /^[6-9]\d{9}$/,
+      "Please enter a valid Indian mobile number."
+    ),
 });
 
 /**

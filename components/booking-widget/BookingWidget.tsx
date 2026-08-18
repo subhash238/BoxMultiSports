@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   ShieldCheck,
@@ -34,7 +34,13 @@ export interface CreatedBooking {
   status: string;
 }
 
-export default function BookingWidget() {
+interface BookingWidgetProps {
+  selectedSportSlug?: string | null;
+}
+
+export default function BookingWidget({
+  selectedSportSlug = null,
+}: BookingWidgetProps) {
   const [bookingData, setBookingData] =
     useState<BookingData>({
       sport: "",
@@ -50,6 +56,11 @@ export default function BookingWidget() {
   const [createdBooking, setCreatedBooking] =
     useState<CreatedBooking | null>(null);
 
+  const [
+    guestPaymentToken,
+    setGuestPaymentToken,
+  ] = useState<string | null>(null);
+
   const [paymentOpen, setPaymentOpen] =
     useState(false);
 
@@ -59,14 +70,47 @@ export default function BookingWidget() {
   const [bookingError, setBookingError] =
     useState<string | null>(null);
 
+  useEffect(() => {
+    if (
+      typeof window === "undefined" ||
+      window.location.hash !== "#booking"
+    ) {
+      return;
+    }
+
+    const frame = window.requestAnimationFrame(() => {
+      const bookingSection =
+        document.getElementById("booking");
+
+      if (!bookingSection) {
+        return;
+      }
+
+      bookingSection.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+    };
+  }, []);
+
   // ==========================================
   // Booking Created
   // ==========================================
 
   const handleBookingCreated = (
-    booking: CreatedBooking
+    result: {
+      booking: CreatedBooking;
+      guestPaymentToken: string | null;
+    }
   ) => {
-    setCreatedBooking(booking);
+    setCreatedBooking(result.booking);
+    setGuestPaymentToken(
+      result.guestPaymentToken
+    );
     setBookingError(null);
     setPaymentOpen(true);
   };
@@ -86,6 +130,7 @@ export default function BookingWidget() {
   // ==========================================
 
   const handlePaymentSuccess = () => {
+    setGuestPaymentToken(null);
     setPaymentOpen(false);
   };
 
@@ -96,6 +141,7 @@ export default function BookingWidget() {
         relative
         isolate
         overflow-hidden
+        scroll-mt-32
         bg-[#050705]
         px-4
         py-20
@@ -448,6 +494,7 @@ export default function BookingWidget() {
                 <BookingForm
                   bookingData={bookingData}
                   setBookingData={setBookingData}
+                  selectedSportSlug={selectedSportSlug}
                   onBookingCreated={
                     handleBookingCreated
                   }
@@ -657,6 +704,9 @@ export default function BookingWidget() {
             <PaymentModal
               booking={createdBooking}
               bookingData={bookingData}
+              guestPaymentToken={
+                guestPaymentToken
+              }
               loading={bookingLoading}
               onClose={() => {
                 setPaymentOpen(false);

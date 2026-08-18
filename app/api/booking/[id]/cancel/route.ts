@@ -66,21 +66,14 @@ export async function PATCH(
       );
     }
 
-    console.error("========== CANCEL ERROR ==========");
-console.dir(error, { depth: null });
-console.error("==================================");
-
-return NextResponse.json(
-  {
-    success: false,
-    message:
-      error instanceof Error
-        ? error.message
-        : String(error),
-  },
-  {
-    status: 500,
-  }
-);
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Unable to cancel booking.",
+      },
+      {
+        status: 500,
+      }
+    );
   }
 }

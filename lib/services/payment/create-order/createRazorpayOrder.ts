@@ -30,7 +30,8 @@ export interface CreateRazorpayOrderResponse {
 // ==========================================
 
 export async function createRazorpayOrder(
-  bookingId: string
+  bookingId: string,
+  guestPaymentToken: string | null
 ): Promise<CreateRazorpayOrderResponse> {
   // -----------------------------------------
   // Validate Booking ID
@@ -58,6 +59,7 @@ export async function createRazorpayOrder(
 
       body: JSON.stringify({
         bookingId,
+        guestPaymentToken,
       }),
     }
   );

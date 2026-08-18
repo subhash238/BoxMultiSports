@@ -34,7 +34,9 @@ export class BookingPricingService {
    */
   static async calculate(
     sportId: string,
-    bookingTime: BookingTimeResult
+    bookingTime: BookingTimeResult,
+    sportSlug?: string,
+    numberOfPlayers?: number
   ): Promise<BookingPricingResult> {
     // -----------------------------------------
     // Calculate Duration
@@ -73,6 +75,33 @@ export class BookingPricingService {
         "Booking duration must be a complete number of hours.",
         400
       );
+    }
+
+    if (
+      sportSlug === "yoga" ||
+      sportSlug === "gym"
+    ) {
+      if (
+        numberOfPlayers === undefined ||
+        !Number.isInteger(numberOfPlayers) ||
+        numberOfPlayers < 1
+      ) {
+        throw new AppError(
+          "Number of players must be a positive integer.",
+          400
+        );
+      }
+
+      const totalAmount =
+        399 * numberOfPlayers;
+
+      return {
+        durationMinutes,
+        durationHours,
+        pricePerHour:
+          totalAmount / durationHours,
+        totalAmount,
+      };
     }
 
     // -----------------------------------------

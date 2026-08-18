@@ -16,6 +16,7 @@ import {
 
 interface RazorpayPayButtonProps {
   bookingId: string;
+  guestPaymentToken: string | null;
   customerName?: string;
   customerEmail?: string;
   customerMobile?: string;
@@ -34,6 +35,7 @@ interface RazorpayPayButtonProps {
 
 export default function RazorpayPayButton({
   bookingId,
+  guestPaymentToken,
   customerName,
   customerEmail,
   customerMobile,
@@ -59,7 +61,8 @@ export default function RazorpayPayButton({
 
       const result =
         await createRazorpayOrder(
-          bookingId
+          bookingId,
+          guestPaymentToken
         );
 
       if (!result.order?.id) {
@@ -136,11 +139,6 @@ export default function RazorpayPayButton({
           response
         ) => {
           try {
-            console.log(
-              "Razorpay payment response:",
-              response
-            );
-
             // ==================================
             // STEP 5
             // Send Payment To Server
@@ -168,6 +166,8 @@ export default function RazorpayPayButton({
 
                     razorpay_signature:
                       response.razorpay_signature,
+
+                    guestPaymentToken,
                   }),
                 }
               );
@@ -197,11 +197,6 @@ export default function RazorpayPayButton({
             // Payment Fully Verified
             // ==================================
 
-            console.log(
-              "Payment verified successfully:",
-              verifyResult
-            );
-
             /*
              * IMPORTANT:
              *
@@ -221,11 +216,6 @@ export default function RazorpayPayButton({
               error instanceof Error
                 ? error.message
                 : "Payment verification failed.";
-
-            console.error(
-              "Payment verification error:",
-              error
-            );
 
             onError?.(
               message
@@ -250,11 +240,6 @@ export default function RazorpayPayButton({
         error instanceof Error
           ? error.message
           : "Unable to start payment.";
-
-      console.error(
-        "Razorpay checkout error:",
-        error
-      );
 
       onError?.(message);
 

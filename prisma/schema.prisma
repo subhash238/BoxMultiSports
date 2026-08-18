@@ -136,7 +136,13 @@ model Booking {
 
   status BookingStatus @default(PENDING)
 
-  userId  String
+  customerName   String
+  customerMobile String
+
+  guestPaymentTokenHash      String?   @unique @db.VarChar(64)
+  guestPaymentTokenExpiresAt DateTime?
+
+  userId  String?
   sportId String
 
   createdAt DateTime @default(now())
@@ -144,7 +150,7 @@ model Booking {
 
   sport Sport @relation(fields: [sportId], references: [id])
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   statusHistory BookingStatusHistory[]
 
@@ -168,16 +174,18 @@ model BookingStatusHistory {
   bookingId   String
   fromStatus  BookingStatus?
   toStatus    BookingStatus
-  changedById String
+  actorType   BookingStatusActorType
+  changedById String?
   createdAt   DateTime      @default(now())
 
   booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
-  changedBy User @relation("BookingStatusChangedBy", fields: [changedById], references: [id])
+  changedBy User? @relation("BookingStatusChangedBy", fields: [changedById], references: [id])
 
   @@index([bookingId])
   @@index([changedById])
   @@index([createdAt])
+  @@index([actorType])
 
   @@map("booking_status_history")
 }
@@ -202,6 +210,8 @@ model Payment {
 
   failureCode    String?
   failureMessage String?
+
+  guestAuthorizedAt DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -233,6 +243,14 @@ enum BookingStatus {
   CONFIRMED
   CANCELLED
   COMPLETED
+}
+
+enum BookingStatusActorType {
+  ADMIN
+  CUSTOMER
+  GUEST
+  PAYMENT
+  SYSTEM
 }
 
 // ==========================================

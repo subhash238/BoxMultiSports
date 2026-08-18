@@ -30,3 +30,35 @@
   --radius:14px;
 
 }
+
+html,
+body {
+  background-color: #050705;
+}
+
+body {
+  font-family: Arial, Helvetica, system-ui, sans-serif;
+}
+
+code,
+pre,
+kbd,
+samp {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+
+/* Shared clearance for the fixed public navigation. The full-screen
+   homepage hero intentionally keeps its own viewport composition. */
+.public-page-shell {
+  padding-top: 4.5rem;
+}
+
+@media (min-width: 1024px) {
+  .public-page-shell {
+    padding-top: 6.5rem;
+  }
+}
+
+.public-page-shell:has(> section.min-h-screen) {
+  padding-top: 0;
+}

@@ -14,8 +14,31 @@ import {
 } from "./payment.types";
 
 import { PAYMENT_MESSAGES } from "./payment.responses";
+import {
+  verifyGuestPaymentToken,
+} from "./guest-payment-token";
 
 import { BOOKING_CONFIG } from "../booking/booking.config";
+
+type CreateOrderAuthorization =
+  | {
+      type: "AUTHENTICATED";
+      userId: string;
+    }
+  | {
+      type: "GUEST";
+      guestPaymentToken: string;
+    };
+
+type VerifyPaymentAuthorization =
+  | {
+      type: "AUTHENTICATED";
+      userId: string;
+    }
+  | {
+      type: "GUEST";
+      guestPaymentToken: string;
+    };
 
 export class PaymentService {
   /**
@@ -124,7 +147,8 @@ export class PaymentService {
    * to the internal payment record.
    */
   static async createRazorpayOrder(
-    bookingId: string
+    bookingId: string,
+    authorization: CreateOrderAuthorization
   ) {
     // -----------------------------------------
     // Find Booking
@@ -141,6 +165,9 @@ export class PaymentService {
           bookingNumber: true,
           totalAmount: true,
           status: true,
+          userId: true,
+          guestPaymentTokenHash: true,
+          guestPaymentTokenExpiresAt: true,
         },
       });
 
@@ -168,6 +195,62 @@ export class PaymentService {
         400
       );
     }
+
+    // -----------------------------------------
+    // Authorize Booking Payment
+    // -----------------------------------------
+
+    if (
+      authorization.type ===
+      "AUTHENTICATED"
+    ) {
+      if (
+        booking.userId === null ||
+        booking.userId !==
+          authorization.userId
+      ) {
+        throw new AppError(
+          "You are not authorized to pay for this booking.",
+          403
+        );
+      }
+    } else {
+      const guestAuthorizationError =
+        new AppError(
+          "You are not authorized to pay for this booking.",
+          403
+        );
+
+      if (
+        booking.userId !== null ||
+        !booking.guestPaymentTokenHash ||
+        !booking.guestPaymentTokenExpiresAt
+      ) {
+        throw guestAuthorizationError;
+      }
+
+      if (
+        new Date() >=
+        booking.guestPaymentTokenExpiresAt
+      ) {
+        throw new AppError(
+          "Guest payment authorization has expired.",
+          403
+        );
+      }
+
+      if (
+        !verifyGuestPaymentToken(
+          authorization.guestPaymentToken,
+          booking.guestPaymentTokenHash
+        )
+      ) {
+        throw guestAuthorizationError;
+      }
+    }
+
+    const isGuestAuthorization =
+      authorization.type === "GUEST";
 
     // -----------------------------------------
     // Validate Booking Amount
@@ -245,6 +328,11 @@ export class PaymentService {
         },
       });
 
+    const guestAuthorizedAt =
+      isGuestAuthorization
+        ? new Date()
+        : null;
+
     // -----------------------------------------
     // Create / Update Internal Payment
     // -----------------------------------------
@@ -262,6 +350,8 @@ export class PaymentService {
           data: {
             razorpayOrderId:
               razorpayOrder.id,
+
+            guestAuthorizedAt,
           },
         });
     } else {
@@ -282,6 +372,8 @@ export class PaymentService {
 
             razorpayOrderId:
               razorpayOrder.id,
+
+            guestAuthorizedAt,
           },
         });
     }
@@ -444,7 +536,7 @@ export class PaymentService {
     razorpayOrderId: string,
     razorpayPaymentId: string,
     razorpaySignature: string,
-    userId: string
+    authorization: VerifyPaymentAuthorization
   ) {
     // -----------------------------------------
     // Validate Input
@@ -453,8 +545,7 @@ export class PaymentService {
     if (
       !razorpayOrderId ||
       !razorpayPaymentId ||
-      !razorpaySignature ||
-      !userId
+      !razorpaySignature
     ) {
       throw new AppError(
         "Razorpay payment verification data is required.",
@@ -480,6 +571,8 @@ export class PaymentService {
               bookingNumber: true,
               status: true,
               createdAt: true,
+              guestPaymentTokenHash: true,
+              guestPaymentTokenExpiresAt: true,
             },
           },
         },
@@ -496,28 +589,127 @@ export class PaymentService {
       );
     }
 
-    // -----------------------------------------
-    // Verify Booking Ownership
-    // -----------------------------------------
+    const authorizePaymentVerification = (
+      paymentRecord: {
+        guestAuthorizedAt: Date | null;
+        booking: {
+          userId: string | null;
+          guestPaymentTokenHash: string | null;
+        };
+      }
+    ) => {
+      if (
+        authorization.type ===
+        "AUTHENTICATED"
+      ) {
+        if (
+          paymentRecord.booking.userId ===
+            null ||
+          paymentRecord.booking.userId !==
+            authorization.userId
+        ) {
+          throw new AppError(
+            "You are not authorized to verify this payment.",
+            403
+          );
+        }
 
-    if (
-      payment.booking.userId !==
-      userId
-    ) {
-      throw new AppError(
-        "You are not authorized to verify this payment.",
-        403
-      );
-    }
+        return;
+      }
 
-    // -----------------------------------------
-    // Prevent Duplicate Capture
-    // -----------------------------------------
+      if (
+        paymentRecord.booking.userId !==
+          null ||
+        paymentRecord.guestAuthorizedAt ===
+          null ||
+        !paymentRecord.booking
+          .guestPaymentTokenHash ||
+        !verifyGuestPaymentToken(
+          authorization.guestPaymentToken,
+          paymentRecord.booking
+            .guestPaymentTokenHash
+        )
+      ) {
+        throw new AppError(
+          "You are not authorized to verify this payment.",
+          403
+        );
+      }
+    };
 
     if (
       payment.status ===
       "CAPTURED"
     ) {
+      if (
+        authorization.type ===
+        "AUTHENTICATED"
+      ) {
+        if (
+          payment.booking.userId ===
+            null ||
+          payment.booking.userId !==
+            authorization.userId
+        ) {
+          throw new AppError(
+            "You are not authorized to verify this payment.",
+            403
+          );
+        }
+      } else if (
+        payment.booking.userId !==
+          null ||
+        payment.guestAuthorizedAt ===
+          null
+      ) {
+        throw new AppError(
+          "You are not authorized to verify this payment.",
+          403
+        );
+      }
+
+      if (
+        typeof payment.razorpayOrderId !==
+          "string" ||
+        !payment.razorpayOrderId ||
+        typeof payment.razorpayPaymentId !==
+          "string" ||
+        !payment.razorpayPaymentId ||
+        payment.razorpayOrderId !==
+          razorpayOrderId ||
+        payment.razorpayPaymentId !==
+          razorpayPaymentId
+      ) {
+        throw new AppError(
+          "Payment verification failed.",
+          400
+        );
+      }
+
+      const signatureValid =
+        this.verifyRazorpaySignature(
+          razorpayOrderId,
+          razorpayPaymentId,
+          razorpaySignature
+        );
+
+      if (!signatureValid) {
+        throw new AppError(
+          "Payment verification failed.",
+          400
+        );
+      }
+
+      if (
+        payment.booking.status !==
+        "CONFIRMED"
+      ) {
+        throw new AppError(
+          "Payment verification failed.",
+          400
+        );
+      }
+
       return {
         payment,
 
@@ -525,6 +717,10 @@ export class PaymentService {
           payment.booking,
       };
     }
+
+    authorizePaymentVerification(
+      payment
+    );
 
     // -----------------------------------------
     // Verify Razorpay Signature
@@ -544,6 +740,68 @@ export class PaymentService {
     if (!signatureValid) {
       throw new AppError(
         "Invalid Razorpay payment signature.",
+        400
+      );
+    }
+
+    let razorpayPayment;
+
+    try {
+      razorpayPayment =
+        await razorpay.payments.fetch(
+          razorpayPaymentId
+        );
+    } catch {
+      throw new AppError(
+        "Payment verification failed.",
+        400
+      );
+    }
+
+    const expectedAmountInPaise =
+      Math.round(
+        Number(payment.amount) * 100
+      );
+
+    const razorpayAmountInPaise =
+      Number(
+        razorpayPayment.amount
+      );
+
+    const reconciliationFailed =
+      !razorpayPayment.id ||
+      razorpayPayment.id !==
+        razorpayPaymentId ||
+      (payment.razorpayPaymentId !==
+        null &&
+        payment.razorpayPaymentId !==
+          razorpayPaymentId) ||
+      !payment.razorpayOrderId ||
+      payment.razorpayOrderId !==
+        razorpayOrderId ||
+      razorpayPayment.order_id !==
+        razorpayOrderId ||
+      razorpayPayment.order_id !==
+        payment.razorpayOrderId ||
+      !Number.isFinite(
+        expectedAmountInPaise
+      ) ||
+      !Number.isFinite(
+        razorpayAmountInPaise
+      ) ||
+      razorpayAmountInPaise !==
+        expectedAmountInPaise ||
+      payment.currency !== "INR" ||
+      razorpayPayment.currency !==
+        payment.currency ||
+      razorpayPayment.status !==
+        "captured" ||
+      razorpayPayment.captured !==
+        true;
+
+    if (reconciliationFailed) {
+      throw new AppError(
+        "Payment verification failed.",
         400
       );
     }
@@ -574,6 +832,8 @@ export class PaymentService {
                     bookingNumber: true,
                     status: true,
                     createdAt: true,
+                    guestPaymentTokenHash: true,
+                    guestPaymentTokenExpiresAt: true,
                   },
                 },
               },
@@ -586,19 +846,9 @@ export class PaymentService {
             );
           }
 
-          // ---------------------------------------
-          // Verify Ownership Again
-          // ---------------------------------------
-
-          if (
-            currentPayment.booking.userId !==
-            userId
-          ) {
-            throw new AppError(
-              "You are not authorized to verify this payment.",
-              403
-            );
-          }
+          authorizePaymentVerification(
+            currentPayment
+          );
 
           // ---------------------------------------
           // Already Captured
@@ -690,6 +940,12 @@ export class PaymentService {
                 data: {
                   status:
                     "CANCELLED",
+
+                  guestPaymentTokenHash:
+                    null,
+
+                  guestPaymentTokenExpiresAt:
+                    null,
                 },
 
                 select: {
@@ -716,15 +972,18 @@ export class PaymentService {
                 toStatus:
                   "CANCELLED",
 
+                actorType:
+                  "SYSTEM",
+
                 changedById:
-                  userId,
+                  null,
               },
             });
 
-            throw new AppError(
-              "The payment window for this booking has expired. The booking has been cancelled. Please create a new booking.",
-              409
-            );
+            return {
+              type:
+                "EXPIRED" as const,
+            };
           }
 
           // ---------------------------------------
@@ -764,6 +1023,12 @@ export class PaymentService {
               data: {
                 status:
                   "CONFIRMED",
+
+                guestPaymentTokenHash:
+                  null,
+
+                guestPaymentTokenExpiresAt:
+                  null,
               },
 
               select: {
@@ -790,8 +1055,11 @@ export class PaymentService {
               toStatus:
                 "CONFIRMED",
 
+              actorType:
+                "PAYMENT",
+
               changedById:
-                userId,
+                null,
             },
           });
 
@@ -800,6 +1068,9 @@ export class PaymentService {
           // ---------------------------------------
 
           return {
+            type:
+              "SUCCESS" as const,
+
             payment:
               updatedPayment,
 
@@ -809,7 +1080,23 @@ export class PaymentService {
         }
       );
 
-    return result;
+    if (
+      result.type ===
+      "EXPIRED"
+    ) {
+      throw new AppError(
+        "The payment window for this booking has expired. The booking has been cancelled. Please create a new booking.",
+        409
+      );
+    }
+
+    return {
+      payment:
+        result.payment,
+
+      booking:
+        result.booking,
+    };
   }
 
   /**

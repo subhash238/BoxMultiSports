@@ -14,9 +14,6 @@ export class BookingCancellationService {
   static async cancel(
   bookingId: string
 ) {
-  console.log("🔥 Cancel Service Called");
-  console.log("Booking ID:", bookingId);
-
   const booking = await prisma.booking.update({
     where: {
       id: bookingId,
@@ -25,8 +22,6 @@ export class BookingCancellationService {
       status: BookingStatus.CANCELLED,
     },
   });
-
-  console.log("Updated Booking:", booking);
 
   return booking;
 }
