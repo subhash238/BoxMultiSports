@@ -5,8 +5,6 @@ import { BOOKING_MESSAGES } from "./booking.responses";
 
 import { CreateBookingInput } from "@/lib/validators/booking";
 
-import { BOOKING_CONFIG } from "./booking.config";
-
 import {
   BookingTimeResult,
   BookingValidationResult,
@@ -60,10 +58,11 @@ export class BookingValidationService {
       bookingTime
     );
 
-    this.validateBusinessHours(
-      bookingTime,
-      sport.slug
-    );
+    if (sport.slug === "yoga") {
+      this.validateBusinessHours(
+        bookingTime
+      );
+    }
 
     return {
       sport,
@@ -243,20 +242,16 @@ export class BookingValidationService {
    * ==========================================
    */
   private static validateBusinessHours(
-    bookingTime: BookingTimeResult,
-    sportSlug: string
+    bookingTime: BookingTimeResult
   ): void {
-    const isYoga =
-      sportSlug === "yoga";
-
     const {
       openingTime,
       closingTime,
     } =
       this.buildBusinessHours(
         bookingTime.bookingDate,
-        isYoga ? "05:00" : undefined,
-        isYoga ? "07:00" : undefined
+        "05:00",
+        "07:00"
       );
 
     if (
@@ -266,9 +261,7 @@ export class BookingValidationService {
         closingTime
     ) {
       throw new AppError(
-        isYoga
-          ? "Yoga bookings are allowed only between 05:00 AM and 07:00 AM."
-          : BOOKING_MESSAGES.BUSINESS_HOURS,
+        "Yoga bookings are allowed only between 05:00 AM and 07:00 AM.",
         400
       );
     }
@@ -281,17 +274,9 @@ export class BookingValidationService {
    */
   private static buildBusinessHours(
     bookingDate: Date,
-    configuredOpeningTime?: string,
-    configuredClosingTime?: string
+    openingTimeValue: string,
+    closingTimeValue: string
   ) {
-    const openingTimeValue =
-      configuredOpeningTime ??
-      BOOKING_CONFIG.OPENING_TIME;
-
-    const closingTimeValue =
-      configuredClosingTime ??
-      BOOKING_CONFIG.CLOSING_TIME;
-
     const openingTime =
       new Date(
         bookingDate
