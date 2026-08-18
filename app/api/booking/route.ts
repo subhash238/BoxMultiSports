@@ -100,11 +100,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error(
-      "Create booking API error:",
-      error
-    );
-
     return NextResponse.json(
       {
         success: false,
@@ -205,11 +200,6 @@ export async function GET(request: NextRequest) {
         }
       );
     }
-
-    console.error(
-      "Admin booking list API error:",
-      error
-    );
 
     return NextResponse.json(
       {

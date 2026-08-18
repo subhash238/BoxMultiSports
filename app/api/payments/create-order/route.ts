@@ -237,11 +237,6 @@ export async function POST(
     // Unknown Error
     // ==========================================
 
-    console.error(
-      "Create Razorpay order error:",
-      error
-    );
-
     return NextResponse.json(
       {
         success: false,

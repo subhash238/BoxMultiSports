@@ -50,8 +50,6 @@ export async function GET(
       );
     }
 
-    console.error(error);
-
     return NextResponse.json(
       {
         success: false,
@@ -139,8 +137,6 @@ export async function PATCH(
       );
     }
 
-    console.error(error);
-
     return NextResponse.json(
       {
         success: false,
@@ -196,8 +192,6 @@ export async function DELETE(
         { status: error.statusCode }
       );
     }
-
-    console.error(error);
 
     return NextResponse.json(
       {

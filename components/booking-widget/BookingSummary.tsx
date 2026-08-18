@@ -104,11 +104,8 @@ export default function BookingSummary({
         if (mounted) {
           setSports(result.sports ?? []);
         }
-      } catch (error) {
-        console.error(
-          "Booking summary sport fetch error:",
-          error
-        );
+      } catch {
+        // Keep the summary usable when sport metadata is unavailable.
       }
     }
 

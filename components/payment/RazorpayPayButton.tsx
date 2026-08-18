@@ -217,11 +217,6 @@ export default function RazorpayPayButton({
                 ? error.message
                 : "Payment verification failed.";
 
-            console.error(
-              "Payment verification error:",
-              error
-            );
-
             onError?.(
               message
             );
@@ -245,11 +240,6 @@ export default function RazorpayPayButton({
         error instanceof Error
           ? error.message
           : "Unable to start payment.";
-
-      console.error(
-        "Razorpay checkout error:",
-        error
-      );
 
       onError?.(message);
 

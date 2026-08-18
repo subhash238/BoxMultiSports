@@ -206,11 +206,6 @@ export async function POST(
     // Unknown Error
     // ==========================================
 
-    console.error(
-      "Razorpay payment verification error:",
-      error
-    );
-
     return NextResponse.json(
       {
         success: false,

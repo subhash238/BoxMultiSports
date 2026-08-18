@@ -132,36 +132,20 @@ export class BookingService {
     userId: string,
     bookingId: string
   ) {
-    console.log(
-      "1. Before findBooking"
-    );
-
     const booking =
       await this.findBookingOrThrow(
         userId,
         bookingId
       );
 
-    console.log(
-      "2. After findBooking"
-    );
-
     BookingCancellationService.validate(
       booking
-    );
-
-    console.log(
-      "3. After validate"
     );
 
     const result =
       await BookingCancellationService.cancel(
         bookingId
       );
-
-    console.log(
-      "4. After cancel"
-    );
 
     return result;
   }
@@ -460,11 +444,6 @@ export class BookingService {
     userId: string,
     bookingId: string
   ) {
-    console.log(
-      "Route bookingId:",
-      bookingId
-    );
-
     const booking =
       await prisma.booking.findUnique({
         where: {
@@ -489,16 +468,6 @@ export class BookingService {
         404
       );
     }
-
-    console.log(
-      "Booking.userId:",
-      booking.userId
-    );
-
-    console.log(
-      "Current userId:",
-      userId
-    );
 
     if (booking.userId !== userId) {
       throw new AppError(

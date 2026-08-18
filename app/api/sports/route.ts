@@ -60,8 +60,6 @@ export async function POST(request: NextRequest)
       );
     }
 
-    console.error(error);
-
     return NextResponse.json(
       {
         success: false,
@@ -92,8 +90,6 @@ export async function GET() {
         { status: error.statusCode }
       );
     }
-
-    console.error(error);
 
     return NextResponse.json(
       {
