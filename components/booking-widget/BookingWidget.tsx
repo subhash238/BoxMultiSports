@@ -34,7 +34,13 @@ export interface CreatedBooking {
   status: string;
 }
 
-export default function BookingWidget() {
+interface BookingWidgetProps {
+  selectedSportSlug?: string | null;
+}
+
+export default function BookingWidget({
+  selectedSportSlug = null,
+}: BookingWidgetProps) {
   const [bookingData, setBookingData] =
     useState<BookingData>({
       sport: "",
@@ -488,6 +494,7 @@ export default function BookingWidget() {
                 <BookingForm
                   bookingData={bookingData}
                   setBookingData={setBookingData}
+                  selectedSportSlug={selectedSportSlug}
                   onBookingCreated={
                     handleBookingCreated
                   }

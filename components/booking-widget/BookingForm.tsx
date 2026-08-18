@@ -9,6 +9,7 @@ import { ChevronDown, ShieldCheck } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 
 import BookingField from "./BookingField";
+import { SHARED_BOOKING_SPORT_SLUGS } from "./constants";
 
 import {
   BookingData,
@@ -32,20 +33,14 @@ interface Sport {
   isActive?: boolean;
 }
 
-const SHARED_BOOKING_SPORT_SLUGS = [
-  "cricket",
-  "football",
-  "pickleball",
-  "badminton",
-  "net-practice",
-];
-
 // ==========================================
 // Props
 // ==========================================
 
 interface BookingFormProps {
   bookingData: BookingData;
+
+  selectedSportSlug?: string | null;
 
   setBookingData: React.Dispatch<
     React.SetStateAction<BookingData>
@@ -162,6 +157,7 @@ function addDurationToTime(
 
 export default function BookingForm({
   bookingData,
+  selectedSportSlug = null,
   setBookingData,
   onBookingCreated,
   onBookingError,
@@ -240,17 +236,12 @@ export default function BookingForm({
           (result.sports ?? []).filter(
             (sport: Sport) =>
               SHARED_BOOKING_SPORT_SLUGS.includes(
-                sport.slug
+                sport.slug as (typeof SHARED_BOOKING_SPORT_SLUGS)[number]
               )
           );
 
         setSports(sharedSports);
       } catch (error) {
-        console.error(
-          "Fetch sports error:",
-          error
-        );
-
         setSportsError(
           error instanceof Error
             ? error.message
@@ -265,20 +256,25 @@ export default function BookingForm({
   }, []);
 
   useEffect(() => {
-    if (
-      sportsLoading ||
-      hasAppliedSportPreselection.current
-    ) {
+    if (sportsLoading) {
       return;
     }
 
-    hasAppliedSportPreselection.current =
-      true;
+    const requestedSlug =
+      selectedSportSlug ?? requestedSportSlug;
+
+    if (!selectedSportSlug) {
+      if (hasAppliedSportPreselection.current) {
+        return;
+      }
+
+      hasAppliedSportPreselection.current = true;
+    }
 
     if (
-      !requestedSportSlug ||
+      !requestedSlug ||
       !SHARED_BOOKING_SPORT_SLUGS.includes(
-        requestedSportSlug
+        requestedSlug as (typeof SHARED_BOOKING_SPORT_SLUGS)[number]
       )
     ) {
       return;
@@ -287,7 +283,7 @@ export default function BookingForm({
     const matchedSport =
       sports.find(
         (sport) =>
-          sport.slug === requestedSportSlug
+          sport.slug === requestedSlug
       );
 
     if (!matchedSport) {
@@ -300,6 +296,7 @@ export default function BookingForm({
     }));
   }, [
     requestedSportSlug,
+    selectedSportSlug,
     setBookingData,
     sports,
     sportsLoading,
@@ -473,11 +470,6 @@ export default function BookingForm({
         error instanceof Error
           ? error.message
           : "Unable to create booking.";
-
-      console.error(
-        "Booking creation error:",
-        error
-      );
 
       onBookingError(message);
     } finally {

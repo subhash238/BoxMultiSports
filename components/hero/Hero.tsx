@@ -1,15 +1,83 @@
+"use client";
+
 import { motion } from "framer-motion";
 import HeroSports from "./HeroSports";
+import CricketAnimation from "./animations/CricketAnimation";
+import FootballAnimation from "./animations/FootballAnimation";
+import PickleballAnimation from "./animations/PickleballAnimation";
+import BadmintonAnimation from "./animations/BadmintonAnimation";
+import NetPracticeAnimation from "./animations/NetPracticeAnimation";
 import { fadeUp, fadeIn, floating } from "@/animations/hero.animation";
-export default function Hero() {
+
+interface HeroProps {
+  selectedSportSlug: string | null;
+  onSportSelect: (slug: string) => void;
+}
+
+export default function Hero({
+  selectedSportSlug,
+  onSportSelect,
+}: HeroProps) {
+  const isCricketMode = selectedSportSlug === "cricket";
+  const isFootballMode = selectedSportSlug === "football";
+  const isPickleballMode = selectedSportSlug === "pickleball";
+  const isBadmintonMode = selectedSportSlug === "badminton";
+  const isNetPracticeMode = selectedSportSlug === "net-practice";
+
   return (
     <section
-      className="relative min-h-screen bg-cover bg-center"
+      className="relative min-h-screen overflow-hidden bg-cover bg-center"
       style={{
         backgroundImage:
           "url('https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=1920&q=80')",
       }}
     >
+      <motion.div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_72%,rgba(242,184,92,0.24),transparent_28%),linear-gradient(135deg,rgba(43,76,38,0.48),transparent_60%)]"
+        initial={false}
+        animate={{ opacity: isCricketMode ? 1 : 0 }}
+        transition={{ duration: 0.4, ease: "easeInOut" }}
+      />
+
+      <motion.div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_82%_24%,rgba(164,211,119,0.2),transparent_25%),linear-gradient(180deg,rgba(21,67,52,0.18),rgba(5,18,14,0.42))]"
+        initial={false}
+        animate={{ opacity: isFootballMode ? 1 : 0 }}
+        transition={{ duration: 0.4, ease: "easeInOut" }}
+      />
+
+      <motion.div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_22%_70%,rgba(45,212,191,0.2),transparent_25%),linear-gradient(180deg,rgba(12,64,64,0.16),rgba(4,20,24,0.46))]"
+        initial={false}
+        animate={{ opacity: isPickleballMode ? 1 : 0 }}
+        transition={{ duration: 0.4, ease: "easeInOut" }}
+      />
+
+      <motion.div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_76%_22%,rgba(125,211,252,0.18),transparent_25%),linear-gradient(180deg,rgba(15,62,75,0.18),rgba(4,16,28,0.46))]"
+        initial={false}
+        animate={{ opacity: isBadmintonMode ? 1 : 0 }}
+        transition={{ duration: 0.4, ease: "easeInOut" }}
+      />
+
+      <motion.div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_78%_30%,rgba(148,202,124,0.16),transparent_24%),linear-gradient(180deg,rgba(24,75,42,0.16),rgba(4,18,12,0.5))]"
+        initial={false}
+        animate={{ opacity: isNetPracticeMode ? 1 : 0 }}
+        transition={{ duration: 0.4, ease: "easeInOut" }}
+      />
+
+      {isCricketMode ? <CricketAnimation /> : null}
+      {isFootballMode ? <FootballAnimation /> : null}
+      {isPickleballMode ? <PickleballAnimation /> : null}
+      {isBadmintonMode ? <BadmintonAnimation /> : null}
+      {isNetPracticeMode ? <NetPracticeAnimation /> : null}
+
       {/* Dark Overlay */}
       <div className="absolute inset-0 bg-black/70"></div>
 
@@ -53,7 +121,10 @@ export default function Hero() {
         </div>
         <div>
         {/* Sports */}
-        <HeroSports />
+        <HeroSports
+          selectedSportSlug={selectedSportSlug}
+          onSportSelect={onSportSelect}
+        />
           
         </div>
 
