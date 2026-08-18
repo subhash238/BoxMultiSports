@@ -30,7 +30,7 @@ export default function Footer() {
     "https://wa.me/919031017884";
 
   const instagramUrl =
-    "https://www.instagram.com/uni_.turf?igsh=MWZseWtlZW1mdWZ1dQ==";
+    "https://www.instagram.com/uni_.turf/";
 
   const facebookUrl =
     "https://www.facebook.com/profile.php?id=61593432292070";
