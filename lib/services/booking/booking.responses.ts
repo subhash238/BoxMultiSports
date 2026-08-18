@@ -57,9 +57,6 @@ export const BOOKING_MESSAGES = {
   INVALID_TIME_RANGE:
     "End time must be after start time.",
 
-  BUSINESS_HOURS:
-    "Booking must be within business hours.",
-
   /**
    * System
    */

@@ -6,13 +6,6 @@
 
 export const BOOKING_CONFIG = {
   /**
-   * Business Hours
-   */
-  OPENING_TIME: "06:00",
-
-  CLOSING_TIME: "23:00",
-
-  /**
    * Booking Number
    */
   BOOKING_PREFIX: "BMS",

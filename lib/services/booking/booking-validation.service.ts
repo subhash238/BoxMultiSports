@@ -121,13 +121,10 @@ export class BookingValidationService {
    * Player count is controlled by the
    * sport's maxPlayers value.
    *
-   * Current limits:
-   *
-   * Cricket     → 22
-   * Football    → 22
-   * Volleyball  → 11
-   *
-   * Players do NOT affect pricing.
+   * The configured maxPlayers value is enforced for
+   * sports that define an explicit capacity. Normal
+   * shared sports do not receive an additional
+   * time-window restriction.
    * ==========================================
    */
   private static validatePlayerCount(
