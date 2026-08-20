@@ -595,6 +595,7 @@ export class PaymentService {
         booking: {
           userId: string | null;
           guestPaymentTokenHash: string | null;
+          guestPaymentTokenExpiresAt: Date | null;
         };
       }
     ) => {
@@ -624,6 +625,11 @@ export class PaymentService {
           null ||
         !paymentRecord.booking
           .guestPaymentTokenHash ||
+        !paymentRecord.booking
+          .guestPaymentTokenExpiresAt ||
+        new Date() >=
+          paymentRecord.booking
+            .guestPaymentTokenExpiresAt ||
         !verifyGuestPaymentToken(
           authorization.guestPaymentToken,
           paymentRecord.booking
@@ -641,32 +647,9 @@ export class PaymentService {
       payment.status ===
       "CAPTURED"
     ) {
-      if (
-        authorization.type ===
-        "AUTHENTICATED"
-      ) {
-        if (
-          payment.booking.userId ===
-            null ||
-          payment.booking.userId !==
-            authorization.userId
-        ) {
-          throw new AppError(
-            "You are not authorized to verify this payment.",
-            403
-          );
-        }
-      } else if (
-        payment.booking.userId !==
-          null ||
-        payment.guestAuthorizedAt ===
-          null
-      ) {
-        throw new AppError(
-          "You are not authorized to verify this payment.",
-          403
-        );
-      }
+      authorizePaymentVerification(
+        payment
+      );
 
       if (
         typeof payment.razorpayOrderId !==
@@ -1023,12 +1006,6 @@ export class PaymentService {
               data: {
                 status:
                   "CONFIRMED",
-
-                guestPaymentTokenHash:
-                  null,
-
-                guestPaymentTokenExpiresAt:
-                  null,
               },
 
               select: {
