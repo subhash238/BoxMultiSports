@@ -137,6 +137,7 @@ model Booking {
   status BookingStatus @default(PENDING)
 
   customerName   String
+  customerEmail  String? @db.VarChar(255)
   customerMobile String
 
   guestPaymentTokenHash      String?   @unique @db.VarChar(64)
