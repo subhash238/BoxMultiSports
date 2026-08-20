@@ -105,6 +105,9 @@ export class BookingTransactionService {
             customerMobile:
               context.customerMobile,
 
+            specialRequest:
+              context.specialRequest,
+
             status: "PENDING",
 
             userId:

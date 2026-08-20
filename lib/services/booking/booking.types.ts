@@ -72,6 +72,7 @@ export type CreateBookingContext = {
   customerName: string;
   customerEmail: string;
   customerMobile: string;
+  specialRequest: string | null;
 };
 
 export type CreateBookingResult = {

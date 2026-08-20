@@ -70,6 +70,7 @@ export class BookingService {
       customerName: data.fullName,
       customerEmail: data.email,
       customerMobile: data.mobile,
+      specialRequest: data.specialRequest ?? null,
     };
 
     // -----------------------------------------

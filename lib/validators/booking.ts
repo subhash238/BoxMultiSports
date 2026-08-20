@@ -50,6 +50,17 @@ export const createBookingSchema = z.object({
       /^[6-9]\d{9}$/,
       "Please enter a valid Indian mobile number."
     ),
+
+  specialRequest: z
+    .string()
+    .trim()
+    .transform((value) => value || undefined)
+    .refine(
+      (value) =>
+        !value || value.split(/\s+/).length <= 500,
+      "Special Request cannot exceed 500 words."
+    )
+    .optional(),
 });
 
 /**
