@@ -143,6 +143,7 @@ model Booking {
 
   guestPaymentTokenHash      String?   @unique @db.VarChar(64)
   guestPaymentTokenExpiresAt DateTime?
+  reservationExpiresAt       DateTime?
 
   userId  String?
   sportId String
