@@ -12,6 +12,12 @@ export const MAIN_BOOKING_SPORT_SLUGS = new Set([
   "pickleball",
 ]);
 
+export const YOGA_ALLOWED_DURATIONS_MINUTES = new Set([
+  60,
+  90,
+  120,
+]);
+
 export const BOOKING_CONFIG = {
   /**
    * Booking Number

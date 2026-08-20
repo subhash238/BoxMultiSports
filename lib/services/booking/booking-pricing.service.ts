@@ -9,13 +9,10 @@ import {
 import {
   calculateDurationMinutes,
 } from "./booking.utils";
-import { MAIN_BOOKING_SPORT_SLUGS } from "./booking.config";
-
-const YOGA_PRICING_DURATIONS = new Set([
-  60,
-  90,
-  120,
-]);
+import {
+  MAIN_BOOKING_SPORT_SLUGS,
+  YOGA_ALLOWED_DURATIONS_MINUTES,
+} from "./booking.config";
 
 export class BookingPricingService {
   /**
@@ -103,7 +100,7 @@ export class BookingPricingService {
 
     if (isYoga) {
       if (
-        !YOGA_PRICING_DURATIONS.has(
+        !YOGA_ALLOWED_DURATIONS_MINUTES.has(
           durationMinutes
         )
       ) {

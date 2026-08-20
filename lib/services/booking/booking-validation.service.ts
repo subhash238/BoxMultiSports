@@ -5,6 +5,7 @@ import { BOOKING_MESSAGES } from "./booking.responses";
 import {
   BOOKING_CONFIG,
   MAIN_BOOKING_SPORT_SLUGS,
+  YOGA_ALLOWED_DURATIONS_MINUTES,
 } from "./booking.config";
 
 import { CreateBookingInput } from "@/lib/validators/booking";
@@ -18,6 +19,7 @@ import {
   buildBookingTime,
   buildBookingTimeFromDuration,
   buildIstDateTimeForBookingDate,
+  calculateDurationMinutes,
   isWithinBookingDayOperatingHours,
   isSameDay,
   normalizeDate,
@@ -93,6 +95,10 @@ export class BookingValidationService {
     }
 
     if (sport.slug === "yoga") {
+      this.validateYogaDuration(
+        bookingTime
+      );
+
       this.validateBusinessHours(
         bookingTime
       );
@@ -280,6 +286,27 @@ export class BookingValidationService {
     if (!isWithinOperatingHours) {
       throw new AppError(
         "Bookings are available between 5:00 AM and 12:00 AM.",
+        400
+      );
+    }
+  }
+
+  private static validateYogaDuration(
+    bookingTime: BookingTimeResult
+  ): void {
+    const durationMinutes =
+      calculateDurationMinutes(
+        bookingTime.startDateTime,
+        bookingTime.endDateTime
+      );
+
+    if (
+      !YOGA_ALLOWED_DURATIONS_MINUTES.has(
+        durationMinutes
+      )
+    ) {
+      throw new AppError(
+        "Yoga bookings support only 60, 90, or 120 minutes.",
         400
       );
     }
