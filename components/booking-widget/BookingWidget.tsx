@@ -19,7 +19,7 @@ export interface BookingData {
   duration: string;
   players?: number;
   fullName: string;
-  email?: string;
+  email: string;
   mobile: string;
   specialRequest: string;
 }
