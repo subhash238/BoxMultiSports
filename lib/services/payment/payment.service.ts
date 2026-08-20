@@ -714,6 +714,9 @@ export class PaymentService {
       );
     }
 
+    const recoveryMessage =
+      "Payment was received, but the reservation expired and the booking could not be confirmed. The payment requires refund review. Please contact support with your booking number.";
+
     const authorizePaymentVerification = (
       paymentRecord: {
         guestAuthorizedAt: Date | null;
@@ -774,10 +777,17 @@ export class PaymentService {
       payment.status ===
       "CAPTURED"
     ) {
+      const isTerminalRecovery =
+        payment.recoveryState ===
+          PaymentRecoveryState.REVIEW_REQUIRED &&
+        payment.booking.status ===
+          "CANCELLED";
+
       authorizePaymentVerification(
         payment,
         payment.booking.status ===
-          "CONFIRMED"
+          "CONFIRMED" ||
+          isTerminalRecovery
       );
 
       if (
@@ -809,6 +819,13 @@ export class PaymentService {
         throw new AppError(
           "Payment verification failed.",
           400
+        );
+      }
+
+      if (isTerminalRecovery) {
+        throw new AppError(
+          recoveryMessage,
+          409
         );
       }
 
@@ -960,7 +977,15 @@ export class PaymentService {
           }
 
           authorizePaymentVerification(
-            currentPayment
+            currentPayment,
+            currentPayment.status ===
+              "CAPTURED" &&
+              (currentPayment.booking.status ===
+                "CONFIRMED" ||
+                (currentPayment.recoveryState ===
+                  PaymentRecoveryState.REVIEW_REQUIRED &&
+                  currentPayment.booking.status ===
+                    "CANCELLED"))
           );
 
           // ---------------------------------------
@@ -971,11 +996,38 @@ export class PaymentService {
             currentPayment.status ===
             "CAPTURED"
           ) {
+            const isTerminalRecovery =
+              currentPayment.recoveryState ===
+                PaymentRecoveryState.REVIEW_REQUIRED &&
+              currentPayment.booking.status ===
+                "CANCELLED";
+
             if (
               currentPayment.razorpayOrderId !==
                 razorpayOrderId ||
               currentPayment.razorpayPaymentId !==
-                razorpayPaymentId ||
+                razorpayPaymentId
+            ) {
+              throw new AppError(
+                "Payment verification failed.",
+                400
+              );
+            }
+
+            if (isTerminalRecovery) {
+              return {
+                type:
+                  "RECOVERY_REPLAY" as const,
+
+                payment:
+                  currentPayment,
+
+                booking:
+                  currentPayment.booking,
+              };
+            }
+
+            if (
               currentPayment.booking.status !==
                 "CONFIRMED"
             ) {
@@ -986,6 +1038,9 @@ export class PaymentService {
             }
 
             return {
+              type:
+                "SUCCESS" as const,
+
               payment:
                 currentPayment,
 
@@ -1079,12 +1134,6 @@ export class PaymentService {
                 data: {
                   status:
                     "CANCELLED",
-
-                  guestPaymentTokenHash:
-                    null,
-
-                  guestPaymentTokenExpiresAt:
-                    null,
                 },
 
                 select: {
@@ -1282,8 +1331,16 @@ export class PaymentService {
         }
       );
 
+    }
+
+    if (
+      result.type ===
+        "EXPIRED" ||
+      result.type ===
+        "RECOVERY_REPLAY"
+    ) {
       throw new AppError(
-        "Payment was received, but the reservation expired and the booking could not be confirmed. The payment requires refund review. Please contact support with your booking number.",
+        recoveryMessage,
         409
       );
     }
