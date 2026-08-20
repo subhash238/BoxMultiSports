@@ -139,6 +139,7 @@ model Booking {
   customerName   String
   customerEmail  String? @db.VarChar(255)
   customerMobile String
+  specialRequest String? @db.Text
 
   guestPaymentTokenHash      String?   @unique @db.VarChar(64)
   guestPaymentTokenExpiresAt DateTime?
