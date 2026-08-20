@@ -209,7 +209,8 @@ model Payment {
   amount   Decimal @db.Decimal(10, 2)
   currency String  @default("INR") @db.VarChar(3)
 
-  status PaymentStatus @default(PENDING)
+  status        PaymentStatus         @default(PENDING)
+  recoveryState PaymentRecoveryState?
 
   failureCode    String?
   failureMessage String?
@@ -267,6 +268,12 @@ enum PaymentStatus {
   FAILED
   REFUNDED
   PARTIALLY_REFUNDED
+}
+
+enum PaymentRecoveryState {
+  REVIEW_REQUIRED
+  REFUND_PENDING
+  RESOLVED
 }
 
 // ==========================================
