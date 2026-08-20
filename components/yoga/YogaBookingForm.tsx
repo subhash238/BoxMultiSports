@@ -10,6 +10,7 @@ import {
   BookingData,
   CreatedBooking,
 } from "@/components/booking-widget/BookingWidget";
+import { validateEmail } from "@/components/booking-widget/validators";
 
 export type YogaTimeSlot = {
   id: string;
@@ -89,6 +90,7 @@ export default function YogaBookingForm({
     useState(1);
   const [fullName, setFullName] =
     useState("");
+  const [email, setEmail] = useState("");
   const [mobile, setMobile] = useState("");
   const [formError, setFormError] =
     useState("");
@@ -174,6 +176,7 @@ export default function YogaBookingForm({
     }
 
     const trimmedName = fullName.trim();
+    const trimmedEmail = email.trim();
     const normalizedMobile = mobile.replace(/\D/g, "");
 
     if (
@@ -182,6 +185,13 @@ export default function YogaBookingForm({
       !/^[A-Za-z]/.test(trimmedName)
     ) {
       setFormError("Please enter a valid full name.");
+      return;
+    }
+
+    const emailError = validateEmail(trimmedEmail);
+
+    if (emailError) {
+      setFormError(emailError);
       return;
     }
 
@@ -208,6 +218,7 @@ export default function YogaBookingForm({
             endTime: selectedSlot.endTime,
             numberOfPlayers,
             fullName: trimmedName,
+            email: trimmedEmail,
             mobile: normalizedMobile,
           }),
         }
@@ -251,6 +262,7 @@ export default function YogaBookingForm({
           duration: selectedSlot.durationLabel,
           players: numberOfPlayers,
           fullName: trimmedName,
+          email: trimmedEmail,
           mobile: normalizedMobile,
           specialRequest: "",
         },
@@ -330,6 +342,22 @@ export default function YogaBookingForm({
             </motion.button>
           ))}
         </div>
+      </div>
+
+      <div>
+        <label className="mb-2 block text-sm font-semibold uppercase tracking-[0.16em] text-white/65">
+          Email ID
+        </label>
+        <input
+          type="email"
+          required
+          maxLength={255}
+          value={email}
+          onChange={(event) =>
+            setEmail(event.target.value)
+          }
+          className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3.5 text-white outline-none transition focus:border-amber-200/60 focus:ring-2 focus:ring-amber-100/10"
+        />
       </div>
 
       <div>
