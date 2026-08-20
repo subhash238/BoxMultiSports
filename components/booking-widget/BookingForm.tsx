@@ -10,6 +10,7 @@ import { useSearchParams } from "next/navigation";
 
 import BookingField from "./BookingField";
 import {
+  ENABLED_MAIN_BOOKING_DURATIONS,
   HOMEPAGE_BOOKING_SPORTS,
   HomepageBookingSportSlug,
 } from "./constants";
@@ -1051,12 +1052,16 @@ export default function BookingForm({
                       Select duration
                     </option>
 
-                    <option>1 Hour</option>
-                    <option>2 Hours</option>
-                    <option>3 Hours</option>
-                    <option>4 Hours</option>
-                    <option>5 Hours</option>
-                    <option>12 Hours</option>
+                    {ENABLED_MAIN_BOOKING_DURATIONS.map(
+                      (duration) => (
+                        <option
+                          key={duration.minutes}
+                          value={duration.label}
+                        >
+                          {duration.label}
+                        </option>
+                      )
+                    )}
                   </select>
 
                   <ChevronDown
