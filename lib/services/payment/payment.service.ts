@@ -1,5 +1,6 @@
 import {
   Payment,
+  PaymentRecoveryState,
   PaymentStatus,
   Prisma,
 } from "@prisma/client";
@@ -650,8 +651,10 @@ export class PaymentService {
    *      ↓
    * CANCELLED
    *
-   * The application will NOT mark an expired
-   * booking's payment as CAPTURED.
+   * A provider-captured payment for an expired
+   * booking is recorded as CAPTURED and marked
+   * for recovery review without confirming the
+   * booking.
    * ==========================================
    */
   static async verifyRazorpayPayment(
@@ -1039,10 +1042,32 @@ export class PaymentService {
             // We cancel the booking so the slot
             // becomes available again.
             //
-            // The payment remains PENDING because
-            // the application must not falsely mark
-            // an expired payment as CAPTURED.
+            // Razorpay has already captured the
+            // money, so persist that provider truth
+            // and flag the payment for refund review.
             // -------------------------------------
+
+            const capturedPayment =
+              await tx.payment.update({
+                where: {
+                  id:
+                    currentPayment.id,
+                },
+
+                data: {
+                  status:
+                    "CAPTURED",
+
+                  razorpayPaymentId:
+                    razorpayPaymentId,
+
+                  razorpaySignature:
+                    razorpaySignature,
+
+                  recoveryState:
+                    PaymentRecoveryState.REVIEW_REQUIRED,
+                },
+              });
 
             const cancelledBooking =
               await tx.booking.update({
@@ -1097,6 +1122,12 @@ export class PaymentService {
             return {
               type:
                 "EXPIRED" as const,
+
+              payment:
+                capturedPayment,
+
+              booking:
+                cancelledBooking,
             };
           }
 
@@ -1242,13 +1273,17 @@ export class PaymentService {
         "Razorpay payment was captured but the booking reservation expired before local confirmation.",
         {
           bookingId: payment.booking.id,
+          bookingNumber:
+            payment.booking.bookingNumber,
           razorpayOrderId,
           razorpayPaymentId,
+          recoveryState:
+            PaymentRecoveryState.REVIEW_REQUIRED,
         }
       );
 
       throw new AppError(
-        "The payment window for this booking has expired. The booking has been cancelled. Please create a new booking.",
+        "Payment was received, but the reservation expired and the booking could not be confirmed. The payment requires refund review. Please contact support with your booking number.",
         409
       );
     }
