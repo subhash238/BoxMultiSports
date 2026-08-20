@@ -915,8 +915,8 @@ export class PaymentService {
     // Confirm Payment + Booking
     // -----------------------------------------
 
-    const result =
-      await prisma.$transaction(
+    const runVerificationTransaction = () =>
+      prisma.$transaction(
         async (tx) => {
           // ---------------------------------------
           // Re-check Payment
@@ -963,6 +963,20 @@ export class PaymentService {
             currentPayment.status ===
             "CAPTURED"
           ) {
+            if (
+              currentPayment.razorpayOrderId !==
+                razorpayOrderId ||
+              currentPayment.razorpayPaymentId !==
+                razorpayPaymentId ||
+              currentPayment.booking.status !==
+                "CONFIRMED"
+            ) {
+              throw new AppError(
+                "Payment verification failed.",
+                400
+              );
+            }
+
             return {
               payment:
                 currentPayment,
@@ -1176,8 +1190,54 @@ export class PaymentService {
             booking:
               updatedBooking,
           };
+        },
+        {
+          isolationLevel:
+            Prisma.TransactionIsolationLevel.Serializable,
         }
       );
+
+    type VerificationTransactionResult = Awaited<
+      ReturnType<typeof runVerificationTransaction>
+    >;
+
+    const maxAttempts = 3;
+    let result: VerificationTransactionResult | null = null;
+
+    for (
+      let attempt = 1;
+      attempt <= maxAttempts;
+      attempt++
+    ) {
+      try {
+        result =
+          await runVerificationTransaction();
+        break;
+      } catch (error) {
+        const isSerializationConflict =
+          error instanceof
+            Prisma.PrismaClientKnownRequestError &&
+          error.code === "P2034";
+
+        if (!isSerializationConflict) {
+          throw error;
+        }
+
+        if (attempt === maxAttempts) {
+          throw new AppError(
+            "Payment verification state changed. Please try again.",
+            409
+          );
+        }
+      }
+    }
+
+    if (result === null) {
+      throw new AppError(
+        "Payment verification state changed. Please try again.",
+        409
+      );
+    }
 
     if (
       result.type ===
