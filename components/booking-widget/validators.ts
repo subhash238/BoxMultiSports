@@ -12,13 +12,13 @@ export interface ValidationErrors {
 export const validateName = (name: string): string => {
   const value = name.trim();
 
-  if (
-    !value ||
-    value.length > 100 ||
-    !/^[A-Za-z]/.test(value)
-  ) {
-    return "Please enter a valid full name.";
-  }
+  if (!value) return "Full Name is required";
+
+  if (!/^[A-Za-z]/.test(value))
+    return "Full Name must start with a letter";
+
+  if (value.length > 100)
+    return "Full Name cannot exceed 100 characters.";
 
   return "";
 };
@@ -26,8 +26,9 @@ export const validateName = (name: string): string => {
 export const validateEmail = (email: string): string => {
   const value = email.trim();
 
+  if (!value) return "Email ID is required.";
+
   if (
-    !value ||
     value.length > 255 ||
     !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
   ) {
@@ -108,7 +109,7 @@ export function validateBooking(data: {
 
   const errors: ValidationErrors = {};
 
-  errors.sport = validateRequired(data.sport, "Sport");
+  errors.sport = validateRequired(data.sport, "Game");
   errors.date = validateDate(data.date);
   errors.time = validateRequired(data.time, "Time Slot");
   errors.duration = validateRequired(data.duration, "Duration");

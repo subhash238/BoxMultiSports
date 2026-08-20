@@ -821,7 +821,7 @@ export default function BookingForm({
                     text-white/55
                   "
                 >
-                  Sport
+                  Game
                   <span className="ml-1 text-[#B6F000]">
                     *
                   </span>
@@ -1001,7 +1001,7 @@ export default function BookingForm({
                     text-white/55
                   "
                 >
-                  Start time
+                  Start Time
                   <span className="ml-1 text-[#B6F000]">
                     *
                   </span>
@@ -1447,7 +1447,6 @@ export default function BookingForm({
 
           <button
             type="button"
-            disabled={!isValid}
             onClick={handleContinue}
             className={`
               group
@@ -1473,7 +1472,7 @@ export default function BookingForm({
                     active:translate-y-0
                   `
                   : `
-                    cursor-not-allowed
+                    cursor-pointer
                     bg-white/[0.07]
                     text-white/25
                     border
@@ -1505,7 +1504,7 @@ export default function BookingForm({
                 gap-2
               "
             >
-              Continue Booking
+              Proceed to Payment
 
               <span
                 className="
