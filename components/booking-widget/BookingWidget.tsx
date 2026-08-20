@@ -28,6 +28,7 @@ export interface BookingData {
 export interface CreatedBooking {
   id: string;
   bookingNumber: string;
+  sportName?: string;
   bookingDate: string;
   startTime: string;
   endTime: string;

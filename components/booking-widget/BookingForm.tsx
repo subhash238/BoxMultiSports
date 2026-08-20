@@ -537,12 +537,21 @@ export default function BookingForm({
       const booking =
         result.data.booking;
 
+      const selectedSport =
+        sports.find(
+          (sport) =>
+            sport.id === bookingData.sport
+        );
+
       const createdBooking:
         CreatedBooking = {
         id: booking.id,
 
         bookingNumber:
           booking.bookingNumber,
+
+        sportName:
+          selectedSport?.displayLabel,
 
         bookingDate:
           booking.bookingDate,

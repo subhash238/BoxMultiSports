@@ -147,11 +147,14 @@ export default function PaymentModal({
 
               <div className="flex justify-between gap-4">
                 <span className="text-gray-400">
-                  Sport
+                  {booking.sportName
+                    ? "Game"
+                    : "Sport"}
                 </span>
 
                 <span className="font-semibold text-white">
-                  {bookingData.sport}
+                  {booking.sportName ??
+                    bookingData.sport}
                 </span>
               </div>
 
@@ -225,6 +228,10 @@ export default function PaymentModal({
 
                 customerName={
                   bookingData.fullName
+                }
+
+                customerEmail={
+                  bookingData.email
                 }
 
                 customerMobile={
