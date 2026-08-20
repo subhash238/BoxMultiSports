@@ -10,6 +10,7 @@ import {
   BookingData,
   CreatedBooking,
 } from "@/components/booking-widget/BookingWidget";
+import { validateEmail } from "@/components/booking-widget/validators";
 
 type GymSport = {
   id: string;
@@ -75,6 +76,7 @@ export default function GymBookingForm({
     useState(1);
   const [fullName, setFullName] =
     useState("");
+  const [email, setEmail] = useState("");
   const [mobile, setMobile] = useState("");
   const [formError, setFormError] =
     useState("");
@@ -189,6 +191,7 @@ export default function GymBookingForm({
     }
 
     const trimmedName = fullName.trim();
+    const trimmedEmail = email.trim();
     const normalizedMobile = mobile.replace(/\D/g, "");
 
     if (
@@ -197,6 +200,13 @@ export default function GymBookingForm({
       !/^[A-Za-z]/.test(trimmedName)
     ) {
       setFormError("Please enter a valid full name.");
+      return;
+    }
+
+    const emailError = validateEmail(trimmedEmail);
+
+    if (emailError) {
+      setFormError(emailError);
       return;
     }
 
@@ -223,6 +233,7 @@ export default function GymBookingForm({
             endTime,
             numberOfPlayers,
             fullName: trimmedName,
+            email: trimmedEmail,
             mobile: normalizedMobile,
           }),
         }
@@ -266,6 +277,7 @@ export default function GymBookingForm({
           duration: `${duration} ${duration === 1 ? "Hour" : "Hours"}`,
           players: numberOfPlayers,
           fullName: trimmedName,
+          email: trimmedEmail,
           mobile: normalizedMobile,
           specialRequest: "",
         },
@@ -358,6 +370,20 @@ export default function GymBookingForm({
             ))}
           </select>
         </div>
+      </div>
+
+      <div>
+        <label className="mb-2 block text-xs font-bold uppercase tracking-[0.2em] text-white/60">
+          Email ID
+        </label>
+        <input
+          type="email"
+          required
+          maxLength={255}
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          className="w-full rounded-2xl border border-white/[0.12] bg-black/20 px-4 py-3.5 text-white outline-none transition hover:border-white/25 focus:border-[#B6F000]/70 focus:ring-2 focus:ring-[#B6F000]/10"
+        />
       </div>
 
       <div>
