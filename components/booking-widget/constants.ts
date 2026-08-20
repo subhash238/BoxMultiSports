@@ -51,10 +51,15 @@ export const MAIN_BOOKING_DURATION_CATALOG = [
 
 export const ENABLED_MAIN_BOOKING_DURATION_MINUTES = [
   60,
+  90,
   120,
+  150,
   180,
+  210,
   240,
+  270,
   300,
+  330,
   720,
 ] as const;
 
