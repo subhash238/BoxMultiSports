@@ -50,16 +50,6 @@ function formatBookingDate(date: string): string {
 }
 
 // ==========================================
-// Parse Duration
-// ==========================================
-
-function getDurationHours(duration: string): number {
-  const hours = Number.parseInt(duration, 10);
-
-  return Number.isFinite(hours) ? hours : 0;
-}
-
-// ==========================================
 // Currency Formatter
 // ==========================================
 
@@ -129,14 +119,11 @@ export default function BookingSummary({
   // Price Calculation
   // ==========================================
 
-  const durationHours = getDurationHours(
-    bookingData.duration
-  );
-
   const selectedPricing =
     selectedSport?.pricing?.find(
       (pricing) =>
-        pricing.duration === durationHours
+        pricing.duration ===
+        bookingData.durationMinutes
     );
 
   const estimatedPrice =
