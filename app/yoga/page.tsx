@@ -20,7 +20,7 @@ export default function YogaPage() {
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3 text-sm text-white/75">
-              <span className="rounded-full border border-amber-200/20 bg-amber-100/[0.06] px-4 py-2">₹399 / person / day</span>
+              <span className="rounded-full border border-amber-200/20 bg-amber-100/[0.06] px-4 py-2">From ₹399 / person</span>
               <span className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2">Up to 30 participants</span>
               <span className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2">Morning sessions only</span>
             </div>
@@ -41,29 +41,6 @@ export default function YogaPage() {
               <span className="text-xs uppercase tracking-[0.28em] text-white/45">Move · Reset</span>
             </div>
           </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-6xl px-6 py-16">
-        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.3em] text-amber-200/75">Session options</p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight">Choose your morning rhythm.</h2>
-          </div>
-          <p className="max-w-sm text-sm leading-6 text-white/50">Every session is priced at ₹399 per person per day.</p>
-        </div>
-        <div className="mt-8 grid gap-4 md:grid-cols-3">
-          {[
-            "5:00 AM – 6:00 AM",
-            "6:00 AM – 7:00 AM",
-            "5:00 AM – 7:00 AM",
-          ].map((session) => (
-            <div key={session} className="rounded-2xl border border-white/10 bg-white/[0.035] p-6 shadow-[0_15px_50px_rgba(0,0,0,0.18)]">
-              <p className="text-xs uppercase tracking-[0.25em] text-amber-200/65">Morning session</p>
-              <p className="mt-4 text-xl font-semibold">{session}</p>
-              <p className="mt-5 text-sm font-semibold text-[#B6F000]">₹399 / person / day</p>
-            </div>
-          ))}
         </div>
       </section>
 
@@ -90,7 +67,7 @@ export default function YogaPage() {
           <div className="mb-10 max-w-2xl">
             <p className="text-xs font-bold uppercase tracking-[0.3em] text-amber-200/75">Reserve your place</p>
             <h2 className="mt-3 text-3xl font-semibold tracking-tight">Book your Yoga morning.</h2>
-            <p className="mt-3 text-sm leading-6 text-white/55">Select a date and session, then complete your secure payment to confirm.</p>
+            <p className="mt-3 text-sm leading-6 text-white/55">Select your date, duration, and available time, then complete your secure payment to confirm.</p>
           </div>
           <YogaBookingWidget />
         </div>
