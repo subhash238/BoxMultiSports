@@ -120,9 +120,9 @@ function convertTo24Hour(time: string): string {
 // Add Duration To Time
 // ==========================================
 
-function addDurationToTime(
+export function addDurationToTime(
   startTime: string,
-  duration: string
+  durationMinutes?: number
 ): string {
   const [hoursString, minutesString] =
     startTime.split(":");
@@ -130,13 +130,13 @@ function addDurationToTime(
   const hours = Number(hoursString);
   const minutes = Number(minutesString);
 
-  const durationHours =
-    Number.parseInt(duration, 10);
-
   if (
     !Number.isFinite(hours) ||
     !Number.isFinite(minutes) ||
-    !Number.isFinite(durationHours)
+    typeof durationMinutes !== "number" ||
+    !Number.isFinite(durationMinutes) ||
+    !Number.isInteger(durationMinutes) ||
+    durationMinutes <= 0
   ) {
     throw new Error(
       "Invalid booking time or duration."
@@ -146,7 +146,7 @@ function addDurationToTime(
   const totalMinutes =
     hours * 60 +
     minutes +
-    durationHours * 60;
+    durationMinutes;
 
   if (totalMinutes >= 24 * 60) {
     throw new Error(
@@ -372,7 +372,7 @@ export default function BookingForm({
       const endTime =
         addDurationToTime(
           startTime,
-          bookingData.duration
+          bookingData.durationMinutes
         );
 
       const trimmedSpecialRequest =
@@ -1027,12 +1027,23 @@ export default function BookingForm({
                     value={
                       bookingData.duration
                     }
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const selectedDuration =
+                        ENABLED_MAIN_BOOKING_DURATIONS.find(
+                          (duration) =>
+                            duration.label ===
+                            e.target.value
+                        );
+
                       updateField(
                         "duration",
-                        e.target.value
-                      )
-                    }
+                        selectedDuration?.label ?? ""
+                      );
+                      updateField(
+                        "durationMinutes",
+                        selectedDuration?.minutes
+                      );
+                    }}
                     onBlur={() =>
                       handleBlur("duration")
                     }
