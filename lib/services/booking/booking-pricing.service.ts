@@ -11,6 +11,12 @@ import {
 } from "./booking.utils";
 import { MAIN_BOOKING_SPORT_SLUGS } from "./booking.config";
 
+const YOGA_PRICING_DURATIONS = new Set([
+  60,
+  90,
+  120,
+]);
+
 export class BookingPricingService {
   /**
    * ==========================================
@@ -55,18 +61,22 @@ export class BookingPricingService {
         sportSlug
       );
 
+    const isYoga =
+      sportSlug === "yoga";
+
     // -----------------------------------------
     // Validate Duration
     // -----------------------------------------
     //
-    // Main SportPricing durations use exact
-    // minutes. Other existing booking flows
+    // Main and Yoga SportPricing durations use
+    // exact minutes. Other existing booking flows
     // retain their complete-hour requirement.
     // -----------------------------------------
 
     if (
       durationMinutes <= 0 ||
       (!isMainBookingSport &&
+        !isYoga &&
         !Number.isInteger(durationHours))
     ) {
       throw new AppError(
@@ -76,7 +86,7 @@ export class BookingPricingService {
     }
 
     if (
-      sportSlug === "yoga" ||
+      isYoga ||
       sportSlug === "gym"
     ) {
       if (
@@ -89,9 +99,54 @@ export class BookingPricingService {
           400
         );
       }
+    }
 
+    if (isYoga) {
+      if (
+        !YOGA_PRICING_DURATIONS.has(
+          durationMinutes
+        )
+      ) {
+        throw new AppError(
+          "Yoga bookings support only 60, 90, or 120 minutes.",
+          400
+        );
+      }
+
+      const sportPricing =
+        await prisma.sportPricing.findFirst({
+          where: {
+            sportId,
+            duration: durationMinutes,
+            isActive: true,
+          },
+        });
+
+      if (!sportPricing) {
+        throw new AppError(
+          `No active pricing is configured for a ${durationMinutes}-minute Yoga booking.`,
+          400
+        );
+      }
+
+      const totalAmount = Number(
+        sportPricing.price.mul(
+          numberOfPlayers!
+        )
+      );
+
+      return {
+        durationMinutes,
+        durationHours,
+        pricePerHour:
+          totalAmount / durationHours,
+        totalAmount,
+      };
+    }
+
+    if (sportSlug === "gym") {
       const totalAmount =
-        399 * numberOfPlayers;
+        399 * numberOfPlayers!;
 
       return {
         durationMinutes,
