@@ -101,6 +101,23 @@ export async function GET(
           },
 
           // --------------------------------------
+          // Payment Information
+          // --------------------------------------
+
+          payment: {
+            select: {
+              status: true,
+              recoveryState: true,
+              amount: true,
+              currency: true,
+              razorpayOrderId: true,
+              razorpayPaymentId: true,
+              createdAt: true,
+              updatedAt: true,
+            },
+          },
+
+          // --------------------------------------
           // Booking Status History
           // --------------------------------------
 

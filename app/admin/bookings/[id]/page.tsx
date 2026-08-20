@@ -12,6 +12,19 @@ type BookingStatus =
   | "CANCELLED"
   | "COMPLETED";
 
+type PaymentStatus =
+  | "PENDING"
+  | "AUTHORIZED"
+  | "CAPTURED"
+  | "FAILED"
+  | "REFUNDED"
+  | "PARTIALLY_REFUNDED";
+
+type PaymentRecoveryState =
+  | "REVIEW_REQUIRED"
+  | "REFUND_PENDING"
+  | "RESOLVED";
+
 interface BookingUser {
   id: string;
   name: string;
@@ -41,6 +54,17 @@ interface BookingStatusHistory {
   };
 }
 
+interface BookingPayment {
+  status: PaymentStatus;
+  recoveryState: PaymentRecoveryState | null;
+  amount: string | number;
+  currency: string;
+  razorpayOrderId: string | null;
+  razorpayPaymentId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface Booking {
   id: string;
   bookingNumber: string;
@@ -52,6 +76,7 @@ interface Booking {
   status: BookingStatus;
   user: BookingUser;
   sport: BookingSport;
+  payment: BookingPayment | null;
   statusHistory: BookingStatusHistory[];
 }
 
@@ -266,6 +291,12 @@ export default function BookingDetailsPage({
   const statusClass =
     statusStyles[booking.status];
 
+  const requiresRefundReview =
+    booking.status === "CANCELLED" &&
+    booking.payment?.status === "CAPTURED" &&
+    booking.payment.recoveryState ===
+      "REVIEW_REQUIRED";
+
   // ==========================================
   // Format History Date
   // ==========================================
@@ -323,6 +354,39 @@ export default function BookingDetailsPage({
 
         </div>
       </div>
+
+      {requiresRefundReview && booking.payment && (
+        <div className="rounded-xl border border-red-300 bg-red-50 p-6 text-red-900 shadow-sm">
+          <h2 className="text-lg font-semibold">
+            Payment captured — refund review required
+          </h2>
+
+          <div className="mt-4 grid gap-4 text-sm md:grid-cols-3">
+            <p>
+              <span className="font-medium">Amount:</span>{" "}
+              {booking.payment.currency}{" "}
+              {Number(booking.payment.amount).toLocaleString(
+                "en-IN"
+              )}
+            </p>
+
+            <p>
+              <span className="font-medium">Payment status:</span>{" "}
+              {booking.payment.status}
+            </p>
+
+            <p>
+              <span className="font-medium">Recovery state:</span>{" "}
+              {booking.payment.recoveryState}
+            </p>
+
+            <p className="md:col-span-3">
+              <span className="font-medium">Payment ID:</span>{" "}
+              {booking.payment.razorpayPaymentId ?? "Not available"}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* ======================================
           Booking Information
@@ -421,6 +485,98 @@ export default function BookingDetailsPage({
           </div>
 
         </div>
+      </div>
+
+      {/* ======================================
+          Payment Information
+      ====================================== */}
+
+      <div className="rounded-xl border bg-white p-6 shadow-sm">
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold">
+            Payment Information
+          </h2>
+
+          <p className="mt-1 text-sm text-gray-500">
+            Read-only payment and recovery details.
+          </p>
+        </div>
+
+        {booking.payment ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div>
+              <p className="text-xs font-medium uppercase text-gray-400">
+                Payment Status
+              </p>
+              <p className="mt-1 font-medium">
+                {booking.payment.status}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-xs font-medium uppercase text-gray-400">
+                Recovery State
+              </p>
+              <p className="mt-1 font-medium">
+                {booking.payment.recoveryState ?? "None"}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-xs font-medium uppercase text-gray-400">
+                Amount
+              </p>
+              <p className="mt-1 font-medium">
+                {booking.payment.currency}{" "}
+                {Number(booking.payment.amount).toLocaleString(
+                  "en-IN"
+                )}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-xs font-medium uppercase text-gray-400">
+                Razorpay Order ID
+              </p>
+              <p className="mt-1 break-all font-medium">
+                {booking.payment.razorpayOrderId ?? "Not available"}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-xs font-medium uppercase text-gray-400">
+                Razorpay Payment ID
+              </p>
+              <p className="mt-1 break-all font-medium">
+                {booking.payment.razorpayPaymentId ?? "Not available"}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-xs font-medium uppercase text-gray-400">
+                Created At
+              </p>
+              <p className="mt-1 font-medium">
+                {formatHistoryDate(booking.payment.createdAt)}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-xs font-medium uppercase text-gray-400">
+                Updated At
+              </p>
+              <p className="mt-1 font-medium">
+                {formatHistoryDate(booking.payment.updatedAt)}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-lg border border-dashed bg-gray-50 p-6 text-center">
+            <p className="text-sm font-medium text-gray-600">
+              No payment record for this booking.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* ======================================
