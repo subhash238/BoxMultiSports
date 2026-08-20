@@ -6,6 +6,7 @@ export interface ValidationErrors {
   fullName?: string;
   email?: string;
   mobile?: string;
+  specialRequest?: string;
 }
 
 export const validateName = (name: string): string => {
@@ -51,6 +52,21 @@ export const validateMobile = (mobile: string): string => {
   return "";
 };
 
+export const validateSpecialRequest = (
+  specialRequest: string
+): string => {
+  const value = specialRequest.trim();
+
+  if (
+    value &&
+    value.split(/\s+/).length > 500
+  ) {
+    return "Special Request cannot exceed 500 words.";
+  }
+
+  return "";
+};
+
 export const validateDate = (date: string): string => {
 
   if (!date)
@@ -87,6 +103,7 @@ export function validateBooking(data: {
   fullName: string;
   email?: string;
   mobile: string;
+  specialRequest: string;
 }) {
 
   const errors: ValidationErrors = {};
@@ -98,6 +115,9 @@ export function validateBooking(data: {
   errors.fullName = validateName(data.fullName);
   errors.email = validateEmail(data.email ?? "");
   errors.mobile = validateMobile(data.mobile);
+  errors.specialRequest = validateSpecialRequest(
+    data.specialRequest
+  );
 
   return errors;
 }

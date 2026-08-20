@@ -374,6 +374,9 @@ export default function BookingForm({
           bookingData.duration
         );
 
+      const trimmedSpecialRequest =
+        bookingData.specialRequest.trim();
+
       // ---------------------------------------
       // Create Booking
       // ---------------------------------------
@@ -411,6 +414,13 @@ export default function BookingForm({
 
             mobile:
               bookingData.mobile.replace(/\D/g, ""),
+
+            ...(trimmedSpecialRequest
+              ? {
+                  specialRequest:
+                    trimmedSpecialRequest,
+                }
+              : {}),
           }),
         }
       );
@@ -1241,6 +1251,19 @@ export default function BookingForm({
                     "specialRequest",
                     e.target.value
                   )
+                }
+                onBlur={() =>
+                  handleBlur("specialRequest")
+                }
+                error={
+                  touched.specialRequest
+                    ? errors.specialRequest
+                    : undefined
+                }
+                success={
+                  touched.specialRequest &&
+                  !!bookingData.specialRequest.trim() &&
+                  !errors.specialRequest
                 }
                 className="
                   !min-h-[110px]

@@ -13,6 +13,7 @@ export interface TouchedFields {
   fullName: boolean;
   email: boolean;
   mobile: boolean;
+  specialRequest: boolean;
 }
 
 const initialTouchedState: TouchedFields = {
@@ -23,6 +24,7 @@ const initialTouchedState: TouchedFields = {
   fullName: false,
   email: false,
   mobile: false,
+  specialRequest: false,
 };
 
 export function useBookingValidation(
@@ -82,6 +84,7 @@ const errors = useMemo<ValidationErrors>(() => {
       fullName: true,
       email: true,
       mobile: true,
+      specialRequest: true,
     });
   };
 
