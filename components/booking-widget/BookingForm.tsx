@@ -406,6 +406,9 @@ export default function BookingForm({
             fullName:
               bookingData.fullName.trim(),
 
+            email:
+              (bookingData.email ?? "").trim(),
+
             mobile:
               bookingData.mobile.replace(/\D/g, ""),
           }),
@@ -1172,6 +1175,45 @@ export default function BookingForm({
                 success={
                   touched.fullName &&
                   !errors.fullName
+                }
+                className="
+                  !border-white/[0.10]
+                  !bg-white/[0.035]
+                  !text-white
+                  placeholder:!text-white/25
+                  focus:!border-[#B6F000]/70
+                  focus:!ring-[#B6F000]/10
+                "
+              />
+            </div>
+
+            {/* Email */}
+
+            <div className="mt-5">
+              <BookingField
+                label="Email ID"
+                type="email"
+                placeholder="you@example.com"
+                required
+                maxLength={255}
+                value={bookingData.email ?? ""}
+                onChange={(e) =>
+                  updateField(
+                    "email",
+                    e.target.value
+                  )
+                }
+                onBlur={() =>
+                  handleBlur("email")
+                }
+                error={
+                  touched.email
+                    ? errors.email
+                    : undefined
+                }
+                success={
+                  touched.email &&
+                  !errors.email
                 }
                 className="
                   !border-white/[0.10]

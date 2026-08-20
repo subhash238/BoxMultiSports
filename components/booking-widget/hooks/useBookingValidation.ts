@@ -11,6 +11,7 @@ export interface TouchedFields {
   time: boolean;
   duration: boolean;
   fullName: boolean;
+  email: boolean;
   mobile: boolean;
 }
 
@@ -20,6 +21,7 @@ const initialTouchedState: TouchedFields = {
   time: false,
   duration: false,
   fullName: false,
+  email: false,
   mobile: false,
 };
 
@@ -78,6 +80,7 @@ const errors = useMemo<ValidationErrors>(() => {
       time: true,
       duration: true,
       fullName: true,
+      email: true,
       mobile: true,
     });
   };

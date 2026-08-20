@@ -19,6 +19,7 @@ export interface BookingData {
   duration: string;
   players?: number;
   fullName: string;
+  email?: string;
   mobile: string;
   specialRequest: string;
 }
@@ -48,6 +49,7 @@ export default function BookingWidget({
       time: "",
       duration: "1 Hour",
       fullName: "",
+      email: "",
       mobile: "",
       specialRequest: "",
     });

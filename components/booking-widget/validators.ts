@@ -4,6 +4,7 @@ export interface ValidationErrors {
   time?: string;
   duration?: string;
   fullName?: string;
+  email?: string;
   mobile?: string;
 }
 
@@ -16,6 +17,20 @@ export const validateName = (name: string): string => {
     !/^[A-Za-z]/.test(value)
   ) {
     return "Please enter a valid full name.";
+  }
+
+  return "";
+};
+
+export const validateEmail = (email: string): string => {
+  const value = email.trim();
+
+  if (
+    !value ||
+    value.length > 255 ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+  ) {
+    return "Please enter a valid email address.";
   }
 
   return "";
@@ -70,6 +85,7 @@ export function validateBooking(data: {
   time: string;
   duration: string;
   fullName: string;
+  email?: string;
   mobile: string;
 }) {
 
@@ -80,6 +96,7 @@ export function validateBooking(data: {
   errors.time = validateRequired(data.time, "Time Slot");
   errors.duration = validateRequired(data.duration, "Duration");
   errors.fullName = validateName(data.fullName);
+  errors.email = validateEmail(data.email ?? "");
   errors.mobile = validateMobile(data.mobile);
 
   return errors;
