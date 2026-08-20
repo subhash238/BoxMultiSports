@@ -937,6 +937,7 @@ export class PaymentService {
                     bookingNumber: true,
                     status: true,
                     createdAt: true,
+                    reservationExpiresAt: true,
                     guestPaymentTokenHash: true,
                     guestPaymentTokenExpiresAt: true,
                   },
@@ -1001,25 +1002,18 @@ export class PaymentService {
           }
 
           // ---------------------------------------
-          // Check Payment Hold
+          // Check Reservation Ownership
           // ---------------------------------------
           //
-          // The booking's createdAt is used as
-          // the beginning of the payment window.
-          //
-          // Example:
-          //
-          // Booking created:
-          // 10:00:00
-          //
-          // Hold expires:
-          // 10:10:00
-          //
-          // Verification at 10:09:59 → allowed
-          // Verification at 10:10:01 → rejected
+          // reservationExpiresAt is authoritative.
+          // Historical null values temporarily use
+          // createdAt plus the initial payment hold.
           // ---------------------------------------
 
-          const holdExpiresAt =
+          const transactionNow = new Date();
+          const effectiveReservationExpiresAt =
+            currentPayment.booking
+              .reservationExpiresAt ??
             new Date(
               currentPayment.booking.createdAt.getTime() +
                 BOOKING_CONFIG.PAYMENT_HOLD_MINUTES *
@@ -1027,19 +1021,16 @@ export class PaymentService {
                   1000
             );
 
-          const now =
-            new Date();
-
           if (
-            now >=
-            holdExpiresAt
+            transactionNow >=
+            effectiveReservationExpiresAt
           ) {
             // -------------------------------------
-            // Expired Payment Hold
+            // Expired Reservation
             // -------------------------------------
             //
             // The booking must not become
-            // CONFIRMED after the hold expires.
+            // CONFIRMED after its reservation expires.
             //
             // We cancel the booking so the slot
             // becomes available again.
@@ -1243,6 +1234,15 @@ export class PaymentService {
       result.type ===
       "EXPIRED"
     ) {
+      console.warn(
+        "Razorpay payment was captured but the booking reservation expired before local confirmation.",
+        {
+          bookingId: payment.booking.id,
+          razorpayOrderId,
+          razorpayPaymentId,
+        }
+      );
+
       throw new AppError(
         "The payment window for this booking has expired. The booking has been cancelled. Please create a new booking.",
         409
