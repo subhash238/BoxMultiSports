@@ -225,8 +225,34 @@ export default function BookingForm({
   const hasAppliedSportPreselection =
     useRef(false);
 
+  const bookingDateInputRef =
+    useRef<HTMLInputElement>(null);
+
   const [sportsError, setSportsError] =
     useState("");
+
+  const handleBookingDateClick = (
+    event: React.MouseEvent<HTMLInputElement>
+  ) => {
+    const input = bookingDateInputRef.current;
+
+    if (!input) {
+      return;
+    }
+
+    input.focus();
+
+    if (typeof input.showPicker !== "function") {
+      return;
+    }
+
+    try {
+      input.showPicker();
+      event.preventDefault();
+    } catch {
+      // Keep native focus/click behavior as the fallback.
+    }
+  };
 
   const startTimeOptions = useMemo(
     () =>
@@ -891,6 +917,8 @@ export default function BookingForm({
 
               <BookingField
                 label="Booking Date"
+                inputId="booking-date"
+                inputRef={bookingDateInputRef}
                 type="date"
                 required
                 value={bookingData.date}
@@ -903,6 +931,7 @@ export default function BookingForm({
                 onBlur={() =>
                   handleBlur("date")
                 }
+                onInputClick={handleBookingDateClick}
                 error={
                   touched.date
                     ? errors.date
@@ -920,6 +949,7 @@ export default function BookingForm({
                   placeholder:!text-white/25
                   focus:!border-[#B6F000]/70
                   focus:!ring-[#B6F000]/10
+                  cursor-pointer
                 "
               />
             </div>
