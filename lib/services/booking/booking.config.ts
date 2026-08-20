@@ -41,16 +41,24 @@ export const BOOKING_CONFIG = {
   MAIN_CLOSING_MINUTES_FROM_MIDNIGHT: 24 * 60,
 
   /**
-   * Payment Hold
+   * Initial Payment Hold
    *
    * A PENDING booking temporarily holds
-   * the selected slot while the customer
-   * completes Razorpay payment.
+   * the selected slot before Razorpay
+   * checkout begins.
    *
    * After 10 minutes, an unpaid PENDING
    * booking should no longer block the slot.
    */
   PAYMENT_HOLD_MINUTES: 10,
+
+  /**
+   * Checkout Payment Hold
+   *
+   * Future reservation window measured from
+   * successful Razorpay order creation.
+   */
+  PAYMENT_CHECKOUT_HOLD_MINUTES: 15,
 
   /**
    * Currency
