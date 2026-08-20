@@ -368,7 +368,7 @@ export default function YogaBookingForm({
           type="number"
           required
           min={1}
-          max={yogaSport?.maxPlayers ?? 25}
+          max={yogaSport?.maxPlayers ?? 30}
           value={numberOfPlayers}
           onChange={(event) =>
             setNumberOfPlayers(Number(event.target.value))

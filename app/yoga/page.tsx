@@ -21,7 +21,7 @@ export default function YogaPage() {
 
             <div className="mt-8 flex flex-wrap gap-3 text-sm text-white/75">
               <span className="rounded-full border border-amber-200/20 bg-amber-100/[0.06] px-4 py-2">₹399 / person / day</span>
-              <span className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2">Up to 25 participants</span>
+              <span className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2">Up to 30 participants</span>
               <span className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2">Morning sessions only</span>
             </div>
 
