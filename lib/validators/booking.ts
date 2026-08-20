@@ -35,6 +35,13 @@ export const createBookingSchema = z.object({
       "Please enter a valid full name."
     ),
 
+  email: z
+    .string()
+    .trim()
+    .min(1, "Please enter a valid email address.")
+    .max(255, "Please enter a valid email address.")
+    .email("Please enter a valid email address."),
+
   mobile: z
     .string()
     .trim()

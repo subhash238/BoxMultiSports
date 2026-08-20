@@ -70,6 +70,7 @@ export type CreateBookingContext = {
   pricing: BookingPricingResult;
   numberOfPlayers: number;
   customerName: string;
+  customerEmail: string;
   customerMobile: string;
 };
 

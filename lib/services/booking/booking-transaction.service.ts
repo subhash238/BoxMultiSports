@@ -99,6 +99,9 @@ export class BookingTransactionService {
             customerName:
               context.customerName,
 
+            customerEmail:
+              context.customerEmail,
+
             customerMobile:
               context.customerMobile,
 
