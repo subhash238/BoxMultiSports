@@ -166,6 +166,8 @@ export class PaymentService {
           totalAmount: true,
           status: true,
           userId: true,
+          createdAt: true,
+          reservationExpiresAt: true,
           guestPaymentTokenHash: true,
           guestPaymentTokenExpiresAt: true,
         },
@@ -195,6 +197,8 @@ export class PaymentService {
         400
       );
     }
+
+    const now = new Date();
 
     // -----------------------------------------
     // Authorize Booking Payment
@@ -230,7 +234,7 @@ export class PaymentService {
       }
 
       if (
-        new Date() >=
+        now >=
         booking.guestPaymentTokenExpiresAt
       ) {
         throw new AppError(
@@ -247,6 +251,26 @@ export class PaymentService {
       ) {
         throw guestAuthorizationError;
       }
+    }
+
+    // -----------------------------------------
+    // Validate Active Booking Reservation
+    // -----------------------------------------
+
+    const reservationExpiresAt =
+      booking.reservationExpiresAt ??
+      new Date(
+        booking.createdAt.getTime() +
+          BOOKING_CONFIG.PAYMENT_HOLD_MINUTES *
+            60 *
+            1000
+      );
+
+    if (now >= reservationExpiresAt) {
+      throw new AppError(
+        "The reservation for this booking has expired. Please create a new booking.",
+        409
+      );
     }
 
     const isGuestAuthorization =
