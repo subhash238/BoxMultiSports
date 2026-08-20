@@ -1,6 +1,7 @@
 import {
   Payment,
   PaymentStatus,
+  Prisma,
 } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
@@ -352,9 +353,17 @@ export class PaymentService {
         },
       });
 
+    const checkoutStartedAt = new Date();
+    const checkoutExpiresAt = new Date(
+      checkoutStartedAt.getTime() +
+        BOOKING_CONFIG.PAYMENT_CHECKOUT_HOLD_MINUTES *
+          60 *
+          1000
+    );
+
     const guestAuthorizedAt =
       isGuestAuthorization
-        ? new Date()
+        ? checkoutStartedAt
         : null;
 
     // -----------------------------------------
@@ -363,43 +372,132 @@ export class PaymentService {
 
     let payment: Payment;
 
-    if (existingPayment) {
-      payment =
-        await prisma.payment.update({
-          where: {
-            id:
-              existingPayment.id,
-          },
+    try {
+      payment = await prisma.$transaction(
+        async (tx) => {
+          const currentBooking =
+            await tx.booking.findUnique({
+              where: {
+                id: booking.id,
+              },
+              select: {
+                id: true,
+                status: true,
+                createdAt: true,
+                reservationExpiresAt: true,
+              },
+            });
 
-          data: {
-            razorpayOrderId:
-              razorpayOrder.id,
+          if (!currentBooking) {
+            throw new AppError(
+              PAYMENT_MESSAGES.BOOKING_NOT_FOUND,
+              404
+            );
+          }
 
-            guestAuthorizedAt,
-          },
-        });
-    } else {
-      payment =
-        await prisma.payment.create({
-          data: {
-            bookingId:
-              booking.id,
+          if (currentBooking.status !== "PENDING") {
+            throw new AppError(
+              `Payment cannot be created for a booking with status ${currentBooking.status}.`,
+              400
+            );
+          }
 
-            amount:
-              booking.totalAmount,
+          const transactionNow = new Date();
+          const currentReservationExpiresAt =
+            currentBooking.reservationExpiresAt ??
+            new Date(
+              currentBooking.createdAt.getTime() +
+                BOOKING_CONFIG.PAYMENT_HOLD_MINUTES *
+                  60 *
+                  1000
+            );
 
-            currency:
-              "INR",
+          if (
+            transactionNow >=
+            currentReservationExpiresAt
+          ) {
+            throw new AppError(
+              "The reservation for this booking has expired. Please create a new booking.",
+              409
+            );
+          }
 
-            status:
-              "PENDING",
+          const currentPayment =
+            await tx.payment.findUnique({
+              where: {
+                bookingId,
+              },
+            });
 
-            razorpayOrderId:
-              razorpayOrder.id,
+          if (currentPayment?.razorpayOrderId) {
+            throw new AppError(
+              "Razorpay order already exists for this booking.",
+              409
+            );
+          }
 
-            guestAuthorizedAt,
-          },
-        });
+          const persistedPayment = currentPayment
+            ? await tx.payment.update({
+                where: {
+                  id: currentPayment.id,
+                },
+                data: {
+                  razorpayOrderId:
+                    razorpayOrder.id,
+                  guestAuthorizedAt,
+                },
+              })
+            : await tx.payment.create({
+                data: {
+                  bookingId:
+                    booking.id,
+                  amount:
+                    booking.totalAmount,
+                  currency:
+                    "INR",
+                  status:
+                    "PENDING",
+                  razorpayOrderId:
+                    razorpayOrder.id,
+                  guestAuthorizedAt,
+                },
+              });
+
+          await tx.booking.update({
+            where: {
+              id: currentBooking.id,
+            },
+            data: {
+              reservationExpiresAt:
+                checkoutExpiresAt,
+              ...(isGuestAuthorization && {
+                guestPaymentTokenExpiresAt:
+                  checkoutExpiresAt,
+              }),
+            },
+          });
+
+          return persistedPayment;
+        },
+        {
+          isolationLevel:
+            Prisma.TransactionIsolationLevel.Serializable,
+        }
+      );
+    } catch (error) {
+      console.error(
+        "Razorpay order created but local checkout persistence failed.",
+        {
+          bookingId: booking.id,
+          razorpayOrderId: razorpayOrder.id,
+          failure:
+            error instanceof Error
+              ? error.message
+              : "Unknown local persistence failure.",
+        }
+      );
+
+      throw error;
     }
 
     // -----------------------------------------
