@@ -20,6 +20,13 @@ export const createBookingSchema = z.object({
     .string()
     .min(1, "End time is required."),
 
+  durationMinutes: z
+    .number()
+    .int("Booking duration must be a whole number of minutes.")
+    .positive("Booking duration must be positive.")
+    .max(720, "Booking duration cannot exceed 720 minutes.")
+    .optional(),
+
   numberOfPlayers: z
     .number()
     .int("Number of players must be a whole number.")

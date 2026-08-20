@@ -365,6 +365,19 @@ export default function BookingForm({
           bookingData.time
         );
 
+      const durationMinutes =
+        bookingData.durationMinutes;
+
+      if (
+        typeof durationMinutes !== "number" ||
+        !Number.isInteger(durationMinutes) ||
+        durationMinutes <= 0
+      ) {
+        throw new Error(
+          "Invalid booking duration."
+        );
+      }
+
       // ---------------------------------------
       // Calculate End Time
       // ---------------------------------------
@@ -372,7 +385,7 @@ export default function BookingForm({
       const endTime =
         addDurationToTime(
           startTime,
-          bookingData.durationMinutes
+          durationMinutes
         );
 
       const trimmedSpecialRequest =
@@ -404,6 +417,8 @@ export default function BookingForm({
             startTime,
 
             endTime,
+
+            durationMinutes,
 
             numberOfPlayers: 1,
 

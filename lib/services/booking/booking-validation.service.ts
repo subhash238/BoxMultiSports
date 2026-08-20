@@ -12,9 +12,18 @@ import {
 
 import {
   buildBookingTime,
+  buildBookingTimeFromDuration,
   isSameDay,
   normalizeDate,
 } from "./booking.utils";
+
+const MAIN_BOOKING_SPORT_SLUGS = new Set([
+  "badminton",
+  "cricket",
+  "football",
+  "net-practice",
+  "pickleball",
+]);
 
 export class BookingValidationService {
   /**
@@ -39,12 +48,33 @@ export class BookingValidationService {
       sport.maxPlayers
     );
 
-    const bookingTime =
-      buildBookingTime(
-        data.bookingDate,
-        data.startTime,
-        data.endTime
+    const isMainBookingSport =
+      MAIN_BOOKING_SPORT_SLUGS.has(
+        sport.slug
       );
+
+    if (
+      isMainBookingSport &&
+      data.durationMinutes === undefined
+    ) {
+      throw new AppError(
+        "Booking duration is required.",
+        400
+      );
+    }
+
+    const bookingTime =
+      isMainBookingSport
+        ? buildBookingTimeFromDuration(
+            data.bookingDate,
+            data.startTime,
+            data.durationMinutes!
+          )
+        : buildBookingTime(
+            data.bookingDate,
+            data.startTime,
+            data.endTime
+          );
 
     this.validateBookingDate(
       bookingTime.bookingDate

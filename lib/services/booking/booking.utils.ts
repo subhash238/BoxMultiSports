@@ -51,6 +51,31 @@ export function buildBookingTime(
   };
 }
 
+export function buildBookingTimeFromDuration(
+  bookingDate: string,
+  startTime: string,
+  durationMinutes: number
+): BookingTimeResult {
+  const bookingDateValue = new Date(
+    `${bookingDate}T00:00:00${INDIA_TIMEZONE_OFFSET}`
+  );
+
+  const startDateTime = new Date(
+    `${bookingDate}T${startTime}:00${INDIA_TIMEZONE_OFFSET}`
+  );
+
+  const endDateTime = new Date(
+    startDateTime.getTime() +
+      durationMinutes * 60 * 1000
+  );
+
+  return {
+    bookingDate: bookingDateValue,
+    startDateTime,
+    endDateTime,
+  };
+}
+
 /**
  * ==========================================
  * Calculate Duration
