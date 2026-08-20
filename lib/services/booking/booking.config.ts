@@ -4,6 +4,14 @@
  * ==========================================
  */
 
+export const MAIN_BOOKING_SPORT_SLUGS = new Set([
+  "badminton",
+  "cricket",
+  "football",
+  "net-practice",
+  "pickleball",
+]);
+
 export const BOOKING_CONFIG = {
   /**
    * Booking Number

@@ -2,7 +2,10 @@ import { prisma } from "@/lib/prisma";
 import { AppError } from "@/lib/errors";
 import { Sport } from "@prisma/client";
 import { BOOKING_MESSAGES } from "./booking.responses";
-import { BOOKING_CONFIG } from "./booking.config";
+import {
+  BOOKING_CONFIG,
+  MAIN_BOOKING_SPORT_SLUGS,
+} from "./booking.config";
 
 import { CreateBookingInput } from "@/lib/validators/booking";
 
@@ -18,14 +21,6 @@ import {
   isSameDay,
   normalizeDate,
 } from "./booking.utils";
-
-const MAIN_BOOKING_SPORT_SLUGS = new Set([
-  "badminton",
-  "cricket",
-  "football",
-  "net-practice",
-  "pickleball",
-]);
 
 export class BookingValidationService {
   /**

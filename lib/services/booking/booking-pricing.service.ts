@@ -9,6 +9,7 @@ import {
 import {
   calculateDurationMinutes,
 } from "./booking.utils";
+import { MAIN_BOOKING_SPORT_SLUGS } from "./booking.config";
 
 export class BookingPricingService {
   /**
@@ -48,28 +49,25 @@ export class BookingPricingService {
     const durationHours =
       durationMinutes / 60;
 
+    const isMainBookingSport =
+      sportSlug !== undefined &&
+      MAIN_BOOKING_SPORT_SLUGS.has(
+        sportSlug
+      );
+
     // -----------------------------------------
     // Validate Duration
     // -----------------------------------------
     //
-    // SportPricing.duration is stored
-    // in complete hours.
-    //
-    // Examples:
-    //
-    // 60 minutes  → 1 hour  ✅
-    // 120 minutes → 2 hours ✅
-    // 180 minutes → 3 hours ✅
-    // 240 minutes → 4 hours ✅
-    // 300 minutes → 5 hours ✅
-    // 720 minutes → 12 hours ✅
-    //
-    // 90 minutes → invalid ❌
+    // Main SportPricing durations use exact
+    // minutes. Other existing booking flows
+    // retain their complete-hour requirement.
     // -----------------------------------------
 
     if (
       durationMinutes <= 0 ||
-      !Number.isInteger(durationHours)
+      (!isMainBookingSport &&
+        !Number.isInteger(durationHours))
     ) {
       throw new AppError(
         "Booking duration must be a complete number of hours.",
@@ -108,28 +106,33 @@ export class BookingPricingService {
     // Find Active Sport Pricing
     // -----------------------------------------
     //
-    // Pricing is determined by:
+    // Main pricing is determined by:
     //
-    // sportId + duration
+    // sportId + exact duration in minutes
     //
     // The actual price comes from the
     // SportPricing table.
     //
     // Example:
     //
-    // Cricket + 1 hour  → ₹1000
-    // Cricket + 2 hours → ₹1800
-    // Cricket + 3 hours → ₹2700
-    // Cricket + 4 hours → ₹3500
-    // Cricket + 5 hours → ₹4500
-    // Cricket + 12 hours → ₹9000
+    // Cricket + 60 minutes
+    // Cricket + 90 minutes
+    // Cricket + 720 minutes
+    //
+    // Other existing sports retain their
+    // legacy complete-hour lookup.
     // -----------------------------------------
+
+    const pricingDuration =
+      isMainBookingSport
+        ? durationMinutes
+        : durationHours;
 
     const sportPricing =
       await prisma.sportPricing.findFirst({
         where: {
           sportId,
-          duration: durationHours,
+          duration: pricingDuration,
           isActive: true,
         },
       });
@@ -139,8 +142,13 @@ export class BookingPricingService {
     // -----------------------------------------
 
     if (!sportPricing) {
+      const durationDescription =
+        isMainBookingSport
+          ? `${durationMinutes}-minute`
+          : `${durationHours}-hour`;
+
       throw new AppError(
-        `No active pricing is configured for a ${durationHours}-hour booking.`,
+        `No active pricing is configured for a ${durationDescription} booking.`,
         400
       );
     }
