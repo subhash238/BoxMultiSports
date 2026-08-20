@@ -15,6 +15,50 @@ import { BookingTimeResult } from "./booking.types";
  */
 
 const INDIA_TIMEZONE_OFFSET = "+05:30";
+const INDIA_TIMEZONE_OFFSET_MINUTES = 5 * 60 + 30;
+
+export function buildDateOnly(
+  calendarDate: string
+): Date {
+  const match =
+    /^(\d{4})-(\d{2})-(\d{2})$/.exec(
+      calendarDate
+    );
+
+  if (!match) {
+    return new Date(Number.NaN);
+  }
+
+  const year = Number(match[1]);
+  const monthIndex = Number(match[2]) - 1;
+  const day = Number(match[3]);
+  const date = new Date(
+    Date.UTC(year, monthIndex, day)
+  );
+
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== monthIndex ||
+    date.getUTCDate() !== day
+  ) {
+    return new Date(Number.NaN);
+  }
+
+  return date;
+}
+
+export function buildIstDateTimeForBookingDate(
+  bookingDate: Date,
+  minutesFromMidnight: number
+): Date {
+  return new Date(
+    bookingDate.getTime() +
+      (minutesFromMidnight -
+        INDIA_TIMEZONE_OFFSET_MINUTES) *
+        60 *
+        1000
+  );
+}
 
 /**
  * ==========================================
@@ -37,9 +81,7 @@ export function buildBookingTime(
   endTime: string
 ): BookingTimeResult {
   return {
-    bookingDate: new Date(
-      `${bookingDate}T00:00:00${INDIA_TIMEZONE_OFFSET}`
-    ),
+    bookingDate: buildDateOnly(bookingDate),
 
     startDateTime: new Date(
       `${bookingDate}T${startTime}:00${INDIA_TIMEZONE_OFFSET}`
@@ -56,9 +98,8 @@ export function buildBookingTimeFromDuration(
   startTime: string,
   durationMinutes: number
 ): BookingTimeResult {
-  const bookingDateValue = new Date(
-    `${bookingDate}T00:00:00${INDIA_TIMEZONE_OFFSET}`
-  );
+  const bookingDateValue =
+    buildDateOnly(bookingDate);
 
   const startDateTime = new Date(
     `${bookingDate}T${startTime}:00${INDIA_TIMEZONE_OFFSET}`
@@ -81,16 +122,17 @@ export function isWithinBookingDayOperatingHours(
   openingMinutesFromMidnight: number,
   closingMinutesFromMidnight: number
 ): boolean {
-  const bookingDayStart =
-    bookingTime.bookingDate.getTime();
-
   const openingBoundary =
-    bookingDayStart +
-    openingMinutesFromMidnight * 60 * 1000;
+    buildIstDateTimeForBookingDate(
+      bookingTime.bookingDate,
+      openingMinutesFromMidnight
+    ).getTime();
 
   const closingBoundary =
-    bookingDayStart +
-    closingMinutesFromMidnight * 60 * 1000;
+    buildIstDateTimeForBookingDate(
+      bookingTime.bookingDate,
+      closingMinutesFromMidnight
+    ).getTime();
 
   return (
     bookingTime.startDateTime.getTime() >=
@@ -156,9 +198,7 @@ export function normalizeDate(
     }
   );
 
-  return new Date(
-    `${indiaDate}T00:00:00${INDIA_TIMEZONE_OFFSET}`
-  );
+  return buildDateOnly(indiaDate);
 }
 
 /**
@@ -170,10 +210,13 @@ export function normalizeDate(
 export function formatBookingDate(
   date: Date
 ): string {
-  return date.toLocaleDateString(
-    "en-CA",
-    {
-      timeZone: "Asia/Kolkata",
-    }
-  ).replace(/-/g, "");
+  const year = date.getUTCFullYear();
+  const month = String(
+    date.getUTCMonth() + 1
+  ).padStart(2, "0");
+  const day = String(
+    date.getUTCDate()
+  ).padStart(2, "0");
+
+  return `${year}${month}${day}`;
 }

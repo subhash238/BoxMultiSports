@@ -17,6 +17,7 @@ import {
 import {
   buildBookingTime,
   buildBookingTimeFromDuration,
+  buildIstDateTimeForBookingDate,
   isWithinBookingDayOperatingHours,
   isSameDay,
   normalizeDate,
@@ -325,41 +326,30 @@ export class BookingValidationService {
     openingTimeValue: string,
     closingTimeValue: string
   ) {
-    const openingTime =
-      new Date(
-        bookingDate
-      );
+    const toMinutesFromMidnight = (
+      value: string
+    ) => {
+      const [hours, minutes] =
+        value.split(":").map(Number);
 
-    openingTime.setHours(
-      Number(
-        openingTimeValue
-          .split(":")[0]
-      ),
-      Number(
-        openingTimeValue
-          .split(":")[1]
-      ),
-      0,
-      0
-    );
+      return hours * 60 + minutes;
+    };
+
+    const openingTime =
+      buildIstDateTimeForBookingDate(
+        bookingDate,
+        toMinutesFromMidnight(
+          openingTimeValue
+        )
+      );
 
     const closingTime =
-      new Date(
-        bookingDate
+      buildIstDateTimeForBookingDate(
+        bookingDate,
+        toMinutesFromMidnight(
+          closingTimeValue
+        )
       );
-
-    closingTime.setHours(
-      Number(
-        closingTimeValue
-          .split(":")[0]
-      ),
-      Number(
-        closingTimeValue
-          .split(":")[1]
-      ),
-      0,
-      0
-    );
 
     return {
       openingTime,

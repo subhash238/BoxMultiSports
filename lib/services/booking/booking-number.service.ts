@@ -46,14 +46,11 @@ export class BookingNumberService {
     bookingDate: Date
   ): Promise<BookingCounter> {
     const normalizedDate = new Date(
-      bookingDate
-    );
-
-    normalizedDate.setHours(
-      0,
-      0,
-      0,
-      0
+      Date.UTC(
+        bookingDate.getUTCFullYear(),
+        bookingDate.getUTCMonth(),
+        bookingDate.getUTCDate()
+      )
     );
 
     let counter =
@@ -106,17 +103,9 @@ private static formatBookingNumber(
   bookingDate: Date,
   sequence: number
 ): string {
-  const year = bookingDate.getFullYear();
-
-  const month = String(
-    bookingDate.getMonth() + 1
-  ).padStart(2, "0");
-
-  const day = String(
-    bookingDate.getDate()
-  ).padStart(2, "0");
-
-  const date = `${year}${month}${day}`;
+  const date = formatBookingDate(
+    bookingDate
+  );
 
   return `${BOOKING_CONFIG.BOOKING_PREFIX}-${date}-${String(
     sequence
