@@ -2,6 +2,7 @@
 
 import {
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -78,42 +79,68 @@ interface BookingFormProps {
   ) => void;
 }
 
-// ==========================================
-// Convert 12 Hour Time → 24 Hour Time
-// ==========================================
+const MAIN_OPENING_MINUTES = 5 * 60;
+const MAIN_CLOSING_MINUTES = 24 * 60;
+const MAIN_START_TIME_INTERVAL_MINUTES = 30;
 
-function convertTo24Hour(time: string): string {
-  const [timePart, period] = time.split(" ");
+export type MainStartTimeOption = {
+  value: string;
+  label: string;
+};
 
-  const [hourString, minuteString] =
-    timePart.split(":");
+function formatTimeValue(totalMinutes: number): string {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
 
-  let hour = Number(hourString);
-  const minute = Number(minuteString);
+  return `${String(hours).padStart(2, "0")}:${String(
+    minutes
+  ).padStart(2, "0")}`;
+}
 
-  if (
-    !Number.isFinite(hour) ||
-    !Number.isFinite(minute)
-  ) {
-    throw new Error("Invalid time selected.");
-  }
+function formatTimeLabel(totalMinutes: number): string {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  const period = hours < 12 ? "AM" : "PM";
+  const displayHours = hours % 12 || 12;
 
-  if (period === "AM") {
-    if (hour === 12) {
-      hour = 0;
-    }
-  }
-
-  if (period === "PM") {
-    if (hour !== 12) {
-      hour += 12;
-    }
-  }
-
-  return `${String(hour).padStart(
+  return `${displayHours}:${String(minutes).padStart(
     2,
     "0"
-  )}:${String(minute).padStart(2, "0")}`;
+  )} ${period}`;
+}
+
+export function generateMainStartTimeOptions(
+  durationMinutes?: number
+): MainStartTimeOption[] {
+  if (
+    typeof durationMinutes !== "number" ||
+    !Number.isInteger(durationMinutes) ||
+    durationMinutes <= 0
+  ) {
+    return [];
+  }
+
+  const options: MainStartTimeOption[] = [];
+
+  for (
+    let startMinutes = MAIN_OPENING_MINUTES;
+    startMinutes < MAIN_CLOSING_MINUTES;
+    startMinutes += MAIN_START_TIME_INTERVAL_MINUTES
+  ) {
+    if (
+      startMinutes + durationMinutes >
+      MAIN_CLOSING_MINUTES
+    ) {
+      continue;
+    }
+
+    options.push({
+      value: formatTimeValue(startMinutes),
+      label: formatTimeLabel(startMinutes),
+    });
+  }
+
+  return options;
 }
 
 // ==========================================
@@ -148,7 +175,7 @@ export function addDurationToTime(
     minutes +
     durationMinutes;
 
-  if (totalMinutes >= 24 * 60) {
+  if (totalMinutes > 24 * 60) {
     throw new Error(
       "Booking cannot extend beyond midnight."
     );
@@ -156,7 +183,7 @@ export function addDurationToTime(
 
   const endHours = Math.floor(
     totalMinutes / 60
-  );
+  ) % 24;
 
   const endMinutes =
     totalMinutes % 60;
@@ -200,6 +227,14 @@ export default function BookingForm({
 
   const [sportsError, setSportsError] =
     useState("");
+
+  const startTimeOptions = useMemo(
+    () =>
+      generateMainStartTimeOptions(
+        bookingData.durationMinutes
+      ),
+    [bookingData.durationMinutes]
+  );
 
   // ==========================================
   // Validation
@@ -357,13 +392,10 @@ export default function BookingForm({
       }
 
       // ---------------------------------------
-      // Convert Start Time
+      // Read Start Time
       // ---------------------------------------
 
-      const startTime =
-        convertTo24Hour(
-          bookingData.time
-        );
+      const startTime = bookingData.time;
 
       const durationMinutes =
         bookingData.durationMinutes;
@@ -973,23 +1005,14 @@ export default function BookingForm({
                       Select time
                     </option>
 
-                    <option>06:00 AM</option>
-                    <option>07:00 AM</option>
-                    <option>08:00 AM</option>
-                    <option>09:00 AM</option>
-                    <option>10:00 AM</option>
-                    <option>11:00 AM</option>
-                    <option>12:00 PM</option>
-                    <option>01:00 PM</option>
-                    <option>02:00 PM</option>
-                    <option>03:00 PM</option>
-                    <option>04:00 PM</option>
-                    <option>05:00 PM</option>
-                    <option>06:00 PM</option>
-                    <option>07:00 PM</option>
-                    <option>08:00 PM</option>
-                    <option>09:00 PM</option>
-                    <option>10:00 PM</option>
+                    {startTimeOptions.map((option) => (
+                      <option
+                        key={option.value}
+                        value={option.value}
+                      >
+                        {option.label}
+                      </option>
+                    ))}
                   </select>
 
                   <ChevronDown
@@ -1050,14 +1073,30 @@ export default function BookingForm({
                             e.target.value
                         );
 
-                      updateField(
-                        "duration",
-                        selectedDuration?.label ?? ""
-                      );
-                      updateField(
-                        "durationMinutes",
-                        selectedDuration?.minutes
-                      );
+                      const nextDurationMinutes =
+                        selectedDuration?.minutes;
+                      const nextStartTimeOptions =
+                        generateMainStartTimeOptions(
+                          nextDurationMinutes
+                        );
+                      setBookingData((current) => {
+                        const selectedTimeRemainsValid =
+                          nextStartTimeOptions.some(
+                            (option) =>
+                              option.value === current.time
+                          );
+
+                        return {
+                          ...current,
+                          duration:
+                            selectedDuration?.label ?? "",
+                          durationMinutes:
+                            nextDurationMinutes,
+                          time: selectedTimeRemainsValid
+                            ? current.time
+                            : "",
+                        };
+                      });
                     }}
                     onBlur={() =>
                       handleBlur("duration")
