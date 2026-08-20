@@ -123,28 +123,27 @@ export class BookingTransactionService {
           },
           });
 
-        let finalBooking =
-          createdBooking;
+        const reservationExpiresAt =
+          new Date(
+            createdBooking.createdAt.getTime() +
+              BOOKING_CONFIG.PAYMENT_HOLD_MINUTES *
+                60 *
+                1000
+          );
 
-        if (isGuest) {
-          const guestPaymentTokenExpiresAt =
-            new Date(
-              createdBooking.createdAt.getTime() +
-                BOOKING_CONFIG.PAYMENT_HOLD_MINUTES *
-                  60 *
-                  1000
-            );
-
-          finalBooking =
-            await tx.booking.update({
-              where: {
-                id: createdBooking.id,
-              },
-              data: {
-                guestPaymentTokenExpiresAt,
-              },
-            });
-        }
+        const finalBooking =
+          await tx.booking.update({
+            where: {
+              id: createdBooking.id,
+            },
+            data: {
+              reservationExpiresAt,
+              ...(isGuest && {
+                guestPaymentTokenExpiresAt:
+                  reservationExpiresAt,
+              }),
+            },
+          });
 
         return {
           booking: finalBooking,
