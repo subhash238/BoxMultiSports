@@ -719,7 +719,8 @@ export class PaymentService {
           guestPaymentTokenHash: string | null;
           guestPaymentTokenExpiresAt: Date | null;
         };
-      }
+      },
+      allowExpiredGuestToken = false
     ) => {
       if (
         authorization.type ===
@@ -747,11 +748,12 @@ export class PaymentService {
           null ||
         !paymentRecord.booking
           .guestPaymentTokenHash ||
-        !paymentRecord.booking
-          .guestPaymentTokenExpiresAt ||
-        new Date() >=
-          paymentRecord.booking
+        (!allowExpiredGuestToken &&
+          (!paymentRecord.booking
             .guestPaymentTokenExpiresAt ||
+            new Date() >=
+              paymentRecord.booking
+                .guestPaymentTokenExpiresAt)) ||
         !verifyGuestPaymentToken(
           authorization.guestPaymentToken,
           paymentRecord.booking
@@ -770,7 +772,9 @@ export class PaymentService {
       "CAPTURED"
     ) {
       authorizePaymentVerification(
-        payment
+        payment,
+        payment.booking.status ===
+          "CONFIRMED"
       );
 
       if (
