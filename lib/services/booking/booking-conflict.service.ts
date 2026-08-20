@@ -11,8 +11,9 @@ export class BookingConflictService {
     bookingTime: BookingTimeResult,
     numberOfPlayers: number
   ): Promise<void> {
-    const pendingHoldStartedAt = new Date(
-      Date.now() -
+    const now = new Date();
+    const legacyCutoff = new Date(
+      now.getTime() -
         BOOKING_CONFIG.PAYMENT_HOLD_MINUTES *
           60 *
           1000
@@ -36,7 +37,7 @@ export class BookingConflictService {
               {
                 status: "PENDING",
                 createdAt: {
-                  gt: pendingHoldStartedAt,
+                  gt: legacyCutoff,
                 },
                 startTime: {
                   lt: bookingTime.endDateTime,
@@ -77,7 +78,8 @@ export class BookingConflictService {
         tx,
         sport.id,
         bookingTime,
-        pendingHoldStartedAt
+        now,
+        legacyCutoff
       );
 
     if (conflictingBooking !== null) {
@@ -92,7 +94,8 @@ export class BookingConflictService {
     tx: Prisma.TransactionClient,
     sportId: string,
     bookingTime: BookingTimeResult,
-    pendingHoldStartedAt: Date
+    now: Date,
+    legacyCutoff: Date
   ) {
     return tx.booking.findFirst({
       where: {
@@ -109,15 +112,25 @@ export class BookingConflictService {
           },
           {
             status: "PENDING",
-            createdAt: {
-              gt: pendingHoldStartedAt,
-            },
             startTime: {
               lt: bookingTime.endDateTime,
             },
             endTime: {
               gt: bookingTime.startDateTime,
             },
+            OR: [
+              {
+                reservationExpiresAt: {
+                  gt: now,
+                },
+              },
+              {
+                reservationExpiresAt: null,
+                createdAt: {
+                  gt: legacyCutoff,
+                },
+              },
+            ],
           },
         ],
       },
