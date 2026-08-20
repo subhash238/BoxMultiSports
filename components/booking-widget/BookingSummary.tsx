@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import {
   CalendarDays,
   Clock3,
-  Users,
   Check,
   MapPin,
   ShieldCheck,
@@ -143,7 +142,7 @@ export default function BookingSummary({
   const estimatedPrice =
     selectedSport?.slug === "yoga" ||
     selectedSport?.slug === "gym"
-      ? 399 * bookingData.players
+      ? 399 * bookingData.players!
       : Number(selectedPricing?.price ?? 0);
 
   // ==========================================
@@ -154,8 +153,6 @@ export default function BookingSummary({
   const hasDate = Boolean(bookingData.date);
   const hasTime = Boolean(bookingData.time);
   const hasDuration = Boolean(bookingData.duration);
-  const hasPlayers =
-    Number(bookingData.players) > 0;
 
   // ==========================================
   // UI
@@ -329,16 +326,6 @@ export default function BookingSummary({
               active={hasDuration}
             />
 
-            {/* Players */}
-
-            <SummaryRow
-              icon={<Users size={16} />}
-              label="Players"
-              value={String(
-                bookingData.players || 0
-              )}
-              active={hasPlayers}
-            />
           </div>
 
           {/* ==================================

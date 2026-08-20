@@ -3,7 +3,6 @@ export interface ValidationErrors {
   date?: string;
   time?: string;
   duration?: string;
-  players?: string;
   fullName?: string;
   mobile?: string;
 }
@@ -11,13 +10,13 @@ export interface ValidationErrors {
 export const validateName = (name: string): string => {
   const value = name.trim();
 
-  if (!value) return "Full name is required.";
-
-  if (value.length < 3)
-    return "Name must contain at least 3 characters.";
-
-  if (!/^[A-Za-z ]+$/.test(value))
-    return "Only letters and spaces are allowed.";
+  if (
+    !value ||
+    value.length > 100 ||
+    !/^[A-Za-z]/.test(value)
+  ) {
+    return "Please enter a valid full name.";
+  }
 
   return "";
 };
@@ -33,20 +32,6 @@ export const validateMobile = (mobile: string): string => {
 
   if (!/^[6-9]\d{9}$/.test(value))
     return "Enter a valid Indian mobile number.";
-
-  return "";
-};
-
-export const validatePlayers = (
-  players: number,
-  maxPlayers: number
-): string => {
-
-  if (players < 1)
-    return "Minimum 1 player required.";
-
-  if (players > maxPlayers)
-    return `Maximum ${maxPlayers} players allowed.`;
 
   return "";
 };
@@ -84,7 +69,6 @@ export function validateBooking(data: {
   date: string;
   time: string;
   duration: string;
-  players: number;
   fullName: string;
   mobile: string;
 }) {
@@ -97,7 +81,6 @@ export function validateBooking(data: {
   errors.duration = validateRequired(data.duration, "Duration");
   errors.fullName = validateName(data.fullName);
   errors.mobile = validateMobile(data.mobile);
-  errors.players = validatePlayers(data.players, 22);
 
   return errors;
 }

@@ -10,7 +10,6 @@ export interface TouchedFields {
   date: boolean;
   time: boolean;
   duration: boolean;
-  players: boolean;
   fullName: boolean;
   mobile: boolean;
 }
@@ -20,7 +19,6 @@ const initialTouchedState: TouchedFields = {
   date: false,
   time: false,
   duration: false,
-  players: false,
   fullName: false,
   mobile: false,
 };
@@ -79,7 +77,6 @@ const errors = useMemo<ValidationErrors>(() => {
       date: true,
       time: true,
       duration: true,
-      players: true,
       fullName: true,
       mobile: true,
     });

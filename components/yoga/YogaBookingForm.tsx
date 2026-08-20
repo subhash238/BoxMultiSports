@@ -177,11 +177,11 @@ export default function YogaBookingForm({
     const normalizedMobile = mobile.replace(/\D/g, "");
 
     if (
-      trimmedName.length < 3 ||
+      !trimmedName ||
       trimmedName.length > 100 ||
-      !/^[A-Za-z ]+$/.test(trimmedName)
+      !/^[A-Za-z]/.test(trimmedName)
     ) {
-      setFormError("Enter a valid full name.");
+      setFormError("Please enter a valid full name.");
       return;
     }
 

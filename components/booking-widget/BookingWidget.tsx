@@ -17,7 +17,7 @@ export interface BookingData {
   date: string;
   time: string;
   duration: string;
-  players: number;
+  players?: number;
   fullName: string;
   mobile: string;
   specialRequest: string;
@@ -47,7 +47,6 @@ export default function BookingWidget({
       date: "",
       time: "",
       duration: "1 Hour",
-      players: 2,
       fullName: "",
       mobile: "",
       specialRequest: "",

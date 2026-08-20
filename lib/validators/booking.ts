@@ -28,8 +28,12 @@ export const createBookingSchema = z.object({
   fullName: z
     .string()
     .trim()
-    .min(3, "Full name must be at least 3 characters.")
-    .max(100, "Full name must be at most 100 characters."),
+    .min(1, "Please enter a valid full name.")
+    .max(100, "Please enter a valid full name.")
+    .regex(
+      /^[A-Za-z]/,
+      "Please enter a valid full name."
+    ),
 
   mobile: z
     .string()

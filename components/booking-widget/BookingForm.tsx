@@ -9,7 +9,10 @@ import { ChevronDown, ShieldCheck } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 
 import BookingField from "./BookingField";
-import { SHARED_BOOKING_SPORT_SLUGS } from "./constants";
+import {
+  HOMEPAGE_BOOKING_SPORTS,
+  HomepageBookingSportSlug,
+} from "./constants";
 
 import {
   BookingData,
@@ -31,6 +34,18 @@ interface Sport {
   maxPlayers?: number | null;
   imageUrl?: string | null;
   isActive?: boolean;
+}
+
+interface HomepageBookingSport extends Sport {
+  displayLabel: string;
+}
+
+function isHomepageBookingSportSlug(
+  slug: string
+): slug is HomepageBookingSportSlug {
+  return HOMEPAGE_BOOKING_SPORTS.some(
+    (sport) => sport.slug === slug
+  );
 }
 
 // ==========================================
@@ -168,7 +183,7 @@ export default function BookingForm({
   // ==========================================
 
   const [sports, setSports] =
-    useState<Sport[]>([]);
+    useState<HomepageBookingSport[]>([]);
 
   const [sportsLoading, setSportsLoading] =
     useState(true);
@@ -232,12 +247,25 @@ export default function BookingForm({
           );
         }
 
+        const fetchedSports: Sport[] =
+          result.sports ?? [];
+
         const sharedSports =
-          (result.sports ?? []).filter(
-            (sport: Sport) =>
-              SHARED_BOOKING_SPORT_SLUGS.includes(
-                sport.slug as (typeof SHARED_BOOKING_SPORT_SLUGS)[number]
-              )
+          HOMEPAGE_BOOKING_SPORTS.flatMap(
+            ({ slug, label }) => {
+              const sport = fetchedSports.find(
+                (item) => item.slug === slug
+              );
+
+              return sport
+                ? [
+                    {
+                      ...sport,
+                      displayLabel: label,
+                    },
+                  ]
+                : [];
+            }
           );
 
         setSports(sharedSports);
@@ -273,8 +301,8 @@ export default function BookingForm({
 
     if (
       !requestedSlug ||
-      !SHARED_BOOKING_SPORT_SLUGS.includes(
-        requestedSlug as (typeof SHARED_BOOKING_SPORT_SLUGS)[number]
+      !isHomepageBookingSportSlug(
+        requestedSlug
       )
     ) {
       return;
@@ -373,8 +401,7 @@ export default function BookingForm({
 
             endTime,
 
-            numberOfPlayers:
-              bookingData.players,
+            numberOfPlayers: 1,
 
             fullName:
               bookingData.fullName.trim(),
@@ -754,7 +781,7 @@ export default function BookingForm({
                             text-white
                           "
                         >
-                          {sport.name}
+                          {sport.displayLabel}
                         </option>
                       )
                     )}
@@ -1078,47 +1105,8 @@ export default function BookingForm({
               className="
                 grid
                 gap-5
-                md:grid-cols-2
               "
             >
-
-              {/* Players */}
-
-              <BookingField
-                label="Number of Players"
-                type="number"
-                required
-                value={bookingData.players}
-                onChange={(e) =>
-                  updateField(
-                    "players",
-                    Number(
-                      e.target.value
-                    )
-                  )
-                }
-                onBlur={() =>
-                  handleBlur("players")
-                }
-                error={
-                  touched.players
-                    ? errors.players
-                    : undefined
-                }
-                success={
-                  touched.players &&
-                  !errors.players
-                }
-                className="
-                  !border-white/[0.10]
-                  !bg-white/[0.035]
-                  !text-white
-                  placeholder:!text-white/25
-                  focus:!border-[#B6F000]/70
-                  focus:!ring-[#B6F000]/10
-                "
-              />
-
               {/* Mobile */}
 
               <BookingField
