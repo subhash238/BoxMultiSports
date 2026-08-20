@@ -36,15 +36,25 @@ export class BookingConflictService {
               },
               {
                 status: "PENDING",
-                createdAt: {
-                  gt: legacyCutoff,
-                },
                 startTime: {
                   lt: bookingTime.endDateTime,
                 },
                 endTime: {
                   gt: bookingTime.startDateTime,
                 },
+                OR: [
+                  {
+                    reservationExpiresAt: {
+                      gt: now,
+                    },
+                  },
+                  {
+                    reservationExpiresAt: null,
+                    createdAt: {
+                      gt: legacyCutoff,
+                    },
+                  },
+                ],
               },
             ],
           },
