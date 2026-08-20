@@ -19,6 +19,14 @@ export const BOOKING_CONFIG = {
   MAX_DURATION: 600,
 
   /**
+   * Main Sports Operating Hours
+   * (Minutes from booking-day midnight, IST)
+   */
+  MAIN_OPENING_MINUTES_FROM_MIDNIGHT: 5 * 60,
+
+  MAIN_CLOSING_MINUTES_FROM_MIDNIGHT: 24 * 60,
+
+  /**
    * Payment Hold
    *
    * A PENDING booking temporarily holds

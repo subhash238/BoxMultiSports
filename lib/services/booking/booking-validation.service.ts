@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { AppError } from "@/lib/errors";
 import { Sport } from "@prisma/client";
 import { BOOKING_MESSAGES } from "./booking.responses";
+import { BOOKING_CONFIG } from "./booking.config";
 
 import { CreateBookingInput } from "@/lib/validators/booking";
 
@@ -13,6 +14,7 @@ import {
 import {
   buildBookingTime,
   buildBookingTimeFromDuration,
+  isWithinBookingDayOperatingHours,
   isSameDay,
   normalizeDate,
 } from "./booking.utils";
@@ -87,6 +89,12 @@ export class BookingValidationService {
     this.validateEndTime(
       bookingTime
     );
+
+    if (isMainBookingSport) {
+      this.validateMainBusinessHours(
+        bookingTime
+      );
+    }
 
     if (sport.slug === "yoga") {
       this.validateBusinessHours(
@@ -258,6 +266,24 @@ export class BookingValidationService {
     ) {
       throw new AppError(
         BOOKING_MESSAGES.INVALID_TIME_RANGE,
+        400
+      );
+    }
+  }
+
+  private static validateMainBusinessHours(
+    bookingTime: BookingTimeResult
+  ): void {
+    const isWithinOperatingHours =
+      isWithinBookingDayOperatingHours(
+        bookingTime,
+        BOOKING_CONFIG.MAIN_OPENING_MINUTES_FROM_MIDNIGHT,
+        BOOKING_CONFIG.MAIN_CLOSING_MINUTES_FROM_MIDNIGHT
+      );
+
+    if (!isWithinOperatingHours) {
+      throw new AppError(
+        "Bookings are available between 5:00 AM and 12:00 AM.",
         400
       );
     }

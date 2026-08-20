@@ -76,6 +76,32 @@ export function buildBookingTimeFromDuration(
   };
 }
 
+export function isWithinBookingDayOperatingHours(
+  bookingTime: BookingTimeResult,
+  openingMinutesFromMidnight: number,
+  closingMinutesFromMidnight: number
+): boolean {
+  const bookingDayStart =
+    bookingTime.bookingDate.getTime();
+
+  const openingBoundary =
+    bookingDayStart +
+    openingMinutesFromMidnight * 60 * 1000;
+
+  const closingBoundary =
+    bookingDayStart +
+    closingMinutesFromMidnight * 60 * 1000;
+
+  return (
+    bookingTime.startDateTime.getTime() >=
+      openingBoundary &&
+    bookingTime.startDateTime.getTime() <
+      closingBoundary &&
+    bookingTime.endDateTime.getTime() <=
+      closingBoundary
+  );
+}
+
 /**
  * ==========================================
  * Calculate Duration
