@@ -110,10 +110,6 @@ export default function Hero({
         {/* Buttons */}
         <div className="mt-12 flex flex-wrap justify-center gap-5">
 
-          <button className="rounded-xl bg-text-lime-400 px-8 py-4 text-lg font-semibold transition-all duration-300 hover:scale-105 hover:bg-text-lime-300">
-            Book Your Slot
-          </button>
-
           <button className="rounded-xl border border-text-lime-400 px-8 py-4 text-lg font-semibold transition-all duration-300 hover:bg-text-lime-400 hover:text-black">
             Explore Arena
           </button>
