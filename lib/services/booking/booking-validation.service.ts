@@ -99,6 +99,10 @@ export class BookingValidationService {
         bookingTime
       );
 
+      this.validateYogaStartGrid(
+        bookingTime
+      );
+
       this.validateBusinessHours(
         bookingTime
       );
@@ -307,6 +311,19 @@ export class BookingValidationService {
     ) {
       throw new AppError(
         "Yoga bookings support only 60, 90, or 120 minutes.",
+        400
+      );
+    }
+  }
+
+  private static validateYogaStartGrid(
+    bookingTime: BookingTimeResult
+  ): void {
+    if (
+      bookingTime.startDateTime.getUTCMinutes() % 30 !== 0
+    ) {
+      throw new AppError(
+        "Yoga bookings must start on a 30-minute time slot.",
         400
       );
     }
