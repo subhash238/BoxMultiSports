@@ -61,19 +61,23 @@ export class BookingPricingService {
     const isYoga =
       sportSlug === "yoga";
 
+    const isGym =
+      sportSlug === "gym";
+
     // -----------------------------------------
     // Validate Duration
     // -----------------------------------------
     //
-    // Main and Yoga SportPricing durations use
-    // exact minutes. Other existing booking flows
-    // retain their complete-hour requirement.
+    // Main, Yoga, and Gym SportPricing durations
+    // use exact minutes. Other existing booking
+    // flows retain their complete-hour requirement.
     // -----------------------------------------
 
     if (
       durationMinutes <= 0 ||
       (!isMainBookingSport &&
         !isYoga &&
+        !isGym &&
         !Number.isInteger(durationHours))
     ) {
       throw new AppError(
@@ -84,7 +88,7 @@ export class BookingPricingService {
 
     if (
       isYoga ||
-      sportSlug === "gym"
+      isGym
     ) {
       if (
         numberOfPlayers === undefined ||
@@ -141,9 +145,28 @@ export class BookingPricingService {
       };
     }
 
-    if (sportSlug === "gym") {
-      const totalAmount =
-        399 * numberOfPlayers!;
+    if (isGym) {
+      const sportPricing =
+        await prisma.sportPricing.findFirst({
+          where: {
+            sportId,
+            duration: durationMinutes,
+            isActive: true,
+          },
+        });
+
+      if (!sportPricing) {
+        throw new AppError(
+          `No active pricing is configured for a ${durationMinutes}-minute Gym booking.`,
+          400
+        );
+      }
+
+      const totalAmount = Number(
+        sportPricing.price.mul(
+          numberOfPlayers!
+        )
+      );
 
       return {
         durationMinutes,
