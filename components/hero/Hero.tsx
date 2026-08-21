@@ -128,7 +128,7 @@ export default function Hero({
         <div className="mt-20 grid w-full max-w-5xl grid-cols-2 gap-8 border-t border-white/20 pt-10 md:grid-cols-4">
 
           <div>
-            <h3 className="text-4xl font-bold text-text-lime-400">
+            <h3 className="text-4xl font-bold text-yellow-400">
               ★★★★★
             </h3>
             <p className="mt-2 text-gray-300">
