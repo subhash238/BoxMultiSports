@@ -17,6 +17,12 @@ const navItems = [
 
 export default function Navbar() {
   const pathname = usePathname();
+  const bookNowHref =
+    pathname === "/yoga"
+      ? "/yoga#yoga-booking"
+      : pathname === "/gym"
+        ? "/gym#gym-booking"
+        : "/#booking";
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -60,8 +66,8 @@ export default function Navbar() {
               className="h-11 w-11 rounded-xl lg:h-[58px] lg:w-[58px]"
             />
             <div className="min-w-0">
-              <h1 className="truncate text-lg font-extrabold tracking-wide text-white lg:text-2xl">
-                UNI <span className="text-[#B6F000]">TURF</span>
+              <h1 className="truncate text-lg font-medium tracking-wide text-white lg:text-2xl">
+                UNI<span className="font-extrabold text-[#B6F000]">TURF</span>
               </h1>
               <p className="hidden text-xs uppercase tracking-[3px] text-gray-400 sm:block">
                 PLAY · IMPROVE · CONNECT
@@ -84,7 +90,7 @@ export default function Navbar() {
 
           <div className="flex shrink-0 items-center gap-2">
             <Link
-              href="/booking"
+              href={bookNowHref}
               onClick={() => setMenuOpen(false)}
               className="rounded-xl bg-[#B6F000] px-3 py-2 text-xs font-semibold text-black transition-all duration-300 hover:scale-105 hover:bg-[#C8FF1A] hover:shadow-[0_0_30px_rgba(182,240,0,0.45)] sm:px-4 lg:rounded-2xl lg:px-7 lg:py-3 lg:text-base"
             >
@@ -131,7 +137,7 @@ export default function Navbar() {
                   </Link>
                 ))}
                 <Link
-                  href="/booking"
+                  href={bookNowHref}
                   onClick={() => setMenuOpen(false)}
                   className="mt-1 flex min-h-11 items-center justify-center rounded-xl bg-[#B6F000] px-4 text-sm font-bold text-black transition hover:bg-[#C8FF1A] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B6F000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                 >
