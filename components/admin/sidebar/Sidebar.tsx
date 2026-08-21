@@ -11,28 +11,23 @@ import {
 const menuItems = [
   {
     title: "Dashboard",
-    href: "/dashboard",
+    href: "/admin/dashboard",
     icon: LayoutDashboard,
   },
   {
     title: "Sports",
-    href: "/sports",
+    href: "/admin/sports",
     icon: Trophy,
   },
   {
     title: "Bookings",
-    href: "/bookings",
+    href: "/admin/bookings",
     icon: CalendarDays,
   },
   {
     title: "Users",
-    href: "/users",
+    href: "/admin/users",
     icon: Users,
-  },
-  {
-    title: "Settings",
-    href: "/settings",
-    icon: Settings,
   },
 ];
 
