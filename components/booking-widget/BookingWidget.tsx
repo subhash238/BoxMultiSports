@@ -74,6 +74,9 @@ export default function BookingWidget({
   const [bookingError, setBookingError] =
     useState<string | null>(null);
 
+  const [paymentSuccess, setPaymentSuccess] =
+    useState(false);
+
   useEffect(() => {
     if (
       typeof window === "undefined" ||
@@ -116,6 +119,7 @@ export default function BookingWidget({
       result.guestPaymentToken
     );
     setBookingError(null);
+    setPaymentSuccess(false);
     setPaymentOpen(true);
   };
 
@@ -136,6 +140,7 @@ export default function BookingWidget({
   const handlePaymentSuccess = () => {
     setGuestPaymentToken(null);
     setPaymentOpen(false);
+    setPaymentSuccess(true);
   };
 
   return (
@@ -456,92 +461,275 @@ export default function BookingWidget({
             />
 
             {/* ==================================================
-                BOOKING LAYOUT
-
-                Desktop:
-                FORM       | SUMMARY
-
-                Mobile:
-                FORM
-                SUMMARY
+                BOOKING LAYOUT / SUCCESS
             ================================================== */}
 
-            <div
-              className="
-                relative
-                grid
-                w-full
-                grid-cols-1
-                items-start
-                gap-4
-                lg:grid-cols-[minmax(0,1fr)_330px]
-                lg:gap-5
-                xl:grid-cols-[minmax(0,1fr)_350px]
-              "
-            >
-
-              {/* ==================================================
-                  FORM PANEL
-              ================================================== */}
-
-              <div
+            {paymentSuccess && createdBooking ? (
+              <motion.div
+                initial={{
+                  opacity: 0,
+                  y: 14,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                }}
                 className="
-                  min-w-0
-                  overflow-hidden
+                  relative
+                  mx-auto
+                  w-full
+                  max-w-2xl
                   rounded-[22px]
                   border
-                  border-white/[0.09]
+                  border-[#B6F000]/20
                   bg-[#090b09]/90
-                  shadow-[0_20px_60px_rgba(0,0,0,0.25)]
-                "
-              >
-                <BookingForm
-                  bookingData={bookingData}
-                  setBookingData={setBookingData}
-                  selectedSportSlug={selectedSportSlug}
-                  onBookingCreated={
-                    handleBookingCreated
-                  }
-                  onBookingError={
-                    handleBookingError
-                  }
-                  setBookingLoading={
-                    setBookingLoading
-                  }
-                />
-              </div>
-
-              {/* ==================================================
-                  SUMMARY PANEL
-              ================================================== */}
-
-              <div
-                className="
-                  min-w-0
-                  lg:sticky
-                  lg:top-6
+                  px-5
+                  py-8
+                  text-center
+                  shadow-[0_20px_60px_rgba(0,0,0,0.30)]
+                  sm:px-8
+                  sm:py-10
                 "
               >
                 <div
                   className="
+                    mx-auto
+                    flex
+                    h-14
+                    w-14
+                    items-center
+                    justify-center
+                    rounded-full
+                    bg-[#B6F000]/10
+                  "
+                >
+                  <CheckCircle2
+                    size={30}
+                    className="text-[#B6F000]"
+                  />
+                </div>
+
+                <p
+                  className="
+                    mt-5
+                    text-[10px]
+                    font-bold
+                    uppercase
+                    tracking-[0.28em]
+                    text-[#B6F000]
+                  "
+                >
+                  Payment Successful
+                </p>
+
+                <h3
+                  className="
+                    mt-2
+                    text-2xl
+                    font-semibold
+                    tracking-[-0.03em]
+                    text-white
+                    sm:text-3xl
+                  "
+                >
+                  Booking Confirmed
+                </h3>
+
+                <p
+                  className="
+                    mx-auto
+                    mt-3
+                    max-w-lg
+                    text-sm
+                    leading-6
+                    text-white/50
+                  "
+                >
+                  Your payment was successful and your turf booking is confirmed.
+                  Save your booking number for reference.
+                </p>
+
+                <div
+                  className="
+                    mt-7
+                    rounded-2xl
+                    border
+                    border-white/[0.09]
+                    bg-white/[0.035]
+                    p-5
+                    text-left
+                  "
+                >
+                  <div
+                    className="
+                      border-b
+                      border-white/[0.07]
+                      pb-4
+                      text-center
+                    "
+                  >
+                    <p
+                      className="
+                        text-[10px]
+                        font-semibold
+                        uppercase
+                        tracking-[0.2em]
+                        text-white/40
+                      "
+                    >
+                      Booking Number
+                    </p>
+
+                    <p
+                      className="
+                        mt-2
+                        text-xl
+                        font-bold
+                        text-[#B6F000]
+                      "
+                    >
+                      {createdBooking.bookingNumber}
+                    </p>
+                  </div>
+
+                  <div className="mt-4 space-y-3 text-sm">
+                    <div className="flex justify-between gap-4">
+                      <span className="text-white/40">
+                        Sport
+                      </span>
+                      <span className="text-right font-semibold text-white">
+                        {createdBooking.sportName ??
+                          bookingData.sport}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between gap-4">
+                      <span className="text-white/40">
+                        Date
+                      </span>
+                      <span className="text-right font-semibold text-white">
+                        {bookingData.date}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between gap-4">
+                      <span className="text-white/40">
+                        Time
+                      </span>
+                      <span className="text-right font-semibold text-white">
+                        {bookingData.time}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between gap-4">
+                      <span className="text-white/40">
+                        Duration
+                      </span>
+                      <span className="text-right font-semibold text-white">
+                        {bookingData.duration}
+                      </span>
+                    </div>
+
+                    <div
+                      className="
+                        flex
+                        justify-between
+                        gap-4
+                        border-t
+                        border-white/[0.07]
+                        pt-3
+                      "
+                    >
+                      <span className="font-semibold text-white">
+                        Total Amount
+                      </span>
+                      <span className="text-right text-lg font-bold text-[#B6F000]">
+                        ₹{Number(
+                          createdBooking.totalAmount
+                        ).toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ) : (
+              <div
+                className="
+                  relative
+                  grid
+                  w-full
+                  grid-cols-1
+                  items-start
+                  gap-4
+                  lg:grid-cols-[minmax(0,1fr)_330px]
+                  lg:gap-5
+                  xl:grid-cols-[minmax(0,1fr)_350px]
+                "
+              >
+
+                {/* ==================================================
+                    FORM PANEL
+                ================================================== */}
+
+                <div
+                  className="
+                    min-w-0
                     overflow-hidden
                     rounded-[22px]
                     border
                     border-white/[0.09]
-                    bg-gradient-to-b
-                    from-[#101410]
-                    via-[#0b0e0b]
-                    to-[#080a08]
-                    shadow-[0_20px_60px_rgba(0,0,0,0.30)]
+                    bg-[#090b09]/90
+                    shadow-[0_20px_60px_rgba(0,0,0,0.25)]
                   "
                 >
-                  <BookingSummary
+                  <BookingForm
                     bookingData={bookingData}
+                    setBookingData={setBookingData}
+                    selectedSportSlug={selectedSportSlug}
+                    onBookingCreated={
+                      handleBookingCreated
+                    }
+                    onBookingError={
+                      handleBookingError
+                    }
+                    setBookingLoading={
+                      setBookingLoading
+                    }
                   />
                 </div>
-              </div>
 
-            </div>
+                {/* ==================================================
+                    SUMMARY PANEL
+                ================================================== */}
+
+                <div
+                  className="
+                    min-w-0
+                    lg:sticky
+                    lg:top-6
+                  "
+                >
+                  <div
+                    className="
+                      overflow-hidden
+                      rounded-[22px]
+                      border
+                      border-white/[0.09]
+                      bg-gradient-to-b
+                      from-[#101410]
+                      via-[#0b0e0b]
+                      to-[#080a08]
+                      shadow-[0_20px_60px_rgba(0,0,0,0.30)]
+                    "
+                  >
+                    <BookingSummary
+                      bookingData={bookingData}
+                    />
+                  </div>
+                </div>
+
+              </div>
+            )}
 
             {/* ==================================================
                 TRUST BAR
