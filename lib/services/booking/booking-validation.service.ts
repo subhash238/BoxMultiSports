@@ -25,6 +25,13 @@ import {
   normalizeDate,
 } from "./booking.utils";
 
+const GYM_ALLOWED_DURATIONS_MINUTES =
+  new Set<number>([
+    60,
+    90,
+    120,
+  ]);
+
 export class BookingValidationService {
   /**
    * ==========================================
@@ -104,6 +111,20 @@ export class BookingValidationService {
       );
 
       this.validateBusinessHours(
+        bookingTime
+      );
+    }
+
+    if (sport.slug === "gym") {
+      this.validateGymDuration(
+        bookingTime
+      );
+
+      this.validateGymStartGrid(
+        bookingTime
+      );
+
+      this.validateGymBusinessHours(
         bookingTime
       );
     }
@@ -277,6 +298,11 @@ export class BookingValidationService {
     }
   }
 
+  /**
+   * ==========================================
+   * Validate Main Sports Business Hours
+   * ==========================================
+   */
   private static validateMainBusinessHours(
     bookingTime: BookingTimeResult
   ): void {
@@ -295,6 +321,11 @@ export class BookingValidationService {
     }
   }
 
+  /**
+   * ==========================================
+   * Validate Yoga Duration
+   * ==========================================
+   */
   private static validateYogaDuration(
     bookingTime: BookingTimeResult
   ): void {
@@ -316,6 +347,11 @@ export class BookingValidationService {
     }
   }
 
+  /**
+   * ==========================================
+   * Validate Yoga Start Grid
+   * ==========================================
+   */
   private static validateYogaStartGrid(
     bookingTime: BookingTimeResult
   ): void {
@@ -331,7 +367,82 @@ export class BookingValidationService {
 
   /**
    * ==========================================
-   * Validate Business Hours
+   * Validate Gym Duration
+   * ==========================================
+   */
+  private static validateGymDuration(
+    bookingTime: BookingTimeResult
+  ): void {
+    const durationMinutes =
+      calculateDurationMinutes(
+        bookingTime.startDateTime,
+        bookingTime.endDateTime
+      );
+
+    if (
+      !GYM_ALLOWED_DURATIONS_MINUTES.has(
+        durationMinutes
+      )
+    ) {
+      throw new AppError(
+        "Gym bookings support only 60, 90, or 120 minutes.",
+        400
+      );
+    }
+  }
+
+  /**
+   * ==========================================
+   * Validate Gym Start Grid
+   * ==========================================
+   */
+  private static validateGymStartGrid(
+    bookingTime: BookingTimeResult
+  ): void {
+    if (
+      bookingTime.startDateTime.getUTCMinutes() % 30 !== 0
+    ) {
+      throw new AppError(
+        "Gym bookings must start on a 30-minute time slot.",
+        400
+      );
+    }
+  }
+
+  /**
+   * ==========================================
+   * Validate Gym Business Hours
+   * ==========================================
+   */
+  private static validateGymBusinessHours(
+    bookingTime: BookingTimeResult
+  ): void {
+    const {
+      openingTime,
+      closingTime,
+    } =
+      this.buildBusinessHours(
+        bookingTime.bookingDate,
+        "05:00",
+        "23:00"
+      );
+
+    if (
+      bookingTime.startDateTime <
+        openingTime ||
+      bookingTime.endDateTime >
+        closingTime
+    ) {
+      throw new AppError(
+        "Gym bookings are allowed only between 05:00 AM and 11:00 PM.",
+        400
+      );
+    }
+  }
+
+  /**
+   * ==========================================
+   * Validate Yoga Business Hours
    * ==========================================
    */
   private static validateBusinessHours(
