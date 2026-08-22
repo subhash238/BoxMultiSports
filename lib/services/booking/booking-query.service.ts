@@ -158,6 +158,27 @@ export class BookingQueryService {
         },
 
         {
+          customerName: {
+            contains: query.search,
+            mode: "insensitive",
+          },
+        },
+
+        {
+          customerEmail: {
+            contains: query.search,
+            mode: "insensitive",
+          },
+        },
+
+        {
+          customerMobile: {
+            contains: query.search,
+            mode: "insensitive",
+          },
+        },
+
+        {
           user: {
             name: {
               contains: query.search,
