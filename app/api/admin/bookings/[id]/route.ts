@@ -72,7 +72,26 @@ export async function GET(
           id,
         },
 
-        include: {
+        select: {
+          // --------------------------------------
+          // Booking Information
+          // --------------------------------------
+
+          id: true,
+          bookingNumber: true,
+          bookingDate: true,
+          startTime: true,
+          endTime: true,
+          duration: true,
+          numberOfPlayers: true,
+          totalAmount: true,
+          status: true,
+
+          customerName: true,
+          customerEmail: true,
+          customerMobile: true,
+          specialRequest: true,
+
           // --------------------------------------
           // Customer Information
           // --------------------------------------
@@ -126,7 +145,13 @@ export async function GET(
               createdAt: "desc",
             },
 
-            include: {
+            select: {
+              id: true,
+              fromStatus: true,
+              toStatus: true,
+              changedById: true,
+              createdAt: true,
+
               changedBy: {
                 select: {
                   id: true,

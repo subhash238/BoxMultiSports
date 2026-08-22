@@ -74,7 +74,13 @@ interface Booking {
   duration: number;
   totalAmount: string | number;
   status: BookingStatus;
-  user: BookingUser;
+
+  customerName: string | null;
+  customerEmail: string | null;
+  customerMobile: string | null;
+  specialRequest: string | null;
+
+  user: BookingUser | null;
   sport: BookingSport;
   payment: BookingPayment | null;
   statusHistory: BookingStatusHistory[];
@@ -754,7 +760,9 @@ export default function BookingDetailsPage({
             </p>
 
             <p className="mt-1 font-medium">
-              {booking.user.name}
+              {booking.user?.name ??
+                booking.customerName ??
+                "Guest"}
             </p>
           </div>
 
@@ -766,7 +774,9 @@ export default function BookingDetailsPage({
             </p>
 
             <p className="mt-1 font-medium">
-              {booking.user.email}
+              {booking.user?.email ??
+                booking.customerEmail ??
+                "—"}
             </p>
           </div>
 
@@ -778,7 +788,9 @@ export default function BookingDetailsPage({
             </p>
 
             <p className="mt-1 font-medium">
-              {booking.user.mobile}
+              {booking.user?.mobile ??
+                booking.customerMobile ??
+                "—"}
             </p>
           </div>
 
