@@ -1,3 +1,565 @@
+"use client";
+
+import { FormEvent, useState } from "react";
+import {
+  Clock3,
+  Mail,
+  MapPin,
+  MessageCircle,
+  Phone,
+  Send,
+} from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
+
+const PHONE_DISPLAY = "+91 90310 17884";
+const PHONE_LINK = "tel:+919031017884";
+const EMAIL = "info@uniturf.in";
+
+const WHATSAPP_BASE_URL =
+  "https://wa.me/919031017884";
+
+const GOOGLE_MAPS_URL =
+  "https://maps.app.goo.gl/awyLTrP8RHETjCrq8?g_st=awb";
+
 export default function ContactPage() {
-  return <div>Contact Page</div>;
+  const [name, setName] = useState("");
+  const [mobile, setMobile] = useState("");
+  const [message, setMessage] = useState("");
+  const [formError, setFormError] = useState("");
+
+  const handleWhatsAppEnquiry = (
+    event: FormEvent<HTMLFormElement>
+  ) => {
+    event.preventDefault();
+
+    const trimmedName = name.trim();
+    const trimmedMobile = mobile.trim();
+    const trimmedMessage = message.trim();
+
+    if (
+      !trimmedName ||
+      !trimmedMobile ||
+      !trimmedMessage
+    ) {
+      setFormError(
+        "Please enter your name, mobile number and message."
+      );
+      return;
+    }
+
+    setFormError("");
+
+    const enquiryMessage = [
+      "Hello UniTurf,",
+      "",
+      "I would like to make an enquiry.",
+      "",
+      `Name: ${trimmedName}`,
+      `Mobile: ${trimmedMobile}`,
+      "",
+      `Message: ${trimmedMessage}`,
+    ].join("\n");
+
+    const whatsappUrl =
+      `${WHATSAPP_BASE_URL}?text=${encodeURIComponent(
+        enquiryMessage
+      )}`;
+
+    window.open(
+      whatsappUrl,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  };
+
+  return (
+    <main className="min-h-screen bg-[#050705] text-white">
+      {/* ==================================================
+          HERO
+      ================================================== */}
+
+      <section
+        className="
+          relative
+          isolate
+          overflow-hidden
+          border-b
+          border-white/[0.07]
+          px-4
+          pb-16
+          pt-32
+          sm:px-6
+          sm:pb-20
+          sm:pt-36
+          lg:px-8
+        "
+      >
+        <div
+          className="
+            pointer-events-none
+            absolute
+            left-1/2
+            top-0
+            h-[420px]
+            w-[760px]
+            -translate-x-1/2
+            rounded-full
+            bg-[#B6F000]/[0.05]
+            blur-[140px]
+          "
+        />
+
+        <div className="relative mx-auto max-w-5xl text-center">
+          <span
+            className="
+              text-[10px]
+              font-bold
+              uppercase
+              tracking-[0.3em]
+              text-[#B6F000]
+            "
+          >
+            Contact UniTurf
+          </span>
+
+          <h1
+            className="
+              mt-5
+              text-4xl
+              font-semibold
+              tracking-[-0.045em]
+              sm:text-5xl
+              lg:text-6xl
+            "
+          >
+            We&apos;re Here to Help.
+          </h1>
+
+          <p
+            className="
+              mx-auto
+              mt-5
+              max-w-2xl
+              text-sm
+              leading-7
+              text-white/50
+              sm:text-base
+            "
+          >
+            Need help with a booking, sports
+            availability or anything else? Call,
+            WhatsApp or send us a quick enquiry.
+          </p>
+        </div>
+      </section>
+
+      {/* ==================================================
+          CONTACT CONTENT
+      ================================================== */}
+
+      <section className="relative px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+        <div
+          className="
+            mx-auto
+            grid
+            max-w-6xl
+            grid-cols-1
+            gap-6
+            lg:grid-cols-[0.9fr_1.1fr]
+          "
+        >
+          {/* ==============================================
+              CONTACT DETAILS
+          ============================================== */}
+
+          <div className="space-y-4">
+            <ContactCard
+              icon={<Phone size={20} />}
+              label="Call Us"
+              value={PHONE_DISPLAY}
+              href={PHONE_LINK}
+            />
+
+            <ContactCard
+              icon={<FaWhatsapp size={20} />}
+              label="WhatsApp"
+              value="Chat with UniTurf"
+              href={WHATSAPP_BASE_URL}
+              external
+            />
+
+            <ContactCard
+              icon={<Mail size={20} />}
+              label="Email"
+              value={EMAIL}
+              href={`mailto:${EMAIL}`}
+            />
+
+            <ContactCard
+              icon={<Clock3 size={20} />}
+              label="Opening Hours"
+              value="Open 24 Hours"
+            />
+
+            <a
+              href={GOOGLE_MAPS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="
+                group
+                flex
+                items-center
+                justify-between
+                rounded-[22px]
+                border
+                border-white/[0.09]
+                bg-gradient-to-br
+                from-[#101310]
+                to-[#080a08]
+                p-5
+                transition
+                hover:border-[#B6F000]/30
+              "
+            >
+              <div className="flex items-center gap-4">
+                <span
+                  className="
+                    flex
+                    h-11
+                    w-11
+                    items-center
+                    justify-center
+                    rounded-xl
+                    bg-[#B6F000]/10
+                    text-[#B6F000]
+                  "
+                >
+                  <MapPin size={20} />
+                </span>
+
+                <div>
+                  <p className="text-xs text-white/40">
+                    Find Us
+                  </p>
+
+                  <p className="mt-1 font-semibold">
+                    Open in Google Maps
+                  </p>
+                </div>
+              </div>
+
+              <span
+                className="
+                  text-sm
+                  text-[#B6F000]
+                  transition-transform
+                  group-hover:translate-x-1
+                "
+              >
+                →
+              </span>
+            </a>
+          </div>
+
+          {/* ==============================================
+              QUICK ENQUIRY
+          ============================================== */}
+
+          <div
+            className="
+              rounded-[28px]
+              border
+              border-white/[0.09]
+              bg-gradient-to-br
+              from-[#111611]
+              via-[#090b09]
+              to-[#070807]
+              p-5
+              shadow-[0_30px_90px_rgba(0,0,0,0.35)]
+              sm:p-7
+              lg:p-8
+            "
+          >
+            <div className="flex items-start gap-4">
+              <span
+                className="
+                  flex
+                  h-11
+                  w-11
+                  shrink-0
+                  items-center
+                  justify-center
+                  rounded-xl
+                  bg-[#B6F000]/10
+                  text-[#B6F000]
+                "
+              >
+                <MessageCircle size={21} />
+              </span>
+
+              <div>
+                <h2 className="text-xl font-semibold sm:text-2xl">
+                  Quick Enquiry
+                </h2>
+
+                <p className="mt-1 text-sm text-white/45">
+                  Fill in the details and continue
+                  directly on WhatsApp.
+                </p>
+              </div>
+            </div>
+
+            <form
+              onSubmit={handleWhatsAppEnquiry}
+              className="mt-7 space-y-5"
+            >
+              <div>
+                <label
+                  htmlFor="contact-name"
+                  className="
+                    mb-2
+                    block
+                    text-xs
+                    font-semibold
+                    uppercase
+                    tracking-[0.14em]
+                    text-white/50
+                  "
+                >
+                  Your Name
+                </label>
+
+                <input
+                  id="contact-name"
+                  type="text"
+                  value={name}
+                  onChange={(event) =>
+                    setName(event.target.value)
+                  }
+                  placeholder="Enter your name"
+                  autoComplete="name"
+                  className="
+                    w-full
+                    rounded-xl
+                    border
+                    border-white/[0.10]
+                    bg-white/[0.035]
+                    px-4
+                    py-3.5
+                    text-sm
+                    text-white
+                    outline-none
+                    transition
+                    placeholder:text-white/25
+                    focus:border-[#B6F000]/50
+                  "
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="contact-mobile"
+                  className="
+                    mb-2
+                    block
+                    text-xs
+                    font-semibold
+                    uppercase
+                    tracking-[0.14em]
+                    text-white/50
+                  "
+                >
+                  Mobile Number
+                </label>
+
+                <input
+                  id="contact-mobile"
+                  type="tel"
+                  value={mobile}
+                  onChange={(event) =>
+                    setMobile(event.target.value)
+                  }
+                  placeholder="Enter your mobile number"
+                  autoComplete="tel"
+                  className="
+                    w-full
+                    rounded-xl
+                    border
+                    border-white/[0.10]
+                    bg-white/[0.035]
+                    px-4
+                    py-3.5
+                    text-sm
+                    text-white
+                    outline-none
+                    transition
+                    placeholder:text-white/25
+                    focus:border-[#B6F000]/50
+                  "
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="contact-message"
+                  className="
+                    mb-2
+                    block
+                    text-xs
+                    font-semibold
+                    uppercase
+                    tracking-[0.14em]
+                    text-white/50
+                  "
+                >
+                  Message
+                </label>
+
+                <textarea
+                  id="contact-message"
+                  value={message}
+                  onChange={(event) =>
+                    setMessage(event.target.value)
+                  }
+                  placeholder="How can we help you?"
+                  rows={5}
+                  className="
+                    w-full
+                    resize-none
+                    rounded-xl
+                    border
+                    border-white/[0.10]
+                    bg-white/[0.035]
+                    px-4
+                    py-3.5
+                    text-sm
+                    text-white
+                    outline-none
+                    transition
+                    placeholder:text-white/25
+                    focus:border-[#B6F000]/50
+                  "
+                />
+              </div>
+
+              {formError && (
+                <p
+                  role="alert"
+                  className="
+                    rounded-xl
+                    border
+                    border-red-500/20
+                    bg-red-500/[0.08]
+                    px-4
+                    py-3
+                    text-sm
+                    text-red-400
+                  "
+                >
+                  {formError}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                className="
+                  flex
+                  w-full
+                  items-center
+                  justify-center
+                  gap-2
+                  rounded-xl
+                  bg-[#B6F000]
+                  px-5
+                  py-4
+                  text-sm
+                  font-bold
+                  text-[#080a08]
+                  transition
+                  hover:brightness-105
+                  active:scale-[0.99]
+                "
+              >
+                <Send size={17} />
+                Send Enquiry on WhatsApp
+              </button>
+
+              <p className="text-center text-xs leading-5 text-white/30">
+                Your enquiry will open in WhatsApp.
+                Nothing is submitted to our database.
+              </p>
+            </form>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+interface ContactCardProps {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  href?: string;
+  external?: boolean;
+}
+
+function ContactCard({
+  icon,
+  label,
+  value,
+  href,
+  external = false,
+}: ContactCardProps) {
+  const content = (
+    <>
+      <span
+        className="
+          flex
+          h-11
+          w-11
+          shrink-0
+          items-center
+          justify-center
+          rounded-xl
+          bg-[#B6F000]/10
+          text-[#B6F000]
+        "
+      >
+        {icon}
+      </span>
+
+      <div>
+        <p className="text-xs text-white/40">
+          {label}
+        </p>
+
+        <p className="mt-1 font-semibold text-white">
+          {value}
+        </p>
+      </div>
+    </>
+  );
+
+  const className =
+    "flex items-center gap-4 rounded-[22px] border border-white/[0.09] bg-gradient-to-br from-[#101310] to-[#080a08] p-5 transition hover:border-[#B6F000]/30";
+
+  if (!href) {
+    return <div className={className}>{content}</div>;
+  }
+
+  return (
+    <a
+      href={href}
+      target={external ? "_blank" : undefined}
+      rel={
+        external
+          ? "noopener noreferrer"
+          : undefined
+      }
+      className={className}
+    >
+      {content}
+    </a>
+  );
 }
