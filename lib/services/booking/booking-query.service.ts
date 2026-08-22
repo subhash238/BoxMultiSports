@@ -202,7 +202,22 @@ export class BookingQueryService {
             bookingDate: "desc",
           },
 
-          include: {
+          select: {
+            id: true,
+            bookingNumber: true,
+            bookingDate: true,
+            startTime: true,
+            endTime: true,
+            duration: true,
+            numberOfPlayers: true,
+            totalAmount: true,
+            status: true,
+
+            customerName: true,
+            customerEmail: true,
+            customerMobile: true,
+            specialRequest: true,
+
             user: {
               select: {
                 id: true,

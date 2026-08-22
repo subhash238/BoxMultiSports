@@ -23,9 +23,16 @@ interface Booking {
   startTime: string;
   endTime: string;
   duration: number;
+  numberOfPlayers: number;
   totalAmount: string | number;
   status: string;
-  user: BookingUser;
+
+  customerName: string | null;
+  customerEmail: string | null;
+  customerMobile: string | null;
+  specialRequest: string | null;
+
+  user: BookingUser | null;
   sport: BookingSport;
 }
 
@@ -500,11 +507,15 @@ export default function BookingList() {
                     <td className="px-4 py-4">
 
                       <div className="font-medium">
-                        {booking.user.name}
+                        {booking.user?.name ??
+                          booking.customerName ??
+                          "Guest"}
                       </div>
 
                       <div className="mt-1 text-xs text-gray-500">
-                        {booking.user.mobile}
+                        {booking.user?.mobile ??
+                          booking.customerMobile ??
+                          "—"}
                       </div>
 
                     </td>
