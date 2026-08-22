@@ -24,8 +24,7 @@ export async function GET(
     // Get Current User
     // ==========================================
 
-    const user =
-      await getCurrentUser(request);
+    const user = await getCurrentUser(request);
 
     // ==========================================
     // Check Admin Permission
@@ -47,8 +46,7 @@ export async function GET(
     // Get Booking ID
     // ==========================================
 
-    const { id } =
-      await context.params;
+    const { id } = await context.params;
 
     if (!id) {
       return NextResponse.json(
@@ -66,104 +64,103 @@ export async function GET(
     // Find Booking
     // ==========================================
 
-    const booking =
-      await prisma.booking.findUnique({
-        where: {
-          id,
+    const booking = await prisma.booking.findUnique({
+      where: {
+        id,
+      },
+
+      select: {
+        // --------------------------------------
+        // Booking Information
+        // --------------------------------------
+
+        id: true,
+        bookingNumber: true,
+        bookingDate: true,
+        startTime: true,
+        endTime: true,
+        duration: true,
+        numberOfPlayers: true,
+        totalAmount: true,
+        status: true,
+
+        customerName: true,
+        customerEmail: true,
+        customerMobile: true,
+        specialRequest: true,
+
+        // --------------------------------------
+        // Customer Information
+        // --------------------------------------
+
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            mobile: true,
+          },
         },
 
-        select: {
-          // --------------------------------------
-          // Booking Information
-          // --------------------------------------
+        // --------------------------------------
+        // Sport Information
+        // --------------------------------------
 
-          id: true,
-          bookingNumber: true,
-          bookingDate: true,
-          startTime: true,
-          endTime: true,
-          duration: true,
-          numberOfPlayers: true,
-          totalAmount: true,
-          status: true,
+        sport: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            imageUrl: true,
+            pricePerHour: true,
+          },
+        },
 
-          customerName: true,
-          customerEmail: true,
-          customerMobile: true,
-          specialRequest: true,
+        // --------------------------------------
+        // Payment Information
+        // --------------------------------------
 
-          // --------------------------------------
-          // Customer Information
-          // --------------------------------------
+        payment: {
+          select: {
+            status: true,
+            recoveryState: true,
+            amount: true,
+            currency: true,
+            razorpayOrderId: true,
+            razorpayPaymentId: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
 
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              mobile: true,
-            },
+        // --------------------------------------
+        // Booking Status History
+        // --------------------------------------
+
+        statusHistory: {
+          orderBy: {
+            createdAt: "desc",
           },
 
-          // --------------------------------------
-          // Sport Information
-          // --------------------------------------
+          select: {
+            id: true,
+            fromStatus: true,
+            toStatus: true,
+            changedById: true,
+            createdAt: true,
 
-          sport: {
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-              imageUrl: true,
-              pricePerHour: true,
-            },
-          },
-
-          // --------------------------------------
-          // Payment Information
-          // --------------------------------------
-
-          payment: {
-            select: {
-              status: true,
-              recoveryState: true,
-              amount: true,
-              currency: true,
-              razorpayOrderId: true,
-              razorpayPaymentId: true,
-              createdAt: true,
-              updatedAt: true,
-            },
-          },
-
-          // --------------------------------------
-          // Booking Status History
-          // --------------------------------------
-
-          statusHistory: {
-            orderBy: {
-              createdAt: "desc",
-            },
-
-            select: {
-              id: true,
-              fromStatus: true,
-              toStatus: true,
-              changedById: true,
-              createdAt: true,
-
-              changedBy: {
-                select: {
-                  id: true,
-                  name: true,
-                  email: true,
-                  mobile: true,
-                },
+            changedBy: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                mobile: true,
               },
             },
           },
         },
-      });
+      },
+    });
 
     // ==========================================
     // Booking Not Found
@@ -195,6 +192,18 @@ export async function GET(
       }
     );
   } catch (error) {
+    if (error instanceof AppError) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: error.message,
+        },
+        {
+          status: error.statusCode,
+        }
+      );
+    }
+
     return NextResponse.json(
       {
         success: false,
@@ -224,8 +233,7 @@ export async function PATCH(
     // Get Current User
     // ==========================================
 
-    const user =
-      await getCurrentUser(request);
+    const user = await getCurrentUser(request);
 
     // ==========================================
     // Admin Authorization
@@ -247,8 +255,7 @@ export async function PATCH(
     // Get Booking ID
     // ==========================================
 
-    const { id } =
-      await context.params;
+    const { id } = await context.params;
 
     if (!id) {
       return NextResponse.json(
@@ -266,11 +273,9 @@ export async function PATCH(
     // Read Request Body
     // ==========================================
 
-    const body =
-      await request.json();
+    const body = await request.json();
 
-    const requestedStatus =
-      body?.status;
+    const requestedStatus = body?.status;
 
     // ==========================================
     // Validate Status Value
@@ -283,16 +288,11 @@ export async function PATCH(
       "COMPLETED",
     ];
 
-    if (
-      !validStatuses.includes(
-        requestedStatus
-      )
-    ) {
+    if (!validStatuses.includes(requestedStatus)) {
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Invalid booking status.",
+          message: "Invalid booking status.",
         },
         {
           status: 400,
@@ -300,8 +300,7 @@ export async function PATCH(
       );
     }
 
-    const newStatus =
-      requestedStatus as BookingStatus;
+    const newStatus = requestedStatus as BookingStatus;
 
     // ==========================================
     // Update Booking Status
@@ -321,8 +320,7 @@ export async function PATCH(
     return NextResponse.json(
       {
         success: true,
-        message:
-          `Booking status changed to ${newStatus}.`,
+        message: `Booking status changed to ${newStatus}.`,
         booking: updatedBooking,
       },
       {
@@ -353,8 +351,7 @@ export async function PATCH(
     return NextResponse.json(
       {
         success: false,
-        message:
-          "Internal Server Error.",
+        message: "Internal Server Error.",
       },
       {
         status: 500,
