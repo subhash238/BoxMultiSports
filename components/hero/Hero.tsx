@@ -12,11 +12,13 @@ import { fadeUp, fadeIn, floating } from "@/animations/hero.animation";
 interface HeroProps {
   selectedSportSlug: string | null;
   onSportSelect: (slug: string) => void;
+  heroImageUrl?: string | null;
 }
 
 export default function Hero({
   selectedSportSlug,
   onSportSelect,
+  heroImageUrl,
 }: HeroProps) {
   const isCricketMode = selectedSportSlug === "cricket";
   const isFootballMode = selectedSportSlug === "football";
@@ -25,13 +27,13 @@ export default function Hero({
   const isNetPracticeMode = selectedSportSlug === "net-practice";
 
   return (
-    <section
-      className="relative min-h-screen overflow-hidden bg-cover bg-center"
+      <section
+      className="relative min-h-screen overflow-hidden bg-[#102519] bg-cover bg-center"
       style={{
-        backgroundImage:
-          "url('https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=1920&q=80')",
-      }}
-    >
+        backgroundImage: heroImageUrl
+          ? `url("${heroImageUrl}")`
+          : undefined, }}
+      >
       <motion.div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_72%,rgba(242,184,92,0.24),transparent_28%),linear-gradient(135deg,rgba(43,76,38,0.48),transparent_60%)]"

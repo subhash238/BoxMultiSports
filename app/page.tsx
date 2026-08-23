@@ -1,23 +1,14 @@
-"use client";
+import HomeClient from "./HomeClient";
+import { getPexelsHeroPhoto } from "@/lib/integrations/pexels";
 
-import { useState } from "react";
-
-import Hero from "../components/hero/Hero";
-import BookingWidget from "../components/booking-widget/BookingWidget";
-
-export default function Home() {
-  const [selectedSportSlug, setSelectedSportSlug] =
-    useState<string | null>(null);
+export default async function Home() {
+  const heroPhoto = await getPexelsHeroPhoto(
+    "indoor sports turf"
+  );
 
   return (
-    <>
-      <Hero
-        selectedSportSlug={selectedSportSlug}
-        onSportSelect={setSelectedSportSlug}
-      />
-      <BookingWidget
-        selectedSportSlug={selectedSportSlug}
-      />
-    </>
+    <HomeClient
+      heroImageUrl={heroPhoto?.imageUrl ?? null}
+    />
   );
 }
