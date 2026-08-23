@@ -168,7 +168,13 @@ export class BookingAvailabilityService {
     const blockingBookings =
       await prisma.booking.findMany({
         where: {
-          sportId: input.sportId,
+          sport: {
+            slug: {
+              in: Array.from(
+                MAIN_BOOKING_SPORT_SLUGS
+              ),
+            },
+          },
           startTime: {
             lt: closingBoundary,
           },

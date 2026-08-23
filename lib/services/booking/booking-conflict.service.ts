@@ -2,7 +2,10 @@ import { AppError } from "@/lib/errors";
 import { Prisma, Sport } from "@prisma/client";
 import { BOOKING_MESSAGES } from "./booking.responses";
 import { BookingTimeResult } from "./booking.types";
-import { BOOKING_CONFIG } from "./booking.config";
+import {
+  BOOKING_CONFIG,
+  MAIN_BOOKING_SPORT_SLUGS,
+} from "./booking.config";
 
 export class BookingConflictService {
   static async check(
@@ -86,7 +89,7 @@ export class BookingConflictService {
     const conflictingBooking =
       await this.findConflict(
         tx,
-        sport.id,
+        sport,
         bookingTime,
         now,
         legacyCutoff
@@ -102,14 +105,24 @@ export class BookingConflictService {
 
   private static async findConflict(
     tx: Prisma.TransactionClient,
-    sportId: string,
+    sport: Sport,
     bookingTime: BookingTimeResult,
     now: Date,
     legacyCutoff: Date
   ) {
     return tx.booking.findFirst({
       where: {
-        sportId,
+        ...(MAIN_BOOKING_SPORT_SLUGS.has(sport.slug)
+          ? {
+              sport: {
+                slug: {
+                  in: Array.from(
+                    MAIN_BOOKING_SPORT_SLUGS
+                  ),
+                },
+              },
+            }
+          : { sportId: sport.id }),
         OR: [
           {
             status: "CONFIRMED",
