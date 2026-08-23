@@ -10,6 +10,7 @@ import { ChevronDown, ShieldCheck } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 
 import BookingField from "./BookingField";
+import SlotAvailabilityModal from "./SlotAvailabilityModal";
 import {
   ENABLED_MAIN_BOOKING_DURATIONS,
   HOMEPAGE_BOOKING_SPORTS,
@@ -231,6 +232,11 @@ export default function BookingForm({
   const [sportsError, setSportsError] =
     useState("");
 
+  const [
+    isSlotModalOpen,
+    setIsSlotModalOpen,
+  ] = useState(false);
+
   const handleBookingDateClick = (
     event: React.MouseEvent<HTMLInputElement>
   ) => {
@@ -262,6 +268,19 @@ export default function BookingForm({
     [bookingData.durationMinutes]
   );
 
+  const selectedSportForAvailability =
+    useMemo(
+      () =>
+        sports.find(
+          (sport) =>
+            sport.id === bookingData.sport
+        ) ?? null,
+      [
+        sports,
+        bookingData.sport,
+      ]
+    );
+
   // ==========================================
   // Validation
   // ==========================================
@@ -277,6 +296,34 @@ export default function BookingForm({
     bookingData,
     setBookingData
   );
+  const handleOpenSlotAvailability = () => {
+    let canOpen = true;
+
+    if (!bookingData.sport || errors.sport) {
+      handleBlur("sport");
+      canOpen = false;
+    }
+
+    if (!bookingData.date || errors.date) {
+      handleBlur("date");
+      canOpen = false;
+    }
+
+    if (
+      typeof bookingData.durationMinutes !== "number" ||
+      errors.duration
+    ) {
+      handleBlur("duration");
+      canOpen = false;
+    }
+
+    if (!canOpen) {
+      return;
+    }
+
+    setIsSlotModalOpen(true);
+  };
+
 
   // ==========================================
   // Fetch Sports
@@ -1016,56 +1063,51 @@ export default function BookingForm({
                   </span>
                 </label>
 
-                <div className="relative">
-                  <select
-                    value={bookingData.time}
-                    onChange={(e) =>
-                      updateField(
-                        "time",
-                        e.target.value
-                      )
-                    }
-                    onBlur={() =>
-                      handleBlur("time")
-                    }
-                    className={
+                <button
+                  type="button"
+                  onClick={handleOpenSlotAvailability}
+                  className={`
+                    ${
                       touched.time &&
                       errors.time
                         ? selectError
-                        : touched.time
+                        : bookingData.time
                           ? selectSuccess
                           : selectNormal
                     }
-                  >
-                    <option
-                      value=""
-                      className="bg-[#11130F] text-white"
-                    >
-                      Select time
-                    </option>
+                    flex
+                    items-center
+                    justify-between
+                    gap-3
+                    text-left
+                  `}
+                >
+                  <span>
+                    {bookingData.time
+                      ? `${
+                          startTimeOptions.find(
+                            (option) =>
+                              option.value ===
+                              bookingData.time
+                          )?.label ??
+                          bookingData.time
+                        } ✓`
+                      : "Select a slot"}
+                  </span>
 
-                    {startTimeOptions.map((option) => (
-                      <option
-                        key={option.value}
-                        value={option.value}
-                      >
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-
-                  <ChevronDown
-                    size={17}
+                  <span
                     className="
-                      pointer-events-none
-                      absolute
-                      right-4
-                      top-1/2
-                      -translate-y-1/2
-                      text-white/40
+                      shrink-0
+                      text-[11px]
+                      font-semibold
+                      text-[#B6F000]
                     "
-                  />
-                </div>
+                  >
+                    {bookingData.time
+                      ? "Change Slot"
+                      : "Check Availability"}
+                  </span>
+                </button>
 
                 {touched.time &&
                   errors.time && (
@@ -1554,6 +1596,33 @@ export default function BookingForm({
 
         </div>
       </div>
+
+      {isSlotModalOpen &&
+        selectedSportForAvailability &&
+        bookingData.date &&
+        typeof bookingData.durationMinutes === "number" && (
+          <SlotAvailabilityModal
+            sportId={bookingData.sport}
+            sportName={
+              selectedSportForAvailability.displayLabel
+            }
+            bookingDate={bookingData.date}
+            durationMinutes={
+              bookingData.durationMinutes
+            }
+            selectedTime={bookingData.time}
+            onSelect={(startTime) => {
+              updateField(
+                "time",
+                startTime
+              );
+              setIsSlotModalOpen(false);
+            }}
+            onClose={() =>
+              setIsSlotModalOpen(false)
+            }
+          />
+        )}
     </div>
   );
 }
