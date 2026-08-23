@@ -117,3 +117,29 @@ export type BookingListResult = {
   bookings: unknown[];
   pagination: BookingPaginationResult;
 };
+
+
+/**
+ * ==========================================
+ * Main Booking Availability
+ * ==========================================
+ */
+
+export type MainBookingAvailabilityInput = {
+  sportId: string;
+  bookingDate: string;
+  durationMinutes: number;
+};
+
+export type MainBookingAvailabilitySlot = {
+  startTime: string;
+  endTime: string;
+  available: boolean;
+};
+
+export type MainBookingAvailabilityResult = {
+  sportId: string;
+  bookingDate: string;
+  durationMinutes: number;
+  slots: MainBookingAvailabilitySlot[];
+};
