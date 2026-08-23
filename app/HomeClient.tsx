@@ -7,20 +7,26 @@ import BookingWidget from "../components/booking-widget/BookingWidget";
 
 interface HomeClientProps {
   heroImageUrl?: string | null;
+  sportHeroImages?: Record<string, string | null>;
 }
 
 export default function HomeClient({
   heroImageUrl,
+  sportHeroImages = {},
 }: HomeClientProps) {
   const [selectedSportSlug, setSelectedSportSlug] =
     useState<string | null>(null);
+
+  const activeHeroImageUrl = selectedSportSlug
+    ? sportHeroImages[selectedSportSlug] ?? heroImageUrl
+    : heroImageUrl;
 
   return (
     <>
       <Hero
         selectedSportSlug={selectedSportSlug}
         onSportSelect={setSelectedSportSlug}
-        heroImageUrl={heroImageUrl}
+        heroImageUrl={activeHeroImageUrl}
       />
 
       <BookingWidget
