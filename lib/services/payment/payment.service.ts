@@ -848,7 +848,8 @@ export class PaymentService {
     }
 
     authorizePaymentVerification(
-      payment
+      payment,
+      payment.status === "PENDING"
     );
 
     // -----------------------------------------
@@ -979,13 +980,15 @@ export class PaymentService {
           authorizePaymentVerification(
             currentPayment,
             currentPayment.status ===
-              "CAPTURED" &&
-              (currentPayment.booking.status ===
-                "CONFIRMED" ||
-                (currentPayment.recoveryState ===
-                  PaymentRecoveryState.REVIEW_REQUIRED &&
-                  currentPayment.booking.status ===
-                    "CANCELLED"))
+              "PENDING" ||
+              (currentPayment.status ===
+                "CAPTURED" &&
+                (currentPayment.booking.status ===
+                  "CONFIRMED" ||
+                  (currentPayment.recoveryState ===
+                    PaymentRecoveryState.REVIEW_REQUIRED &&
+                    currentPayment.booking.status ===
+                      "CANCELLED")))
           );
 
           // ---------------------------------------
