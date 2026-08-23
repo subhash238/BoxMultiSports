@@ -886,12 +886,16 @@ export default function BookingForm({
                 <div className="relative">
                   <select
                     value={bookingData.sport}
-                    onChange={(e) =>
-                      updateField(
-                        "sport",
-                        e.target.value
-                      )
-                    }
+                    onChange={(e) => {
+                      const nextSportId =
+                        e.target.value;
+
+                      setBookingData((current) => ({
+                        ...current,
+                        sport: nextSportId,
+                        time: "",
+                      }));
+                    }}
                     onBlur={() =>
                       handleBlur("sport")
                     }
@@ -978,12 +982,16 @@ export default function BookingForm({
                 type="date"
                 required
                 value={bookingData.date}
-                onChange={(e) =>
-                  updateField(
-                    "date",
-                    e.target.value
-                  )
-                }
+                onChange={(e) => {
+                  const nextDate =
+                    e.target.value;
+
+                  setBookingData((current) => ({
+                    ...current,
+                    date: nextDate,
+                    time: "",
+                  }));
+                }}
                 onBlur={() =>
                   handleBlur("date")
                 }
@@ -1156,28 +1164,14 @@ export default function BookingForm({
 
                       const nextDurationMinutes =
                         selectedDuration?.minutes;
-                      const nextStartTimeOptions =
-                        generateMainStartTimeOptions(
-                          nextDurationMinutes
-                        );
-                      setBookingData((current) => {
-                        const selectedTimeRemainsValid =
-                          nextStartTimeOptions.some(
-                            (option) =>
-                              option.value === current.time
-                          );
-
-                        return {
-                          ...current,
-                          duration:
-                            selectedDuration?.label ?? "",
-                          durationMinutes:
-                            nextDurationMinutes,
-                          time: selectedTimeRemainsValid
-                            ? current.time
-                            : "",
-                        };
-                      });
+                      setBookingData((current) => ({
+                        ...current,
+                        duration:
+                          selectedDuration?.label ?? "",
+                        durationMinutes:
+                          nextDurationMinutes,
+                        time: "",
+                      }));
                     }}
                     onBlur={() =>
                       handleBlur("duration")
