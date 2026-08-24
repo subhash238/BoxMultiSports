@@ -13,13 +13,13 @@ import { FaWhatsapp } from "react-icons/fa";
 
 const PHONE_DISPLAY = "+91 90310 17884";
 const PHONE_LINK = "tel:+919031017884";
-const EMAIL = "info@uniturf.in";
+const EMAIL = "uniturf231@gmail.com";
 
 const WHATSAPP_BASE_URL =
   "https://wa.me/919031017884";
 
 const GOOGLE_MAPS_URL =
-  "https://www.google.com/maps/search/?api=1&query=25.554039,85.149262";
+  "https://www.google.com/maps/search/?api=1&query=25.5540556,85.1492778";
 
 export default function ContactPage() {
   const [name, setName] = useState("");
