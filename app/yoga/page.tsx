@@ -1,18 +1,60 @@
 import YogaBookingWidget from "@/components/yoga/YogaBookingWidget";
-import { getPexelsHeroPhoto } from "@/lib/integrations/pexels";
+
+type PexelsYogaPhoto = {
+  src?: {
+    large2x?: string;
+    landscape?: string;
+    large?: string;
+  };
+};
+
+async function getYogaHeroImage(): Promise<string | null> {
+  const apiKey = process.env.PEXELS_API_KEY;
+
+  if (!apiKey) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(
+      "https://api.pexels.com/v1/photos/8436610",
+      {
+        headers: {
+          Authorization: apiKey,
+        },
+        next: {
+          revalidate: 86400,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const photo = (await response.json()) as PexelsYogaPhoto;
+
+    return (
+      photo.src?.large2x ??
+      photo.src?.landscape ??
+      photo.src?.large ??
+      null
+    );
+  } catch {
+    return null;
+  }
+}
 
 export default async function YogaPage() {
-  const yogaPhoto = await getPexelsHeroPhoto(
-    "modern yoga studio"
-  );
+  const yogaImageUrl = await getYogaHeroImage();
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#0d0c0a] text-white">
       <section
-        className="relative isolate bg-[#0d0c0a] bg-cover bg-center px-6 pb-20 pt-28 sm:pt-36"
+        className="relative isolate flex min-h-[560px] items-center bg-[#0d0c0a] bg-cover bg-center px-6 py-24 sm:min-h-[620px] sm:py-28 lg:min-h-[680px]"
         style={{
-          backgroundImage: yogaPhoto?.imageUrl
-            ? `url("${yogaPhoto.imageUrl}")`
+          backgroundImage: yogaImageUrl
+            ? `url("${yogaImageUrl}")`
             : undefined,
         }}
       >
@@ -20,7 +62,7 @@ export default async function YogaPage() {
 
         <div className="absolute -right-24 top-16 -z-10 h-72 w-72 rounded-full bg-amber-200/10 blur-3xl" />
 
-        <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
+        <div className="mx-auto grid w-full max-w-6xl items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.34em] text-amber-200/85">
               Morning Yoga at UniTurf
