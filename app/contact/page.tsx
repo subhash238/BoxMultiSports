@@ -19,7 +19,7 @@ const WHATSAPP_BASE_URL =
   "https://wa.me/919031017884";
 
 const GOOGLE_MAPS_URL =
-  "https://maps.app.goo.gl/awyLTrP8RHETjCrq8?g_st=awb";
+  "https://www.google.com/maps/search/?api=1&query=25.554039,85.149262";
 
 export default function ContactPage() {
   const [name, setName] = useState("");
