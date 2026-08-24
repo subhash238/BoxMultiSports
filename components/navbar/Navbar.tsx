@@ -17,6 +17,13 @@ const navItems = [
 
 export default function Navbar() {
   const pathname = usePathname();
+  const isNavItemActive = (href: string) => {
+    if (href === "/") {
+      return pathname === "/";
+    }
+
+    return pathname === href || pathname.startsWith(`${href}/`);
+  };
   const bookNowHref =
     pathname === "/yoga"
       ? "/yoga#yoga-booking"
@@ -76,16 +83,25 @@ export default function Navbar() {
           </Link>
 
           <ul className="hidden items-center gap-10 text-sm font-semibold lg:flex">
-            {navItems.map((item) => (
-              <li key={item.name}>
-                <Link
-                  href={item.href}
-                  className="relative text-white transition-all duration-300 hover:text-[#B6F000] after:absolute after:-bottom-2 after:left-0 after:h-[2px] after:w-0 after:bg-[#B6F000] after:transition-all after:duration-300 hover:after:w-full"
-                >
-                  {item.name}
-                </Link>
-              </li>
-            ))}
+            {navItems.map((item) => {
+              const isActive = isNavItemActive(item.href);
+
+              return (
+                <li key={item.name}>
+                  <Link
+                    href={item.href}
+                    aria-current={isActive ? "page" : undefined}
+                    className={`relative transition-all duration-300 after:absolute after:-bottom-2 after:left-0 after:h-[2px] after:bg-[#B6F000] after:transition-all after:duration-300 ${
+                      isActive
+                        ? "text-[#B6F000] after:w-full"
+                        : "text-white hover:text-[#B6F000] after:w-0 hover:after:w-full"
+                    }`}
+                  >
+                    {item.name}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
 
           <div className="flex shrink-0 items-center gap-2">
@@ -126,16 +142,25 @@ export default function Navbar() {
               className="overflow-hidden border-t border-white/10 lg:hidden"
             >
               <div className="grid gap-1 px-3 pb-3 pt-2">
-                {navItems.map((item) => (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    onClick={() => setMenuOpen(false)}
-                    className="flex min-h-11 items-center rounded-xl px-4 text-sm font-semibold text-white transition hover:bg-white/[0.08] hover:text-[#B6F000] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B6F000]"
-                  >
-                    {item.name}
-                  </Link>
-                ))}
+                {navItems.map((item) => {
+                  const isActive = isNavItemActive(item.href);
+
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      aria-current={isActive ? "page" : undefined}
+                      onClick={() => setMenuOpen(false)}
+                      className={`flex min-h-11 items-center rounded-xl px-4 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B6F000] ${
+                        isActive
+                          ? "bg-white/[0.08] text-[#B6F000]"
+                          : "text-white hover:bg-white/[0.08] hover:text-[#B6F000]"
+                      }`}
+                    >
+                      {item.name}
+                    </Link>
+                  );
+                })}
                 <Link
                   href={bookNowHref}
                   onClick={() => setMenuOpen(false)}
