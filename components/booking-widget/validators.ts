@@ -3,21 +3,37 @@ export interface ValidationErrors {
   date?: string;
   time?: string;
   duration?: string;
-  players?: string;
   fullName?: string;
+  email?: string;
   mobile?: string;
+  specialRequest?: string;
 }
 
 export const validateName = (name: string): string => {
   const value = name.trim();
 
-  if (!value) return "Full name is required.";
+  if (!value) return "Full Name is required";
 
-  if (value.length < 3)
-    return "Name must contain at least 3 characters.";
+  if (!/^[A-Za-z]/.test(value))
+    return "Full Name must start with a letter";
 
-  if (!/^[A-Za-z ]+$/.test(value))
-    return "Only letters and spaces are allowed.";
+  if (value.length > 100)
+    return "Full Name cannot exceed 100 characters.";
+
+  return "";
+};
+
+export const validateEmail = (email: string): string => {
+  const value = email.trim();
+
+  if (!value) return "Email ID is required.";
+
+  if (
+    value.length > 255 ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+  ) {
+    return "Please enter a valid email address.";
+  }
 
   return "";
 };
@@ -37,16 +53,17 @@ export const validateMobile = (mobile: string): string => {
   return "";
 };
 
-export const validatePlayers = (
-  players: number,
-  maxPlayers: number
+export const validateSpecialRequest = (
+  specialRequest: string
 ): string => {
+  const value = specialRequest.trim();
 
-  if (players < 1)
-    return "Minimum 1 player required.";
-
-  if (players > maxPlayers)
-    return `Maximum ${maxPlayers} players allowed.`;
+  if (
+    value &&
+    value.split(/\s+/).length > 500
+  ) {
+    return "Special Request cannot exceed 500 words.";
+  }
 
   return "";
 };
@@ -84,20 +101,24 @@ export function validateBooking(data: {
   date: string;
   time: string;
   duration: string;
-  players: number;
   fullName: string;
+  email?: string;
   mobile: string;
+  specialRequest: string;
 }) {
 
   const errors: ValidationErrors = {};
 
-  errors.sport = validateRequired(data.sport, "Sport");
+  errors.sport = validateRequired(data.sport, "Game");
   errors.date = validateDate(data.date);
   errors.time = validateRequired(data.time, "Time Slot");
   errors.duration = validateRequired(data.duration, "Duration");
   errors.fullName = validateName(data.fullName);
+  errors.email = validateEmail(data.email ?? "");
   errors.mobile = validateMobile(data.mobile);
-  errors.players = validatePlayers(data.players, 22);
+  errors.specialRequest = validateSpecialRequest(
+    data.specialRequest
+  );
 
   return errors;
 }

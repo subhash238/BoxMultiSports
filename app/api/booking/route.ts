@@ -20,7 +20,16 @@ export async function POST(request: NextRequest) {
       request.cookies.get("auth_token")?.value;
 
     const user = authToken
-      ? await getCurrentUser(request)
+      ? await getCurrentUser(request).catch((error) => {
+          if (
+            error instanceof AppError &&
+            (error.statusCode === 401 || error.statusCode === 404)
+          ) {
+            return null;
+          }
+
+          throw error;
+        })
       : null;
 
     // -----------------------------------------

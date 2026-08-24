@@ -2,7 +2,10 @@ import { AppError } from "@/lib/errors";
 import { Prisma, Sport } from "@prisma/client";
 import { BOOKING_MESSAGES } from "./booking.responses";
 import { BookingTimeResult } from "./booking.types";
-import { BOOKING_CONFIG } from "./booking.config";
+import {
+  BOOKING_CONFIG,
+  MAIN_BOOKING_SPORT_SLUGS,
+} from "./booking.config";
 
 export class BookingConflictService {
   static async check(
@@ -11,8 +14,9 @@ export class BookingConflictService {
     bookingTime: BookingTimeResult,
     numberOfPlayers: number
   ): Promise<void> {
-    const pendingHoldStartedAt = new Date(
-      Date.now() -
+    const now = new Date();
+    const legacyCutoff = new Date(
+      now.getTime() -
         BOOKING_CONFIG.PAYMENT_HOLD_MINUTES *
           60 *
           1000
@@ -35,15 +39,25 @@ export class BookingConflictService {
               },
               {
                 status: "PENDING",
-                createdAt: {
-                  gt: pendingHoldStartedAt,
-                },
                 startTime: {
                   lt: bookingTime.endDateTime,
                 },
                 endTime: {
                   gt: bookingTime.startDateTime,
                 },
+                OR: [
+                  {
+                    reservationExpiresAt: {
+                      gt: now,
+                    },
+                  },
+                  {
+                    reservationExpiresAt: null,
+                    createdAt: {
+                      gt: legacyCutoff,
+                    },
+                  },
+                ],
               },
             ],
           },
@@ -75,9 +89,10 @@ export class BookingConflictService {
     const conflictingBooking =
       await this.findConflict(
         tx,
-        sport.id,
+        sport,
         bookingTime,
-        pendingHoldStartedAt
+        now,
+        legacyCutoff
       );
 
     if (conflictingBooking !== null) {
@@ -90,13 +105,24 @@ export class BookingConflictService {
 
   private static async findConflict(
     tx: Prisma.TransactionClient,
-    sportId: string,
+    sport: Sport,
     bookingTime: BookingTimeResult,
-    pendingHoldStartedAt: Date
+    now: Date,
+    legacyCutoff: Date
   ) {
     return tx.booking.findFirst({
       where: {
-        sportId,
+        ...(MAIN_BOOKING_SPORT_SLUGS.has(sport.slug)
+          ? {
+              sport: {
+                slug: {
+                  in: Array.from(
+                    MAIN_BOOKING_SPORT_SLUGS
+                  ),
+                },
+              },
+            }
+          : { sportId: sport.id }),
         OR: [
           {
             status: "CONFIRMED",
@@ -109,15 +135,25 @@ export class BookingConflictService {
           },
           {
             status: "PENDING",
-            createdAt: {
-              gt: pendingHoldStartedAt,
-            },
             startTime: {
               lt: bookingTime.endDateTime,
             },
             endTime: {
               gt: bookingTime.startDateTime,
             },
+            OR: [
+              {
+                reservationExpiresAt: {
+                  gt: now,
+                },
+              },
+              {
+                reservationExpiresAt: null,
+                createdAt: {
+                  gt: legacyCutoff,
+                },
+              },
+            ],
           },
         ],
       },

@@ -9,6 +9,10 @@ import {
 import {
   calculateDurationMinutes,
 } from "./booking.utils";
+import {
+  MAIN_BOOKING_SPORT_SLUGS,
+  YOGA_ALLOWED_DURATIONS_MINUTES,
+} from "./booking.config";
 
 export class BookingPricingService {
   /**
@@ -48,28 +52,33 @@ export class BookingPricingService {
     const durationHours =
       durationMinutes / 60;
 
+    const isMainBookingSport =
+      sportSlug !== undefined &&
+      MAIN_BOOKING_SPORT_SLUGS.has(
+        sportSlug
+      );
+
+    const isYoga =
+      sportSlug === "yoga";
+
+    const isGym =
+      sportSlug === "gym";
+
     // -----------------------------------------
     // Validate Duration
     // -----------------------------------------
     //
-    // SportPricing.duration is stored
-    // in complete hours.
-    //
-    // Examples:
-    //
-    // 60 minutes  → 1 hour  ✅
-    // 120 minutes → 2 hours ✅
-    // 180 minutes → 3 hours ✅
-    // 240 minutes → 4 hours ✅
-    // 300 minutes → 5 hours ✅
-    // 720 minutes → 12 hours ✅
-    //
-    // 90 minutes → invalid ❌
+    // Main, Yoga, and Gym SportPricing durations
+    // use exact minutes. Other existing booking
+    // flows retain their complete-hour requirement.
     // -----------------------------------------
 
     if (
       durationMinutes <= 0 ||
-      !Number.isInteger(durationHours)
+      (!isMainBookingSport &&
+        !isYoga &&
+        !isGym &&
+        !Number.isInteger(durationHours))
     ) {
       throw new AppError(
         "Booking duration must be a complete number of hours.",
@@ -78,8 +87,8 @@ export class BookingPricingService {
     }
 
     if (
-      sportSlug === "yoga" ||
-      sportSlug === "gym"
+      isYoga ||
+      isGym
     ) {
       if (
         numberOfPlayers === undefined ||
@@ -91,9 +100,73 @@ export class BookingPricingService {
           400
         );
       }
+    }
 
-      const totalAmount =
-        399 * numberOfPlayers;
+    if (isYoga) {
+      if (
+        !YOGA_ALLOWED_DURATIONS_MINUTES.has(
+          durationMinutes
+        )
+      ) {
+        throw new AppError(
+          "Yoga bookings support only 60, 90, or 120 minutes.",
+          400
+        );
+      }
+
+      const sportPricing =
+        await prisma.sportPricing.findFirst({
+          where: {
+            sportId,
+            duration: durationMinutes,
+            isActive: true,
+          },
+        });
+
+      if (!sportPricing) {
+        throw new AppError(
+          `No active pricing is configured for a ${durationMinutes}-minute Yoga booking.`,
+          400
+        );
+      }
+
+      const totalAmount = Number(
+        sportPricing.price.mul(
+          numberOfPlayers!
+        )
+      );
+
+      return {
+        durationMinutes,
+        durationHours,
+        pricePerHour:
+          totalAmount / durationHours,
+        totalAmount,
+      };
+    }
+
+    if (isGym) {
+      const sportPricing =
+        await prisma.sportPricing.findFirst({
+          where: {
+            sportId,
+            duration: durationMinutes,
+            isActive: true,
+          },
+        });
+
+      if (!sportPricing) {
+        throw new AppError(
+          `No active pricing is configured for a ${durationMinutes}-minute Gym booking.`,
+          400
+        );
+      }
+
+      const totalAmount = Number(
+        sportPricing.price.mul(
+          numberOfPlayers!
+        )
+      );
 
       return {
         durationMinutes,
@@ -108,28 +181,33 @@ export class BookingPricingService {
     // Find Active Sport Pricing
     // -----------------------------------------
     //
-    // Pricing is determined by:
+    // Main pricing is determined by:
     //
-    // sportId + duration
+    // sportId + exact duration in minutes
     //
     // The actual price comes from the
     // SportPricing table.
     //
     // Example:
     //
-    // Cricket + 1 hour  → ₹1000
-    // Cricket + 2 hours → ₹1800
-    // Cricket + 3 hours → ₹2700
-    // Cricket + 4 hours → ₹3500
-    // Cricket + 5 hours → ₹4500
-    // Cricket + 12 hours → ₹9000
+    // Cricket + 60 minutes
+    // Cricket + 90 minutes
+    // Cricket + 720 minutes
+    //
+    // Other existing sports retain their
+    // legacy complete-hour lookup.
     // -----------------------------------------
+
+    const pricingDuration =
+      isMainBookingSport
+        ? durationMinutes
+        : durationHours;
 
     const sportPricing =
       await prisma.sportPricing.findFirst({
         where: {
           sportId,
-          duration: durationHours,
+          duration: pricingDuration,
           isActive: true,
         },
       });
@@ -139,8 +217,13 @@ export class BookingPricingService {
     // -----------------------------------------
 
     if (!sportPricing) {
+      const durationDescription =
+        isMainBookingSport
+          ? `${durationMinutes}-minute`
+          : `${durationHours}-hour`;
+
       throw new AppError(
-        `No active pricing is configured for a ${durationHours}-hour booking.`,
+        `No active pricing is configured for a ${durationDescription} booking.`,
         400
       );
     }

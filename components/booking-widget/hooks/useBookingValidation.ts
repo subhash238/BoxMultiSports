@@ -10,9 +10,10 @@ export interface TouchedFields {
   date: boolean;
   time: boolean;
   duration: boolean;
-  players: boolean;
   fullName: boolean;
+  email: boolean;
   mobile: boolean;
+  specialRequest: boolean;
 }
 
 const initialTouchedState: TouchedFields = {
@@ -20,9 +21,10 @@ const initialTouchedState: TouchedFields = {
   date: false,
   time: false,
   duration: false,
-  players: false,
   fullName: false,
+  email: false,
   mobile: false,
+  specialRequest: false,
 };
 
 export function useBookingValidation(
@@ -79,9 +81,10 @@ const errors = useMemo<ValidationErrors>(() => {
       date: true,
       time: true,
       duration: true,
-      players: true,
       fullName: true,
+      email: true,
       mobile: true,
+      specialRequest: true,
     });
   };
 

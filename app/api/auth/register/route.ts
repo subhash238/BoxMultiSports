@@ -30,11 +30,8 @@ export async function POST(request: NextRequest) {
 
     const existingUser = await prisma.user.findFirst({
       where: {
-        OR: [
-          { email },
-          { mobile }
-        ]
-      }
+        OR: [{ email }, { mobile }],
+      },
     });
 
     if (existingUser) {
@@ -56,6 +53,15 @@ export async function POST(request: NextRequest) {
         mobile,
         password: hashedPassword,
       },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        mobile: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
 
     return NextResponse.json(
@@ -66,7 +72,7 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       {
         success: false,

@@ -68,7 +68,9 @@ export class BookingService {
       pricing,
       numberOfPlayers,
       customerName: data.fullName,
+      customerEmail: data.email,
       customerMobile: data.mobile,
+      specialRequest: data.specialRequest ?? null,
     };
 
     // -----------------------------------------

@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import {
   CalendarDays,
   Clock3,
-  Users,
   Check,
   MapPin,
   ShieldCheck,
@@ -48,16 +47,6 @@ function formatBookingDate(date: string): string {
     month: "short",
     year: "numeric",
   });
-}
-
-// ==========================================
-// Parse Duration
-// ==========================================
-
-function getDurationHours(duration: string): number {
-  const hours = Number.parseInt(duration, 10);
-
-  return Number.isFinite(hours) ? hours : 0;
 }
 
 // ==========================================
@@ -130,20 +119,17 @@ export default function BookingSummary({
   // Price Calculation
   // ==========================================
 
-  const durationHours = getDurationHours(
-    bookingData.duration
-  );
-
   const selectedPricing =
     selectedSport?.pricing?.find(
       (pricing) =>
-        pricing.duration === durationHours
+        pricing.duration ===
+        bookingData.durationMinutes
     );
 
   const estimatedPrice =
     selectedSport?.slug === "yoga" ||
     selectedSport?.slug === "gym"
-      ? 399 * bookingData.players
+      ? 399 * bookingData.players!
       : Number(selectedPricing?.price ?? 0);
 
   // ==========================================
@@ -154,8 +140,6 @@ export default function BookingSummary({
   const hasDate = Boolean(bookingData.date);
   const hasTime = Boolean(bookingData.time);
   const hasDuration = Boolean(bookingData.duration);
-  const hasPlayers =
-    Number(bookingData.players) > 0;
 
   // ==========================================
   // UI
@@ -329,16 +313,6 @@ export default function BookingSummary({
               active={hasDuration}
             />
 
-            {/* Players */}
-
-            <SummaryRow
-              icon={<Users size={16} />}
-              label="Players"
-              value={String(
-                bookingData.players || 0
-              )}
-              active={hasPlayers}
-            />
           </div>
 
           {/* ==================================

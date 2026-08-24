@@ -9,6 +9,10 @@ import {
 interface BookingFieldProps {
   label: string;
 
+  inputId?: string;
+
+  inputRef?: React.Ref<HTMLInputElement>;
+
   type?: string;
 
   placeholder?: string;
@@ -22,6 +26,8 @@ interface BookingFieldProps {
   ) => void;
 
   onBlur?: () => void;
+
+  onInputClick?: React.MouseEventHandler<HTMLInputElement>;
 
   textarea?: boolean;
 
@@ -40,11 +46,14 @@ interface BookingFieldProps {
 
 export default function BookingField({
   label,
+  inputId,
+  inputRef,
   type = "text",
   placeholder,
   value,
   onChange,
   onBlur,
+  onInputClick,
   textarea = false,
   error,
   success = false,
@@ -103,6 +112,7 @@ export default function BookingField({
       ====================================== */}
 
       <label
+        htmlFor={inputId}
         className="
           flex
           items-center
@@ -130,6 +140,7 @@ export default function BookingField({
 
         {textarea ? (
           <textarea
+            id={inputId}
             rows={4}
             value={value}
             placeholder={placeholder}
@@ -141,11 +152,14 @@ export default function BookingField({
           />
         ) : (
           <input
+            id={inputId}
+            ref={inputRef}
             type={type}
             value={value}
             placeholder={placeholder}
             onChange={onChange}
             onBlur={onBlur}
+            onClick={onInputClick}
             disabled={disabled}
             maxLength={maxLength}
             className={inputClass}

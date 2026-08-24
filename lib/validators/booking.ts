@@ -20,6 +20,13 @@ export const createBookingSchema = z.object({
     .string()
     .min(1, "End time is required."),
 
+  durationMinutes: z
+    .number()
+    .int("Booking duration must be a whole number of minutes.")
+    .positive("Booking duration must be positive.")
+    .max(720, "Booking duration cannot exceed 720 minutes.")
+    .optional(),
+
   numberOfPlayers: z
     .number()
     .int("Number of players must be a whole number.")
@@ -28,8 +35,19 @@ export const createBookingSchema = z.object({
   fullName: z
     .string()
     .trim()
-    .min(3, "Full name must be at least 3 characters.")
-    .max(100, "Full name must be at most 100 characters."),
+    .min(1, "Please enter a valid full name.")
+    .max(100, "Please enter a valid full name.")
+    .regex(
+      /^[A-Za-z]/,
+      "Please enter a valid full name."
+    ),
+
+  email: z
+    .string()
+    .trim()
+    .min(1, "Please enter a valid email address.")
+    .max(255, "Please enter a valid email address.")
+    .email("Please enter a valid email address."),
 
   mobile: z
     .string()
@@ -39,6 +57,17 @@ export const createBookingSchema = z.object({
       /^[6-9]\d{9}$/,
       "Please enter a valid Indian mobile number."
     ),
+
+  specialRequest: z
+    .string()
+    .trim()
+    .transform((value) => value || undefined)
+    .refine(
+      (value) =>
+        !value || value.split(/\s+/).length <= 500,
+      "Special Request cannot exceed 500 words."
+    )
+    .optional(),
 });
 
 /**

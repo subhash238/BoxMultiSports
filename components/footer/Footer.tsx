@@ -360,7 +360,7 @@ export default function Footer() {
             </p>
 
             <Link
-              href="/booking"
+              href="/#booking"
               className="
                 mt-5
                 inline-flex

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { BookingStatus } from "@prisma/client";
+import { normalizeDate } from "./booking.utils";
 
 import {
   BookingListQuery,
@@ -89,21 +90,14 @@ export class BookingQueryService {
 
     const now = new Date();
 
-    const startOfToday = new Date(now);
-
-    startOfToday.setHours(
-      0,
-      0,
-      0,
-      0
-    );
+    const startOfToday = normalizeDate(now);
 
     const startOfTomorrow = new Date(
       startOfToday
     );
 
-    startOfTomorrow.setDate(
-      startOfTomorrow.getDate() + 1
+    startOfTomorrow.setUTCDate(
+      startOfTomorrow.getUTCDate() + 1
     );
 
     // ==========================================
@@ -164,6 +158,27 @@ export class BookingQueryService {
         },
 
         {
+          customerName: {
+            contains: query.search,
+            mode: "insensitive",
+          },
+        },
+
+        {
+          customerEmail: {
+            contains: query.search,
+            mode: "insensitive",
+          },
+        },
+
+        {
+          customerMobile: {
+            contains: query.search,
+            mode: "insensitive",
+          },
+        },
+
+        {
           user: {
             name: {
               contains: query.search,
@@ -208,7 +223,22 @@ export class BookingQueryService {
             bookingDate: "desc",
           },
 
-          include: {
+          select: {
+            id: true,
+            bookingNumber: true,
+            bookingDate: true,
+            startTime: true,
+            endTime: true,
+            duration: true,
+            numberOfPlayers: true,
+            totalAmount: true,
+            status: true,
+
+            customerName: true,
+            customerEmail: true,
+            customerMobile: true,
+            specialRequest: true,
+
             user: {
               select: {
                 id: true,

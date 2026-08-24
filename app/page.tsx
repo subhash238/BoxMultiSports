@@ -1,23 +1,35 @@
-"use client";
+import HomeClient from "./HomeClient";
+import { getPexelsHeroPhoto } from "@/lib/integrations/pexels";
 
-import { useState } from "react";
+export default async function Home() {
+  const [
+    heroPhoto,
+    cricketPhoto,
+    footballPhoto,
+    badmintonPhoto,
+    pickleballPhoto,
+    netPracticePhoto,
+  ] = await Promise.all([
+    getPexelsHeroPhoto("indoor sports turf"),
+    getPexelsHeroPhoto("indoor cricket"),
+    getPexelsHeroPhoto("indoor football turf"),
+    getPexelsHeroPhoto("indoor badminton court"),
+    getPexelsHeroPhoto("indoor pickleball court"),
+    getPexelsHeroPhoto("cricket net practice"),
+  ]);
 
-import Hero from "../components/hero/Hero";
-import BookingWidget from "../components/booking-widget/BookingWidget";
-
-export default function Home() {
-  const [selectedSportSlug, setSelectedSportSlug] =
-    useState<string | null>(null);
+  const sportHeroImages = {
+    cricket: cricketPhoto?.imageUrl ?? null,
+    football: footballPhoto?.imageUrl ?? null,
+    badminton: badmintonPhoto?.imageUrl ?? null,
+    pickleball: pickleballPhoto?.imageUrl ?? null,
+    "net-practice": netPracticePhoto?.imageUrl ?? null,
+  };
 
   return (
-    <>
-      <Hero
-        selectedSportSlug={selectedSportSlug}
-        onSportSelect={setSelectedSportSlug}
-      />
-      <BookingWidget
-        selectedSportSlug={selectedSportSlug}
-      />
-    </>
+    <HomeClient
+      heroImageUrl={heroPhoto?.imageUrl ?? null}
+      sportHeroImages={sportHeroImages}
+    />
   );
 }

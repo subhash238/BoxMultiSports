@@ -2,6 +2,7 @@
 
 import {
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -9,7 +10,12 @@ import { ChevronDown, ShieldCheck } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 
 import BookingField from "./BookingField";
-import { SHARED_BOOKING_SPORT_SLUGS } from "./constants";
+import SlotAvailabilityModal from "./SlotAvailabilityModal";
+import {
+  ENABLED_MAIN_BOOKING_DURATIONS,
+  HOMEPAGE_BOOKING_SPORTS,
+  HomepageBookingSportSlug,
+} from "./constants";
 
 import {
   BookingData,
@@ -31,6 +37,18 @@ interface Sport {
   maxPlayers?: number | null;
   imageUrl?: string | null;
   isActive?: boolean;
+}
+
+interface HomepageBookingSport extends Sport {
+  displayLabel: string;
+}
+
+function isHomepageBookingSportSlug(
+  slug: string
+): slug is HomepageBookingSportSlug {
+  return HOMEPAGE_BOOKING_SPORTS.some(
+    (sport) => sport.slug === slug
+  );
 }
 
 // ==========================================
@@ -62,51 +80,77 @@ interface BookingFormProps {
   ) => void;
 }
 
-// ==========================================
-// Convert 12 Hour Time → 24 Hour Time
-// ==========================================
+const MAIN_OPENING_MINUTES = 5 * 60;
+const MAIN_CLOSING_MINUTES = 24 * 60;
+const MAIN_START_TIME_INTERVAL_MINUTES = 30;
 
-function convertTo24Hour(time: string): string {
-  const [timePart, period] = time.split(" ");
+export type MainStartTimeOption = {
+  value: string;
+  label: string;
+};
 
-  const [hourString, minuteString] =
-    timePart.split(":");
+function formatTimeValue(totalMinutes: number): string {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
 
-  let hour = Number(hourString);
-  const minute = Number(minuteString);
+  return `${String(hours).padStart(2, "0")}:${String(
+    minutes
+  ).padStart(2, "0")}`;
+}
 
-  if (
-    !Number.isFinite(hour) ||
-    !Number.isFinite(minute)
-  ) {
-    throw new Error("Invalid time selected.");
-  }
+function formatTimeLabel(totalMinutes: number): string {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  const period = hours < 12 ? "AM" : "PM";
+  const displayHours = hours % 12 || 12;
 
-  if (period === "AM") {
-    if (hour === 12) {
-      hour = 0;
-    }
-  }
-
-  if (period === "PM") {
-    if (hour !== 12) {
-      hour += 12;
-    }
-  }
-
-  return `${String(hour).padStart(
+  return `${displayHours}:${String(minutes).padStart(
     2,
     "0"
-  )}:${String(minute).padStart(2, "0")}`;
+  )} ${period}`;
+}
+
+export function generateMainStartTimeOptions(
+  durationMinutes?: number
+): MainStartTimeOption[] {
+  if (
+    typeof durationMinutes !== "number" ||
+    !Number.isInteger(durationMinutes) ||
+    durationMinutes <= 0
+  ) {
+    return [];
+  }
+
+  const options: MainStartTimeOption[] = [];
+
+  for (
+    let startMinutes = MAIN_OPENING_MINUTES;
+    startMinutes < MAIN_CLOSING_MINUTES;
+    startMinutes += MAIN_START_TIME_INTERVAL_MINUTES
+  ) {
+    if (
+      startMinutes + durationMinutes >
+      MAIN_CLOSING_MINUTES
+    ) {
+      continue;
+    }
+
+    options.push({
+      value: formatTimeValue(startMinutes),
+      label: formatTimeLabel(startMinutes),
+    });
+  }
+
+  return options;
 }
 
 // ==========================================
 // Add Duration To Time
 // ==========================================
 
-function addDurationToTime(
+export function addDurationToTime(
   startTime: string,
-  duration: string
+  durationMinutes?: number
 ): string {
   const [hoursString, minutesString] =
     startTime.split(":");
@@ -114,13 +158,13 @@ function addDurationToTime(
   const hours = Number(hoursString);
   const minutes = Number(minutesString);
 
-  const durationHours =
-    Number.parseInt(duration, 10);
-
   if (
     !Number.isFinite(hours) ||
     !Number.isFinite(minutes) ||
-    !Number.isFinite(durationHours)
+    typeof durationMinutes !== "number" ||
+    !Number.isFinite(durationMinutes) ||
+    !Number.isInteger(durationMinutes) ||
+    durationMinutes <= 0
   ) {
     throw new Error(
       "Invalid booking time or duration."
@@ -130,9 +174,9 @@ function addDurationToTime(
   const totalMinutes =
     hours * 60 +
     minutes +
-    durationHours * 60;
+    durationMinutes;
 
-  if (totalMinutes >= 24 * 60) {
+  if (totalMinutes > 24 * 60) {
     throw new Error(
       "Booking cannot extend beyond midnight."
     );
@@ -140,7 +184,7 @@ function addDurationToTime(
 
   const endHours = Math.floor(
     totalMinutes / 60
-  );
+  ) % 24;
 
   const endMinutes =
     totalMinutes % 60;
@@ -168,7 +212,7 @@ export default function BookingForm({
   // ==========================================
 
   const [sports, setSports] =
-    useState<Sport[]>([]);
+    useState<HomepageBookingSport[]>([]);
 
   const [sportsLoading, setSportsLoading] =
     useState(true);
@@ -182,8 +226,60 @@ export default function BookingForm({
   const hasAppliedSportPreselection =
     useRef(false);
 
+  const bookingDateInputRef =
+    useRef<HTMLInputElement>(null);
+
   const [sportsError, setSportsError] =
     useState("");
+
+  const [
+    isSlotModalOpen,
+    setIsSlotModalOpen,
+  ] = useState(false);
+
+  const handleBookingDateClick = (
+    event: React.MouseEvent<HTMLInputElement>
+  ) => {
+    const input = bookingDateInputRef.current;
+
+    if (!input) {
+      return;
+    }
+
+    input.focus();
+
+    if (typeof input.showPicker !== "function") {
+      return;
+    }
+
+    try {
+      input.showPicker();
+      event.preventDefault();
+    } catch {
+      // Keep native focus/click behavior as the fallback.
+    }
+  };
+
+  const startTimeOptions = useMemo(
+    () =>
+      generateMainStartTimeOptions(
+        bookingData.durationMinutes
+      ),
+    [bookingData.durationMinutes]
+  );
+
+  const selectedSportForAvailability =
+    useMemo(
+      () =>
+        sports.find(
+          (sport) =>
+            sport.id === bookingData.sport
+        ) ?? null,
+      [
+        sports,
+        bookingData.sport,
+      ]
+    );
 
   // ==========================================
   // Validation
@@ -200,6 +296,34 @@ export default function BookingForm({
     bookingData,
     setBookingData
   );
+  const handleOpenSlotAvailability = () => {
+    let canOpen = true;
+
+    if (!bookingData.sport || errors.sport) {
+      handleBlur("sport");
+      canOpen = false;
+    }
+
+    if (!bookingData.date || errors.date) {
+      handleBlur("date");
+      canOpen = false;
+    }
+
+    if (
+      typeof bookingData.durationMinutes !== "number" ||
+      errors.duration
+    ) {
+      handleBlur("duration");
+      canOpen = false;
+    }
+
+    if (!canOpen) {
+      return;
+    }
+
+    setIsSlotModalOpen(true);
+  };
+
 
   // ==========================================
   // Fetch Sports
@@ -232,12 +356,25 @@ export default function BookingForm({
           );
         }
 
+        const fetchedSports: Sport[] =
+          result.sports ?? [];
+
         const sharedSports =
-          (result.sports ?? []).filter(
-            (sport: Sport) =>
-              SHARED_BOOKING_SPORT_SLUGS.includes(
-                sport.slug as (typeof SHARED_BOOKING_SPORT_SLUGS)[number]
-              )
+          HOMEPAGE_BOOKING_SPORTS.flatMap(
+            ({ slug, label }) => {
+              const sport = fetchedSports.find(
+                (item) => item.slug === slug
+              );
+
+              return sport
+                ? [
+                    {
+                      ...sport,
+                      displayLabel: label,
+                    },
+                  ]
+                : [];
+            }
           );
 
         setSports(sharedSports);
@@ -273,8 +410,8 @@ export default function BookingForm({
 
     if (
       !requestedSlug ||
-      !SHARED_BOOKING_SPORT_SLUGS.includes(
-        requestedSlug as (typeof SHARED_BOOKING_SPORT_SLUGS)[number]
+      !isHomepageBookingSportSlug(
+        requestedSlug
       )
     ) {
       return;
@@ -328,13 +465,23 @@ export default function BookingForm({
       }
 
       // ---------------------------------------
-      // Convert Start Time
+      // Read Start Time
       // ---------------------------------------
 
-      const startTime =
-        convertTo24Hour(
-          bookingData.time
+      const startTime = bookingData.time;
+
+      const durationMinutes =
+        bookingData.durationMinutes;
+
+      if (
+        typeof durationMinutes !== "number" ||
+        !Number.isInteger(durationMinutes) ||
+        durationMinutes <= 0
+      ) {
+        throw new Error(
+          "Invalid booking duration."
         );
+      }
 
       // ---------------------------------------
       // Calculate End Time
@@ -343,8 +490,11 @@ export default function BookingForm({
       const endTime =
         addDurationToTime(
           startTime,
-          bookingData.duration
+          durationMinutes
         );
+
+      const trimmedSpecialRequest =
+        bookingData.specialRequest.trim();
 
       // ---------------------------------------
       // Create Booking
@@ -373,14 +523,25 @@ export default function BookingForm({
 
             endTime,
 
-            numberOfPlayers:
-              bookingData.players,
+            durationMinutes,
+
+            numberOfPlayers: 1,
 
             fullName:
               bookingData.fullName.trim(),
 
+            email:
+              (bookingData.email ?? "").trim(),
+
             mobile:
               bookingData.mobile.replace(/\D/g, ""),
+
+            ...(trimmedSpecialRequest
+              ? {
+                  specialRequest:
+                    trimmedSpecialRequest,
+                }
+              : {}),
           }),
         }
       );
@@ -423,12 +584,21 @@ export default function BookingForm({
       const booking =
         result.data.booking;
 
+      const selectedSport =
+        sports.find(
+          (sport) =>
+            sport.id === bookingData.sport
+        );
+
       const createdBooking:
         CreatedBooking = {
         id: booking.id,
 
         bookingNumber:
           booking.bookingNumber,
+
+        sportName:
+          selectedSport?.displayLabel,
 
         bookingDate:
           booking.bookingDate,
@@ -707,7 +877,7 @@ export default function BookingForm({
                     text-white/55
                   "
                 >
-                  Sport
+                  Game
                   <span className="ml-1 text-[#B6F000]">
                     *
                   </span>
@@ -716,12 +886,16 @@ export default function BookingForm({
                 <div className="relative">
                   <select
                     value={bookingData.sport}
-                    onChange={(e) =>
-                      updateField(
-                        "sport",
-                        e.target.value
-                      )
-                    }
+                    onChange={(e) => {
+                      const nextSportId =
+                        e.target.value;
+
+                      setBookingData((current) => ({
+                        ...current,
+                        sport: nextSportId,
+                        time: "",
+                      }));
+                    }}
                     onBlur={() =>
                       handleBlur("sport")
                     }
@@ -754,7 +928,7 @@ export default function BookingForm({
                             text-white
                           "
                         >
-                          {sport.name}
+                          {sport.displayLabel}
                         </option>
                       )
                     )}
@@ -803,18 +977,25 @@ export default function BookingForm({
 
               <BookingField
                 label="Booking Date"
+                inputId="booking-date"
+                inputRef={bookingDateInputRef}
                 type="date"
                 required
                 value={bookingData.date}
-                onChange={(e) =>
-                  updateField(
-                    "date",
-                    e.target.value
-                  )
-                }
+                onChange={(e) => {
+                  const nextDate =
+                    e.target.value;
+
+                  setBookingData((current) => ({
+                    ...current,
+                    date: nextDate,
+                    time: "",
+                  }));
+                }}
                 onBlur={() =>
                   handleBlur("date")
                 }
+                onInputClick={handleBookingDateClick}
                 error={
                   touched.date
                     ? errors.date
@@ -832,6 +1013,7 @@ export default function BookingForm({
                   placeholder:!text-white/25
                   focus:!border-[#B6F000]/70
                   focus:!ring-[#B6F000]/10
+                  cursor-pointer
                 "
               />
             </div>
@@ -883,71 +1065,57 @@ export default function BookingForm({
                     text-white/55
                   "
                 >
-                  Start time
+                  Start Time
                   <span className="ml-1 text-[#B6F000]">
                     *
                   </span>
                 </label>
 
-                <div className="relative">
-                  <select
-                    value={bookingData.time}
-                    onChange={(e) =>
-                      updateField(
-                        "time",
-                        e.target.value
-                      )
-                    }
-                    onBlur={() =>
-                      handleBlur("time")
-                    }
-                    className={
+                <button
+                  type="button"
+                  onClick={handleOpenSlotAvailability}
+                  className={`
+                    ${
                       touched.time &&
                       errors.time
                         ? selectError
-                        : touched.time
+                        : bookingData.time
                           ? selectSuccess
                           : selectNormal
                     }
-                  >
-                    <option
-                      value=""
-                      className="bg-[#11130F] text-white"
-                    >
-                      Select time
-                    </option>
+                    flex
+                    items-center
+                    justify-between
+                    gap-3
+                    text-left
+                  `}
+                >
+                  <span>
+                    {bookingData.time
+                      ? `${
+                          startTimeOptions.find(
+                            (option) =>
+                              option.value ===
+                              bookingData.time
+                          )?.label ??
+                          bookingData.time
+                        } ✓`
+                      : "Select a slot"}
+                  </span>
 
-                    <option>06:00 AM</option>
-                    <option>07:00 AM</option>
-                    <option>08:00 AM</option>
-                    <option>09:00 AM</option>
-                    <option>10:00 AM</option>
-                    <option>11:00 AM</option>
-                    <option>12:00 PM</option>
-                    <option>01:00 PM</option>
-                    <option>02:00 PM</option>
-                    <option>03:00 PM</option>
-                    <option>04:00 PM</option>
-                    <option>05:00 PM</option>
-                    <option>06:00 PM</option>
-                    <option>07:00 PM</option>
-                    <option>08:00 PM</option>
-                    <option>09:00 PM</option>
-                    <option>10:00 PM</option>
-                  </select>
-
-                  <ChevronDown
-                    size={17}
+                  <span
                     className="
-                      pointer-events-none
-                      absolute
-                      right-4
-                      top-1/2
-                      -translate-y-1/2
-                      text-white/40
+                      shrink-0
+                      text-[11px]
+                      font-semibold
+                      text-[#B6F000]
                     "
-                  />
-                </div>
+                  >
+                    {bookingData.time
+                      ? "Change Slot"
+                      : "Check Availability"}
+                  </span>
+                </button>
 
                 {touched.time &&
                   errors.time && (
@@ -986,12 +1154,25 @@ export default function BookingForm({
                     value={
                       bookingData.duration
                     }
-                    onChange={(e) =>
-                      updateField(
-                        "duration",
-                        e.target.value
-                      )
-                    }
+                    onChange={(e) => {
+                      const selectedDuration =
+                        ENABLED_MAIN_BOOKING_DURATIONS.find(
+                          (duration) =>
+                            duration.label ===
+                            e.target.value
+                        );
+
+                      const nextDurationMinutes =
+                        selectedDuration?.minutes;
+                      setBookingData((current) => ({
+                        ...current,
+                        duration:
+                          selectedDuration?.label ?? "",
+                        durationMinutes:
+                          nextDurationMinutes,
+                        time: "",
+                      }));
+                    }}
                     onBlur={() =>
                       handleBlur("duration")
                     }
@@ -1011,12 +1192,16 @@ export default function BookingForm({
                       Select duration
                     </option>
 
-                    <option>1 Hour</option>
-                    <option>2 Hours</option>
-                    <option>3 Hours</option>
-                    <option>4 Hours</option>
-                    <option>5 Hours</option>
-                    <option>12 Hours</option>
+                    {ENABLED_MAIN_BOOKING_DURATIONS.map(
+                      (duration) => (
+                        <option
+                          key={duration.minutes}
+                          value={duration.label}
+                        >
+                          {duration.label}
+                        </option>
+                      )
+                    )}
                   </select>
 
                   <ChevronDown
@@ -1078,47 +1263,8 @@ export default function BookingForm({
               className="
                 grid
                 gap-5
-                md:grid-cols-2
               "
             >
-
-              {/* Players */}
-
-              <BookingField
-                label="Number of Players"
-                type="number"
-                required
-                value={bookingData.players}
-                onChange={(e) =>
-                  updateField(
-                    "players",
-                    Number(
-                      e.target.value
-                    )
-                  )
-                }
-                onBlur={() =>
-                  handleBlur("players")
-                }
-                error={
-                  touched.players
-                    ? errors.players
-                    : undefined
-                }
-                success={
-                  touched.players &&
-                  !errors.players
-                }
-                className="
-                  !border-white/[0.10]
-                  !bg-white/[0.035]
-                  !text-white
-                  placeholder:!text-white/25
-                  focus:!border-[#B6F000]/70
-                  focus:!ring-[#B6F000]/10
-                "
-              />
-
               {/* Mobile */}
 
               <BookingField
@@ -1196,6 +1342,45 @@ export default function BookingForm({
               />
             </div>
 
+            {/* Email */}
+
+            <div className="mt-5">
+              <BookingField
+                label="Email ID"
+                type="email"
+                placeholder="you@example.com"
+                required
+                maxLength={255}
+                value={bookingData.email ?? ""}
+                onChange={(e) =>
+                  updateField(
+                    "email",
+                    e.target.value
+                  )
+                }
+                onBlur={() =>
+                  handleBlur("email")
+                }
+                error={
+                  touched.email
+                    ? errors.email
+                    : undefined
+                }
+                success={
+                  touched.email &&
+                  !errors.email
+                }
+                className="
+                  !border-white/[0.10]
+                  !bg-white/[0.035]
+                  !text-white
+                  placeholder:!text-white/25
+                  focus:!border-[#B6F000]/70
+                  focus:!ring-[#B6F000]/10
+                "
+              />
+            </div>
+
             {/* Special Request */}
 
             <div className="mt-5">
@@ -1211,6 +1396,19 @@ export default function BookingForm({
                     "specialRequest",
                     e.target.value
                   )
+                }
+                onBlur={() =>
+                  handleBlur("specialRequest")
+                }
+                error={
+                  touched.specialRequest
+                    ? errors.specialRequest
+                    : undefined
+                }
+                success={
+                  touched.specialRequest &&
+                  !!bookingData.specialRequest.trim() &&
+                  !errors.specialRequest
                 }
                 className="
                   !min-h-[110px]
@@ -1294,7 +1492,6 @@ export default function BookingForm({
 
           <button
             type="button"
-            disabled={!isValid}
             onClick={handleContinue}
             className={`
               group
@@ -1320,7 +1517,7 @@ export default function BookingForm({
                     active:translate-y-0
                   `
                   : `
-                    cursor-not-allowed
+                    cursor-pointer
                     bg-white/[0.07]
                     text-white/25
                     border
@@ -1352,7 +1549,7 @@ export default function BookingForm({
                 gap-2
               "
             >
-              Continue Booking
+              Proceed to Payment
 
               <span
                 className="
@@ -1393,6 +1590,33 @@ export default function BookingForm({
 
         </div>
       </div>
+
+      {isSlotModalOpen &&
+        selectedSportForAvailability &&
+        bookingData.date &&
+        typeof bookingData.durationMinutes === "number" && (
+          <SlotAvailabilityModal
+            sportId={bookingData.sport}
+            sportName={
+              selectedSportForAvailability.displayLabel
+            }
+            bookingDate={bookingData.date}
+            durationMinutes={
+              bookingData.durationMinutes
+            }
+            selectedTime={bookingData.time}
+            onSelect={(startTime) => {
+              updateField(
+                "time",
+                startTime
+              );
+              setIsSlotModalOpen(false);
+            }}
+            onClose={() =>
+              setIsSlotModalOpen(false)
+            }
+          />
+        )}
     </div>
   );
 }
