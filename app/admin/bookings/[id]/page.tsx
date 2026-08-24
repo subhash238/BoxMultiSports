@@ -44,14 +44,14 @@ interface BookingStatusHistory {
   id: string;
   fromStatus: BookingStatus | null;
   toStatus: BookingStatus;
-  changedById: string;
+  changedById: string | null;
   createdAt: string;
   changedBy: {
     id: string;
     name: string;
     email: string;
     mobile: string;
-  };
+  } | null;
 }
 
 interface BookingPayment {
@@ -704,14 +704,22 @@ export default function BookingDetailsPage({
 
                       <div className="mt-3">
 
-                        <p className="text-sm font-medium text-gray-700">
-                          Changed by{" "}
-                          {history.changedBy.name}
-                        </p>
+                        {history.changedBy ? (
+                          <>
+                            <p className="text-sm font-medium text-gray-700">
+                              Changed by{" "}
+                              {history.changedBy.name}
+                            </p>
 
-                        <p className="mt-1 text-xs text-gray-400">
-                          {history.changedBy.email}
-                        </p>
+                            <p className="mt-1 text-xs text-gray-400">
+                              {history.changedBy.email}
+                            </p>
+                          </>
+                        ) : (
+                          <p className="text-sm font-medium text-gray-700">
+                            Changed by System
+                          </p>
+                        )}
 
                       </div>
 
