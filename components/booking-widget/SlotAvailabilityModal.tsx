@@ -6,6 +6,8 @@ import {
   useState,
 } from "react";
 
+import ModalPortal from "./ModalPortal";
+
 type AvailabilitySlot = {
   startTime: string;
   endTime: string;
@@ -200,35 +202,36 @@ export default function SlotAvailabilityModal({
     ).length;
 
   return (
-    <div
-      className="
-        fixed inset-0 z-[110]
-        flex items-end justify-center
-        bg-black/80
-        backdrop-blur-md
-        md:items-center
-        md:px-4 md:py-6
-      "
-      role="dialog"
-      aria-modal="true"
-      aria-label="Select available booking slot"
-    >
+    <ModalPortal>
       <div
         className="
-          relative
-          max-h-[88vh]
-          w-full
-          overflow-y-auto
-          rounded-t-3xl
-          border border-white/10
-          bg-[#111111]
-          p-5
-          shadow-2xl
-          md:max-w-2xl
-          md:rounded-3xl
-          md:p-7
+          fixed inset-0 z-[110]
+          flex items-end justify-center
+          bg-black/80
+          backdrop-blur-md
+          md:items-center
+          md:px-4 md:py-6
         "
+        role="dialog"
+        aria-modal="true"
+        aria-label="Select available booking slot"
       >
+        <div
+          className="
+            relative
+            max-h-[88vh]
+            w-full
+            overflow-y-auto
+            rounded-t-3xl
+            border border-white/10
+            bg-[#111111]
+            p-5
+            shadow-2xl
+            md:max-w-2xl
+            md:rounded-3xl
+            md:p-7
+          "
+        >
         <button
           type="button"
           onClick={onClose}
@@ -595,7 +598,8 @@ export default function SlotAvailabilityModal({
             </p>
           </>
         )}
+        </div>
       </div>
-    </div>
+    </ModalPortal>
   );
 }
