@@ -42,6 +42,14 @@ interface BookingFieldProps {
   maxLength?: number;
 
   className?: string;
+
+  containerClassName?: string;
+
+  labelClassName?: string;
+
+  textareaRows?: number;
+
+  showSuccessMessage?: boolean;
 }
 
 export default function BookingField({
@@ -61,6 +69,10 @@ export default function BookingField({
   disabled = false,
   maxLength,
   className,
+  containerClassName,
+  labelClassName,
+  textareaRows = 4,
+  showSuccessMessage = true,
 }: BookingFieldProps) {
   const inputClass = clsx(
     `
@@ -105,7 +117,7 @@ export default function BookingField({
   );
 
   return (
-    <div className="space-y-2">
+    <div className={clsx("space-y-2", containerClassName)}>
 
       {/* ======================================
           Label
@@ -113,15 +125,10 @@ export default function BookingField({
 
       <label
         htmlFor={inputId}
-        className="
-          flex
-          items-center
-          gap-1
-          text-[13px]
-          font-semibold
-          tracking-[-0.01em]
-          text-[#52525B]
-        "
+        className={clsx(
+          "flex items-center gap-1 text-[13px] font-semibold tracking-[-0.01em] text-[#52525B]",
+          labelClassName
+        )}
       >
         {label}
 
@@ -141,7 +148,7 @@ export default function BookingField({
         {textarea ? (
           <textarea
             id={inputId}
-            rows={4}
+            rows={textareaRows}
             value={value}
             placeholder={placeholder}
             onChange={onChange}
@@ -231,7 +238,7 @@ export default function BookingField({
           Success Message
       ====================================== */}
 
-      {success && !error && (
+      {showSuccessMessage && success && !error && (
         <p
           className="
             flex

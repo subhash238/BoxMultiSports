@@ -654,7 +654,7 @@ export default function BookingForm({
   // ==========================================
 
   const selectBase = `
-    h-[56px]
+    ${compact ? "h-[48px]" : "h-[56px]"}
     w-full
     appearance-none
     rounded-[14px]
@@ -712,13 +712,12 @@ export default function BookingForm({
     title: string;
     description: string;
   }) => (
-    <div className="mb-6">
-      <div className="flex items-center gap-3">
+    <div className={compact ? "mb-3" : "mb-6"}>
+      <div className={`flex items-center ${compact ? "gap-2" : "gap-3"}`}>
         <span
-          className="
+          className={`
             flex
-            h-8
-            w-8
+            ${compact ? "h-6 w-6" : "h-8 w-8"}
             shrink-0
             items-center
             justify-center
@@ -729,34 +728,32 @@ export default function BookingForm({
             text-[10px]
             font-bold
             text-[#B6F000]
-          "
+          `}
         >
           {number}
         </span>
 
         <h3
-          className="
-            text-[15px]
+          className={`
+            ${compact ? "text-sm" : "text-[15px]"}
             font-semibold
             tracking-[-0.01em]
             text-white
-          "
+          `}
         >
           {title}
         </h3>
       </div>
 
-      <p
-        className="
-          mt-2
-          pl-11
+      {!compact && <p
+        className={`
+          ${compact ? "mt-1 pl-9 leading-4" : "mt-2 pl-11 leading-5"}
           text-xs
-          leading-5
           text-white/35
-        "
+        `}
       >
         {description}
-      </p>
+      </p>}
     </div>
   );
 
@@ -846,7 +843,7 @@ export default function BookingForm({
         "
       >
 
-        <div className="p-5 sm:p-7 lg:p-8">
+        <div className={compact ? "p-4" : "p-5 sm:p-7 lg:p-8"}>
 
           {/* ==================================
               GAME DETAILS
@@ -860,24 +857,23 @@ export default function BookingForm({
             />
 
             <div
-              className="
+              className={`
                 grid
-                gap-5
+                ${compact ? "gap-3" : "gap-5"}
                 md:grid-cols-2
-              "
+              `}
             >
 
               {/* Sport */}
 
               <div>
                 <label
-                  className="
-                    mb-2
+                  className={`
+                    ${compact ? "mb-1 text-[11px]" : "mb-2 text-[12px]"}
                     block
-                    text-[12px]
                     font-medium
                     text-white/55
-                  "
+                  `}
                 >
                   Game
                   <span className="ml-1 text-[#B6F000]">
@@ -980,6 +976,9 @@ export default function BookingForm({
               {/* Date */}
 
               <BookingField
+                containerClassName={compact ? "space-y-1.5" : undefined}
+                labelClassName={compact ? "text-[11px]" : undefined}
+                showSuccessMessage={!compact}
                 label="Booking Date"
                 inputId="booking-date"
                 inputRef={bookingDateInputRef}
@@ -1009,7 +1008,7 @@ export default function BookingForm({
                   touched.date &&
                   !errors.date
                 }
-                className="
+                className={`
                   !border-white/[0.10]
                   !bg-white/[0.035]
                   !text-white
@@ -1018,7 +1017,8 @@ export default function BookingForm({
                   focus:!border-[#B6F000]/70
                   focus:!ring-[#B6F000]/10
                   cursor-pointer
-                "
+                  ${compact ? "!h-[48px]" : ""}
+                `}
               />
             </div>
           </section>
@@ -1028,14 +1028,14 @@ export default function BookingForm({
           ================================== */}
 
           <div
-            className="
-              my-8
+            className={`
+              ${compact ? "my-3" : "my-8"}
               h-px
               bg-gradient-to-r
               from-transparent
               via-white/[0.08]
               to-transparent
-            "
+            `}
           />
 
           {/* ==================================
@@ -1050,24 +1050,23 @@ export default function BookingForm({
             />
 
             <div
-              className="
+              className={`
                 grid
-                gap-5
+                ${compact ? "gap-3" : "gap-5"}
                 md:grid-cols-2
-              "
+              `}
             >
 
               {/* Start Time */}
 
               <div>
                 <label
-                  className="
-                    mb-2
+                  className={`
+                    ${compact ? "mb-1 text-[11px]" : "mb-2 text-[12px]"}
                     block
-                    text-[12px]
                     font-medium
                     text-white/55
-                  "
+                  `}
                 >
                   Start Time
                   <span className="ml-1 text-[#B6F000]">
@@ -1139,13 +1138,12 @@ export default function BookingForm({
 
               <div>
                 <label
-                  className="
-                    mb-2
+                  className={`
+                    ${compact ? "mb-1 text-[11px]" : "mb-2 text-[12px]"}
                     block
-                    text-[12px]
                     font-medium
                     text-white/55
-                  "
+                  `}
                 >
                   Duration
                   <span className="ml-1 text-[#B6F000]">
@@ -1245,14 +1243,14 @@ export default function BookingForm({
           ================================== */}
 
           <div
-            className="
-              my-8
+            className={`
+              ${compact ? "my-3" : "my-8"}
               h-px
               bg-gradient-to-r
               from-transparent
               via-white/[0.08]
               to-transparent
-            "
+            `}
           />
 
           {/* ==================================
@@ -1266,15 +1264,13 @@ export default function BookingForm({
               description="Tell us who is joining the game."
             />
 
-            <div
-              className="
-                grid
-                gap-5
-              "
-            >
+            <div className={`grid ${compact ? "gap-3 md:grid-cols-2" : "gap-5"}`}>
               {/* Mobile */}
 
               <BookingField
+                containerClassName={compact ? "space-y-1.5" : undefined}
+                labelClassName={compact ? "text-[11px]" : undefined}
+                showSuccessMessage={!compact}
                 label="Mobile Number"
                 type="tel"
                 placeholder="9876543210"
@@ -1299,21 +1295,24 @@ export default function BookingForm({
                   touched.mobile &&
                   !errors.mobile
                 }
-                className="
+                className={`
                   !border-white/[0.10]
                   !bg-white/[0.035]
                   !text-white
                   placeholder:!text-white/25
                   focus:!border-[#B6F000]/70
                   focus:!ring-[#B6F000]/10
-                "
+                  ${compact ? "!h-[48px]" : ""}
+                `}
               />
-            </div>
 
             {/* Full Name */}
 
-            <div className="mt-5">
+            <div>
               <BookingField
+                containerClassName={compact ? "space-y-1.5" : undefined}
+                labelClassName={compact ? "text-[11px]" : undefined}
+                showSuccessMessage={!compact}
                 label="Full Name"
                 placeholder="Enter your full name"
                 required
@@ -1338,21 +1337,25 @@ export default function BookingForm({
                   touched.fullName &&
                   !errors.fullName
                 }
-                className="
+                className={`
                   !border-white/[0.10]
                   !bg-white/[0.035]
                   !text-white
                   placeholder:!text-white/25
                   focus:!border-[#B6F000]/70
                   focus:!ring-[#B6F000]/10
-                "
+                  ${compact ? "!h-[48px]" : ""}
+                `}
               />
             </div>
 
             {/* Email */}
 
-            <div className="mt-5">
+            <div className={compact ? "md:col-span-2" : undefined}>
               <BookingField
+                containerClassName={compact ? "space-y-1.5" : undefined}
+                labelClassName={compact ? "text-[11px]" : undefined}
+                showSuccessMessage={!compact}
                 label="Email ID"
                 type="email"
                 placeholder="you@example.com"
@@ -1377,21 +1380,26 @@ export default function BookingForm({
                   touched.email &&
                   !errors.email
                 }
-                className="
+                className={`
                   !border-white/[0.10]
                   !bg-white/[0.035]
                   !text-white
                   placeholder:!text-white/25
                   focus:!border-[#B6F000]/70
                   focus:!ring-[#B6F000]/10
-                "
+                  ${compact ? "!h-[48px]" : ""}
+                `}
               />
             </div>
 
             {/* Special Request */}
 
-            <div className="mt-5">
+            <div className={compact ? "md:col-span-2" : undefined}>
               <BookingField
+                containerClassName={compact ? "space-y-1.5" : undefined}
+                labelClassName={compact ? "text-[11px]" : undefined}
+                textareaRows={compact ? 2 : 4}
+                showSuccessMessage={!compact}
                 label="Special Request"
                 textarea
                 placeholder="Birthday match, corporate event, tournament, coaching..."
@@ -1417,16 +1425,17 @@ export default function BookingForm({
                   !!bookingData.specialRequest.trim() &&
                   !errors.specialRequest
                 }
-                className="
-                  !min-h-[110px]
+                className={`
+                  ${compact ? "!min-h-[68px]" : "!min-h-[110px]"}
                   !border-white/[0.10]
                   !bg-white/[0.035]
                   !text-white
                   placeholder:!text-white/25
                   focus:!border-[#B6F000]/70
                   focus:!ring-[#B6F000]/10
-                "
+                `}
               />
+            </div>
             </div>
           </section>
 
@@ -1435,29 +1444,26 @@ export default function BookingForm({
           ================================== */}
 
           <div
-            className="
-              mt-8
+            className={`
+              ${compact ? "mt-4 px-3 py-2.5" : "mt-8 px-4 py-4"}
               rounded-[16px]
               border
               border-[#B6F000]/10
               bg-[#B6F000]/[0.035]
-              px-4
-              py-4
-            "
+            `}
           >
-            <div className="flex gap-3">
+            <div className={`flex items-center ${compact ? "gap-2" : "gap-3"}`}>
               <div
-                className="
+                className={`
                   mt-0.5
                   flex
-                  h-7
-                  w-7
+                  ${compact ? "h-6 w-6" : "h-7 w-7"}
                   shrink-0
                   items-center
                   justify-center
                   rounded-full
                   bg-[#B6F000]/10
-                "
+                `}
               >
                 <ShieldCheck
                   size={15}
@@ -1473,10 +1479,18 @@ export default function BookingForm({
                     text-white/70
                   "
                 >
-                  Secure booking process
+                  {compact ? (
+                    <>
+                      Secure booking
+                      <span className="mx-1 text-[#B6F000]/60" aria-hidden="true">•</span>
+                      Slot held until payment
+                    </>
+                  ) : (
+                    "Secure booking process"
+                  )}
                 </p>
 
-                <p
+                {!compact && <p
                   className="
                     mt-1
                     text-[11px]
@@ -1488,7 +1502,7 @@ export default function BookingForm({
                   while payment is completed.
                   The booking becomes confirmed
                   only after successful payment.
-                </p>
+                </p>}
               </div>
             </div>
           </div>
@@ -1503,8 +1517,7 @@ export default function BookingForm({
             className={`
               group
               relative
-              mt-5
-              h-[58px]
+              ${compact ? "mt-3 h-[50px]" : "mt-5 h-[58px]"}
               w-full
               overflow-hidden
               rounded-[15px]
@@ -1576,15 +1589,15 @@ export default function BookingForm({
           ================================== */}
 
           <div
-            className="
-              mt-4
+            className={`
+              ${compact ? "mt-2" : "mt-4"}
               flex
               items-center
               justify-center
               gap-2
               text-[10px]
               text-white/25
-            "
+            `}
           >
             <ShieldCheck
               size={12}

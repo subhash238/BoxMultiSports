@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import RazorpayPayButton from "@/components/payment/RazorpayPayButton";
+import ModalPortal from "./ModalPortal";
 
 import {
   BookingData,
@@ -59,7 +60,8 @@ export default function PaymentModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 px-4 py-6 backdrop-blur-md">
+    <ModalPortal>
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 px-4 py-6 backdrop-blur-md">
 
       <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-3xl border border-white/10 bg-[#111111] p-6 shadow-2xl md:p-8">
 
@@ -272,6 +274,7 @@ export default function PaymentModal({
           </>
         )}
       </div>
-    </div>
+      </div>
+    </ModalPortal>
   );
 }
