@@ -5,7 +5,7 @@ import {
   useEffect,
   useState,
 } from "react";
-import Link from "next/link";
+import BookNowTrigger from "@/components/booking-widget/BookNowTrigger";
 import {
   AnimatePresence,
   motion,
@@ -460,16 +460,14 @@ export default function SportsGrid() {
                       }}
                       className="mt-6 inline-block"
                     >
-                      <Link
-                        href={`/?sport=${sport.slug}#booking`}
-                        onClick={(event) =>
-                          event.stopPropagation()
-                        }
+                      <BookNowTrigger
+                        sportSlug={sport.slug}
+                        onClick={(event) => event.stopPropagation()}
                         className="inline-flex items-center gap-2 rounded-xl bg-[#B6F000] px-5 py-3 text-sm font-bold text-black shadow-[0_0_18px_rgba(182,240,0,0.16)]"
                       >
                         Book Now
                         <span aria-hidden="true">→</span>
-                      </Link>
+                      </BookNowTrigger>
                     </motion.div>
                   </motion.div>
                 )}

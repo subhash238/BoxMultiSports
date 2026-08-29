@@ -2,6 +2,7 @@
 "use client";
 
 import Link from "next/link";
+import BookNowTrigger from "@/components/booking-widget/BookNowTrigger";
 
 import {
   ArrowUpRight,
@@ -359,8 +360,7 @@ export default function Footer() {
               preferred slot online.
             </p>
 
-            <Link
-              href="/#booking"
+            <BookNowTrigger
               className="
                 mt-5
                 inline-flex
@@ -380,7 +380,7 @@ export default function Footer() {
             >
               Book Now
               <ArrowUpRight size={15} />
-            </Link>
+            </BookNowTrigger>
           </div>
 
           {/* ==================================================
@@ -543,28 +543,28 @@ export default function Footer() {
 
             <ul className="space-y-3">
               <FooterLink
-                href="/?sport=cricket#booking"
                 label="Box Cricket"
+                bookingSportSlug="cricket"
               />
 
               <FooterLink
-                href="/?sport=football#booking"
                 label="Football"
+                bookingSportSlug="football"
               />
 
               <FooterLink
-                href="/?sport=pickleball#booking"
                 label="Pickleball"
+                bookingSportSlug="pickleball"
               />
 
               <FooterLink
-                href="/?sport=badminton#booking"
                 label="Badminton"
+                bookingSportSlug="badminton"
               />
 
               <FooterLink
-                href="/?sport=net-practice#booking"
                 label="Net Practice"
+                bookingSportSlug="net-practice"
               />
             </ul>
           </div>
@@ -656,7 +656,7 @@ export default function Footer() {
 
               <li>
                 <a
-                  href="mailto:info@uniturf.in"
+                  href="mailto:uniturf231@gmail.com"
                   className="
                     flex
                     items-start
@@ -677,7 +677,7 @@ export default function Footer() {
                   />
 
                   <span>
-                    info@uniturf.in
+                    uniturf231@gmail.com
                   </span>
                 </a>
               </li>
@@ -983,27 +983,41 @@ export default function Footer() {
 function FooterLink({
   href,
   label,
+  bookingSportSlug,
 }: {
-  href: string;
+  href?: string;
   label: string;
+  bookingSportSlug?: string;
 }) {
+  const className = `
+    group
+    inline-flex
+    items-center
+    gap-1.5
+    text-sm
+    text-white/40
+    transition-all
+    duration-200
+    hover:translate-x-1
+    hover:text-white
+  `;
+
   return (
     <li>
-      <Link
-        href={href}
-        className="
-          group
-          inline-flex
-          items-center
-          gap-1.5
-          text-sm
-          text-white/40
-          transition-all
-          duration-200
-          hover:translate-x-1
-          hover:text-white
-        "
-      >
+      {bookingSportSlug ? (
+        <BookNowTrigger
+          sportSlug={bookingSportSlug}
+          className={className}
+        >
+          <span>{label}</span>
+
+          <ArrowUpRight
+            size={12}
+            className="opacity-0 transition-opacity group-hover:opacity-60"
+          />
+        </BookNowTrigger>
+      ) : (
+        <Link href={href ?? "/"} className={className}>
         <span>{label}</span>
 
         <ArrowUpRight
@@ -1014,7 +1028,8 @@ function FooterLink({
             group-hover:opacity-60
           "
         />
-      </Link>
+        </Link>
+      )}
     </li>
   );
 }

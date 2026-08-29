@@ -56,6 +56,7 @@ function isHomepageBookingSportSlug(
 // ==========================================
 
 interface BookingFormProps {
+  compact?: boolean;
   bookingData: BookingData;
 
   selectedSportSlug?: string | null;
@@ -200,6 +201,7 @@ export function addDurationToTime(
 // ==========================================
 
 export default function BookingForm({
+  compact = false,
   bookingData,
   selectedSportSlug = null,
   setBookingData,
@@ -769,7 +771,7 @@ export default function BookingForm({
           Header
       ====================================== */}
 
-      <div className="mb-8">
+      {!compact && <div className="mb-8">
         <div
           className="
             mb-3
@@ -826,7 +828,7 @@ export default function BookingForm({
           and reserve your game in less than
           one minute.
         </p>
-      </div>
+      </div>}
 
       {/* ======================================
           Form Surface
@@ -912,6 +914,7 @@ export default function BookingForm({
                     <option
                       value=""
                       className="bg-[#11130F] text-white"
+                      style={{ backgroundColor: "#11130F", color: "#FFFFFF" }}
                     >
                       {sportsLoading
                         ? "Loading sports..."
@@ -927,6 +930,7 @@ export default function BookingForm({
                             bg-[#11130F]
                             text-white
                           "
+                          style={{ backgroundColor: "#11130F", color: "#FFFFFF" }}
                         >
                           {sport.displayLabel}
                         </option>
@@ -1188,6 +1192,7 @@ export default function BookingForm({
                     <option
                       value=""
                       className="bg-[#11130F] text-white"
+                      style={{ backgroundColor: "#11130F", color: "#FFFFFF" }}
                     >
                       Select duration
                     </option>
@@ -1197,6 +1202,8 @@ export default function BookingForm({
                         <option
                           key={duration.minutes}
                           value={duration.label}
+                          className="bg-[#11130F] text-white"
+                          style={{ backgroundColor: "#11130F", color: "#FFFFFF" }}
                         >
                           {duration.label}
                         </option>
