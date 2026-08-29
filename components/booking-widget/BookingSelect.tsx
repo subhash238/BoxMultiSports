@@ -72,6 +72,8 @@ export default function BookingSelect({
             <option
               key={option.value}
               value={option.value}
+              className="bg-[#11130F] text-white"
+              style={{ backgroundColor: "#11130F", color: "#FFFFFF" }}
             >
               {option.label}
             </option>

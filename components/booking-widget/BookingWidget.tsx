@@ -39,11 +39,14 @@ export interface CreatedBooking {
 
 interface BookingWidgetProps {
   selectedSportSlug?: string | null;
+  variant?: "section" | "modal";
 }
 
 export default function BookingWidget({
   selectedSportSlug = null,
+  variant = "section",
 }: BookingWidgetProps) {
+  const isModal = variant === "modal";
   const [bookingData, setBookingData] =
     useState<BookingData>({
       sport: "",
@@ -79,6 +82,7 @@ export default function BookingWidget({
 
   useEffect(() => {
     if (
+      isModal ||
       typeof window === "undefined" ||
       window.location.hash !== "#booking"
     ) {
@@ -102,7 +106,7 @@ export default function BookingWidget({
     return () => {
       window.cancelAnimationFrame(frame);
     };
-  }, []);
+  }, [isModal]);
 
   // ==========================================
   // Booking Created
@@ -145,20 +149,16 @@ export default function BookingWidget({
 
   return (
     <section
-      id="booking"
-      className="
+      id={isModal ? undefined : "booking"}
+      className={`
         relative
         isolate
         overflow-hidden
-        scroll-mt-32
         bg-[#050705]
-        px-4
-        py-20
-        sm:px-6
-        sm:py-24
-        lg:px-8
-        lg:py-28
-      "
+        ${isModal
+          ? "mx-auto w-full max-w-[1240px] rounded-[28px]"
+          : "scroll-mt-32 px-4 py-20 sm:px-6 sm:py-24 lg:px-8 lg:py-28"}
+      `}
     >
       {/* ==================================================
           PREMIUM BACKGROUND
@@ -255,7 +255,7 @@ export default function BookingWidget({
             HEADING
         ================================================== */}
 
-        <motion.div
+        {!isModal && <motion.div
           initial={{
             opacity: 0,
             y: 24,
@@ -351,7 +351,7 @@ export default function BookingWidget({
             time and reserve your game in less than
             one minute.
           </p>
-        </motion.div>
+        </motion.div>}
 
         {/* ==================================================
             MAIN BOOKING SURFACE
@@ -683,6 +683,7 @@ export default function BookingWidget({
                   "
                 >
                   <BookingForm
+                    compact={isModal}
                     bookingData={bookingData}
                     setBookingData={setBookingData}
                     selectedSportSlug={selectedSportSlug}

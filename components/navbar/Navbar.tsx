@@ -4,7 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import BookNowTrigger from "@/components/booking-widget/BookNowTrigger";
 
 const navItems = [
   { name: "Home", href: "/" },
@@ -24,13 +25,14 @@ export default function Navbar() {
 
     return pathname === href || pathname.startsWith(`${href}/`);
   };
-  const bookNowHref =
+  const dedicatedBookingHref =
     pathname === "/yoga"
       ? "/yoga#yoga-booking"
       : pathname === "/gym"
         ? "/gym#gym-booking"
-        : "/#booking";
+        : null;
   const [menuOpen, setMenuOpen] = useState(false);
+  const mobileMenuToggleRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!menuOpen) {
@@ -105,14 +107,24 @@ export default function Navbar() {
           </ul>
 
           <div className="flex shrink-0 items-center gap-2">
-            <Link
-              href={bookNowHref}
-              onClick={() => setMenuOpen(false)}
-              className="rounded-xl bg-[#B6F000] px-3 py-2 text-xs font-semibold text-black transition-all duration-300 hover:scale-105 hover:bg-[#C8FF1A] hover:shadow-[0_0_30px_rgba(182,240,0,0.45)] sm:px-4 lg:rounded-2xl lg:px-7 lg:py-3 lg:text-base"
-            >
-              Book Now
-            </Link>
+            {dedicatedBookingHref ? (
+              <Link
+                href={dedicatedBookingHref}
+                onClick={() => setMenuOpen(false)}
+                className="rounded-xl bg-[#B6F000] px-3 py-2 text-xs font-semibold text-black transition-all duration-300 hover:scale-105 hover:bg-[#C8FF1A] hover:shadow-[0_0_30px_rgba(182,240,0,0.45)] sm:px-4 lg:rounded-2xl lg:px-7 lg:py-3 lg:text-base"
+              >
+                Book Now
+              </Link>
+            ) : (
+              <BookNowTrigger
+                onClick={() => setMenuOpen(false)}
+                className="rounded-xl bg-[#B6F000] px-3 py-2 text-xs font-semibold text-black transition-all duration-300 hover:scale-105 hover:bg-[#C8FF1A] hover:shadow-[0_0_30px_rgba(182,240,0,0.45)] sm:px-4 lg:rounded-2xl lg:px-7 lg:py-3 lg:text-base"
+              >
+                Book Now
+              </BookNowTrigger>
+            )}
             <button
+              ref={mobileMenuToggleRef}
               type="button"
               aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
               aria-expanded={menuOpen}
@@ -161,13 +173,23 @@ export default function Navbar() {
                     </Link>
                   );
                 })}
-                <Link
-                  href={bookNowHref}
-                  onClick={() => setMenuOpen(false)}
-                  className="mt-1 flex min-h-11 items-center justify-center rounded-xl bg-[#B6F000] px-4 text-sm font-bold text-black transition hover:bg-[#C8FF1A] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B6F000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-                >
-                  Book Now
-                </Link>
+                {dedicatedBookingHref ? (
+                  <Link
+                    href={dedicatedBookingHref}
+                    onClick={() => setMenuOpen(false)}
+                    className="mt-1 flex min-h-11 items-center justify-center rounded-xl bg-[#B6F000] px-4 text-sm font-bold text-black transition hover:bg-[#C8FF1A] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B6F000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                  >
+                    Book Now
+                  </Link>
+                ) : (
+                  <BookNowTrigger
+                    onClick={() => setMenuOpen(false)}
+                    focusFallbackRef={mobileMenuToggleRef}
+                    className="mt-1 flex min-h-11 items-center justify-center rounded-xl bg-[#B6F000] px-4 text-sm font-bold text-black transition hover:bg-[#C8FF1A] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B6F000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                  >
+                    Book Now
+                  </BookNowTrigger>
+                )}
               </div>
             </motion.div>
           ) : null}
