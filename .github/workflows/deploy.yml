@@ -1,0 +1,90 @@
+name: Deploy UniTurf Production
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DEPLOY_HOST: 168.144.223.154
+  DEPLOY_USER: deploy
+  APP_ROOT: /var/www/uniturf
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        env:
+          DATABASE_URL: postgresql://build:build@127.0.0.1:5432/build
+        run: npx prisma generate
+
+      - name: Verify public Razorpay key secret exists
+        run: |
+          if [ -z "${{ secrets.NEXT_PUBLIC_RAZORPAY_KEY_ID }}" ]; then
+            echo "NEXT_PUBLIC_RAZORPAY_KEY_ID repository secret is missing"
+            exit 1
+          fi
+
+      - name: Build standalone app
+        env:
+          NODE_ENV: production
+          DATABASE_URL: postgresql://build:build@127.0.0.1:5432/build
+          JWT_SECRET: build-only-placeholder
+          RAZORPAY_KEY_ID: build-only-placeholder
+          RAZORPAY_KEY_SECRET: build-only-placeholder
+          NEXT_PUBLIC_RAZORPAY_KEY_ID: ${{ secrets.NEXT_PUBLIC_RAZORPAY_KEY_ID }}
+        run: npm run build
+
+      - name: Package standalone release
+        run: |
+          mkdir -p release/.next
+          cp -a .next/standalone/. release/
+          cp -a .next/static release/.next/static
+          cp -a public release/public
+          tar -czf uniturf-release.tgz -C release .
+
+      - name: Configure deployment SSH
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+
+      - name: Upload release
+        run: scp uniturf-release.tgz "$DEPLOY_USER@$DEPLOY_HOST:/tmp/uniturf-release.tgz"
+
+      - name: Activate release
+        run: |
+          ssh "$DEPLOY_USER@$DEPLOY_HOST" "APP_ROOT='$APP_ROOT' RELEASE_SHA='$GITHUB_SHA' bash -s" <<'REMOTE'
+          set -euo pipefail
+          release="$APP_ROOT/releases/$RELEASE_SHA"
+          mkdir -p "$APP_ROOT/releases" "$APP_ROOT/shared" "$release"
+          tar -xzf /tmp/uniturf-release.tgz -C "$release"
+          rm -f /tmp/uniturf-release.tgz
+          ln -sfn "$release" "$APP_ROOT/current"
+
+          if [ -f "$APP_ROOT/shared/.env" ]; then
+            ln -sfn "$APP_ROOT/shared/.env" "$release/.env"
+          fi
+
+          if command -v pm2 >/dev/null 2>&1 && pm2 describe uniturf >/dev/null 2>&1; then
+            pm2 reload uniturf --update-env
+            pm2 save
+          fi
+          REMOTE
