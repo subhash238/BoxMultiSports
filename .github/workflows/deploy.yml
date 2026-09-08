@@ -35,8 +35,8 @@ jobs:
 
       - name: Verify build variables and secrets exist
         run: |
-          if [ -z "${{ vars.NEXT_PUBLIC_RAZORPAY_KEY_ID }}" ]; then
-            echo "NEXT_PUBLIC_RAZORPAY_KEY_ID repository variable is missing"
+          if [ -z "${{ secrets.NEXT_PUBLIC_RAZORPAY_KEY_ID }}" ]; then
+            echo "NEXT_PUBLIC_RAZORPAY_KEY_ID repository secret is missing"
             exit 1
           fi
           if [ -z "${{ secrets.PEXELS_API_KEY }}" ]; then
@@ -51,7 +51,7 @@ jobs:
           JWT_SECRET: build-only-placeholder
           RAZORPAY_KEY_ID: build-only-placeholder
           RAZORPAY_KEY_SECRET: build-only-placeholder
-          NEXT_PUBLIC_RAZORPAY_KEY_ID: ${{ vars.NEXT_PUBLIC_RAZORPAY_KEY_ID }}
+          NEXT_PUBLIC_RAZORPAY_KEY_ID: ${{ secrets.NEXT_PUBLIC_RAZORPAY_KEY_ID }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
         run: npm run build
 
