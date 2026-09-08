@@ -6,6 +6,8 @@ import DashboardLayout from "@/components/admin/layout/DashboardLayout";
 
 import jwt from "jsonwebtoken";
 
+export const dynamic = "force-dynamic";
+
 interface AdminLayoutProps {
   children: ReactNode;
 }
