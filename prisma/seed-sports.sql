@@ -9,7 +9,7 @@ VALUES
   (gen_random_uuid()::text, 'Pickleball', 'pickleball', 999, 23, true, NOW(), NOW()),
   (gen_random_uuid()::text, 'Badminton', 'badminton', 999, 23, true, NOW(), NOW()),
   (gen_random_uuid()::text, 'Net Practice', 'net-practice', 299, 25, true, NOW(), NOW()),
-  (gen_random_uuid()::text, 'Yoga', 'yoga', 399, 25, true, NOW(), NOW()),
+  (gen_random_uuid()::text, 'Yoga', 'yoga', 399, 30, true, NOW(), NOW()),
   (gen_random_uuid()::text, 'Gym', 'gym', 399, 25, true, NOW(), NOW())
 ON CONFLICT ("slug") DO UPDATE SET
   "name" = EXCLUDED."name",
