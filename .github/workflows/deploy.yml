@@ -33,10 +33,10 @@ jobs:
           DATABASE_URL: postgresql://build:build@127.0.0.1:5432/build
         run: npx prisma generate
 
-      - name: Verify public Razorpay key secret exists
+      - name: Verify public Razorpay key variable exists
         run: |
-          if [ -z "${{ secrets.NEXT_PUBLIC_RAZORPAY_KEY_ID }}" ]; then
-            echo "NEXT_PUBLIC_RAZORPAY_KEY_ID repository secret is missing"
+          if [ -z "${{ vars.NEXT_PUBLIC_RAZORPAY_KEY_ID }}" ]; then
+            echo "NEXT_PUBLIC_RAZORPAY_KEY_ID repository variable is missing"
             exit 1
           fi
 
@@ -47,7 +47,7 @@ jobs:
           JWT_SECRET: build-only-placeholder
           RAZORPAY_KEY_ID: build-only-placeholder
           RAZORPAY_KEY_SECRET: build-only-placeholder
-          NEXT_PUBLIC_RAZORPAY_KEY_ID: ${{ secrets.NEXT_PUBLIC_RAZORPAY_KEY_ID }}
+          NEXT_PUBLIC_RAZORPAY_KEY_ID: ${{ vars.NEXT_PUBLIC_RAZORPAY_KEY_ID }}
         run: npm run build
 
       - name: Package standalone release
