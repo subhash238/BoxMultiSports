@@ -93,7 +93,7 @@ export default function GalleryPage() {
 
         setReels(payload.reels ?? []);
         setNextCursor(payload.nextCursor ?? null);
-      } catch (error) {
+      } catch {
         if (!controller.signal.aborted) {
           setHasError(true);
         }

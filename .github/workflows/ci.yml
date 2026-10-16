@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Generate Prisma client
+        env:
+          DATABASE_URL: postgresql://build:build@127.0.0.1:5432/build
+        run: npx prisma generate
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build
+        env:
+          DATABASE_URL: postgresql://build:build@127.0.0.1:5432/build
+          JWT_SECRET: ci-build-secret
+          RAZORPAY_KEY_ID: rzp_test_ci
+          RAZORPAY_KEY_SECRET: ci_secret
+          RAZORPAY_WEBHOOK_SECRET: ci_webhook_secret
+        run: npm run build

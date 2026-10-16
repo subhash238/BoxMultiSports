@@ -4,6 +4,8 @@ import { BookingService } from "@/lib/services/booking/booking.service";
 import { AppError } from "@/lib/errors";
 import { createBookingSchema } from "@/lib/validators/booking";
 import { getCurrentUser } from "@/lib/auth";
+import { requireAdminUser } from "@/lib/permissions";
+import { enforceRateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
 import { ZodError } from "zod";
 
 // ==========================================
@@ -12,6 +14,16 @@ import { ZodError } from "zod";
 
 export async function POST(request: NextRequest) {
   try {
+    // -----------------------------------------
+    // Rate Limiting
+    // -----------------------------------------
+
+    enforceRateLimit(
+      "booking-create",
+      getClientIp(request),
+      RATE_LIMITS.BOOKING_CREATE
+    );
+
     // -----------------------------------------
     // Authentication
     // -----------------------------------------
@@ -131,23 +143,7 @@ export async function GET(request: NextRequest) {
     // Authentication
     // -----------------------------------------
 
-    const user = await getCurrentUser(request);
-
-    // -----------------------------------------
-    // Admin Authorization
-    // -----------------------------------------
-
-    if (user.role !== "ADMIN") {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Access denied.",
-        },
-        {
-          status: 403,
-        }
-      );
-    }
+    await requireAdminUser(request);
 
     // -----------------------------------------
     // Query Parameters

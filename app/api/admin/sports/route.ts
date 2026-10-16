@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { SportService } from "@/lib/services/sport/sport.service";
 import { createSportSchema } from "@/lib/validators/sport";
 import { AppError } from "@/lib/errors";
-import { getCurrentUser } from "@/lib/auth";
+import { requireAdminUser } from "@/lib/permissions";
 
 // ==========================================
 // POST - Create Sport
@@ -15,21 +15,7 @@ export async function POST(request: NextRequest) {
     // Check authentication
     // -----------------------------------------
 
-    const user = await getCurrentUser(request);
-
-    // -----------------------------------------
-    // Allow only admins
-    // -----------------------------------------
-
-    if (user.role !== "ADMIN") {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Access denied.",
-        },
-        { status: 403 }
-      );
-    }
+    await requireAdminUser(request);
 
     // -----------------------------------------
     // Read request body

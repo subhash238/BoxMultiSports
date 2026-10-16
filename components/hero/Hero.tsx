@@ -7,7 +7,6 @@ import FootballAnimation from "./animations/FootballAnimation";
 import PickleballAnimation from "./animations/PickleballAnimation";
 import BadmintonAnimation from "./animations/BadmintonAnimation";
 import NetPracticeAnimation from "./animations/NetPracticeAnimation";
-import { fadeUp, fadeIn, floating } from "@/animations/hero.animation";
 
 interface HeroProps {
   selectedSportSlug: string | null;

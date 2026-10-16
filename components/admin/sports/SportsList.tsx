@@ -79,7 +79,9 @@ export default function SportsList({
   // ==========================================
 
   useEffect(() => {
-    fetchSports();
+    queueMicrotask(() => {
+      void fetchSports();
+    });
   }, [fetchSports, refreshKey]);
 
   // ==========================================
@@ -163,9 +165,11 @@ export default function SportsList({
   // Reset page when search changes
   // ==========================================
 
-  useEffect(() => {
+  const [prevSearch, setPrevSearch] = useState(search);
+  if (prevSearch !== search) {
+    setPrevSearch(search);
     setCurrentPage(1);
-  }, [search]);
+  }
 
   // ==========================================
   // Pagination Calculations
@@ -192,14 +196,9 @@ export default function SportsList({
   // Keep Current Page Valid
   // ==========================================
 
-  useEffect(() => {
-    if (
-      totalPages > 0 &&
-      currentPage > totalPages
-    ) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, totalPages]);
+  if (totalPages > 0 && currentPage > totalPages) {
+    setCurrentPage(totalPages);
+  }
 
   // ==========================================
   // Loading State

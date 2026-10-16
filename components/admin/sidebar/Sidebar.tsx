@@ -4,7 +4,6 @@ import {
   Trophy,
   CalendarDays,
   Users,
-  Settings,
   LogOut,
 } from "lucide-react";
 

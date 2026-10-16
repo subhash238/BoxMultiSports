@@ -49,9 +49,11 @@ export default function Navbar() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [menuOpen]);
 
-  useEffect(() => {
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
     setMenuOpen(false);
-  }, [pathname]);
+  }
 
   if (pathname.startsWith("/admin") || pathname === "/login") {
     return null;

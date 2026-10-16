@@ -193,7 +193,11 @@ export default function BookingList() {
   // ==========================================
 
   useEffect(() => {
-    fetchBookings();
+    // Defer the synchronous loading-state update
+    // out of the effect body.
+    queueMicrotask(() => {
+      void fetchBookings();
+    });
   }, [fetchBookings]);
 
   // ==========================================

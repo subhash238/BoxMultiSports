@@ -111,6 +111,64 @@ function formatTimeLabel(totalMinutes: number): string {
   )} ${period}`;
 }
 
+// ==========================================
+// Section Header
+// ==========================================
+
+function SectionHeader({
+  number,
+  title,
+  description,
+  compact,
+}: {
+  number: string;
+  title: string;
+  description: string;
+  compact?: boolean;
+}) {
+  return (
+    <div className={compact ? "mb-3" : "mb-6"}>
+      <div className={`flex items-center ${compact ? "gap-2" : "gap-3"}`}>
+        <span
+          className={`
+            flex
+            ${compact ? "h-6 w-6" : "h-8 w-8"}
+            shrink-0
+            items-center
+            justify-center
+            rounded-full
+            border
+            border-[#B6F000]/20
+            bg-[#B6F000]/[0.08]
+            text-[10px]
+            font-bold
+            text-[#B6F000]
+          `}
+        >
+          {number}
+        </span>
+
+        <h3
+          className={`
+            ${compact ? "text-sm" : "text-[15px]"}
+            font-semibold
+            tracking-[-0.01em]
+            text-white
+          `}
+        >
+          {title}
+        </h3>
+      </div>
+
+      {!compact && <p
+        className="mt-2 pl-11 text-xs leading-5 text-white/35"
+      >
+        {description}
+      </p>}
+    </div>
+  );
+}
+
 export function generateMainStartTimeOptions(
   durationMinutes?: number
 ): MainStartTimeOption[] {
@@ -700,64 +758,6 @@ export default function BookingForm({
   `;
 
   // ==========================================
-  // Section Header
-  // ==========================================
-
-  const SectionHeader = ({
-    number,
-    title,
-    description,
-  }: {
-    number: string;
-    title: string;
-    description: string;
-  }) => (
-    <div className={compact ? "mb-3" : "mb-6"}>
-      <div className={`flex items-center ${compact ? "gap-2" : "gap-3"}`}>
-        <span
-          className={`
-            flex
-            ${compact ? "h-6 w-6" : "h-8 w-8"}
-            shrink-0
-            items-center
-            justify-center
-            rounded-full
-            border
-            border-[#B6F000]/20
-            bg-[#B6F000]/[0.08]
-            text-[10px]
-            font-bold
-            text-[#B6F000]
-          `}
-        >
-          {number}
-        </span>
-
-        <h3
-          className={`
-            ${compact ? "text-sm" : "text-[15px]"}
-            font-semibold
-            tracking-[-0.01em]
-            text-white
-          `}
-        >
-          {title}
-        </h3>
-      </div>
-
-      {!compact && <p
-        className={`
-          ${compact ? "mt-1 pl-9 leading-4" : "mt-2 pl-11 leading-5"}
-          text-xs
-          text-white/35
-        `}
-      >
-        {description}
-      </p>}
-    </div>
-  );
-
-  // ==========================================
   // UI
   // ==========================================
 
@@ -851,6 +851,7 @@ export default function BookingForm({
 
           <section>
             <SectionHeader
+                compact={compact}
               number="01"
               title="Game details"
               description="Select your sport and preferred date."
@@ -1044,6 +1045,7 @@ export default function BookingForm({
 
           <section>
             <SectionHeader
+                compact={compact}
               number="02"
               title="Time & duration"
               description="Pick when you want to play and for how long."
@@ -1259,6 +1261,7 @@ export default function BookingForm({
 
           <section>
             <SectionHeader
+                compact={compact}
               number="03"
               title="Your details"
               description="Tell us who is joining the game."

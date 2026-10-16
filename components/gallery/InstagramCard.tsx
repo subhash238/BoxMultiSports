@@ -51,6 +51,7 @@ export default function InstagramCard({
         ) : (
           <>
             {thumbnailUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- external Instagram CDN media
               <img
                 src={thumbnailUrl}
                 alt={caption || "UniTurf Instagram Reel"}

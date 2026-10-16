@@ -187,9 +187,11 @@ export default function SlotAvailabilityModal({
     const controller =
       new AbortController();
 
-    loadAvailability(
-      controller.signal
-    );
+    queueMicrotask(() => {
+      void loadAvailability(
+        controller.signal
+      );
+    });
 
     return () => {
       controller.abort();

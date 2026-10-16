@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
+import { enforceRateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -11,6 +12,8 @@ const loginSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    enforceRateLimit("auth", getClientIp(request), RATE_LIMITS.AUTH);
+
     const body = await request.json();
 
     const result = loginSchema.safeParse(body);
@@ -97,7 +100,7 @@ export async function POST(request: NextRequest) {
 
     return response;
 
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       {
         success: false,

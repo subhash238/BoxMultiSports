@@ -259,9 +259,11 @@ export default function GymBookingForm({
     useState("");
 
   useEffect(() => {
-    setToday(
-      getToday()
-    );
+    queueMicrotask(() => {
+      setToday(
+        getToday()
+      );
+    });
 
     async function loadGymSport() {
       try {
@@ -436,25 +438,19 @@ export default function GymBookingForm({
       duration,
     ]);
 
-  useEffect(() => {
+  const [prevDuration, setPrevDuration] =
+    useState(duration);
+  if (prevDuration !== duration) {
+    setPrevDuration(duration);
     if (
       startTime &&
       !startOptions.some(
-        (
-          option
-        ) =>
-          option.value ===
-          startTime
+        (option) => option.value === startTime
       )
     ) {
-      setStartTime(
-        ""
-      );
+      setStartTime("");
     }
-  }, [
-    startOptions,
-    startTime,
-  ]);
+  }
 
   const endTime =
     startTime
