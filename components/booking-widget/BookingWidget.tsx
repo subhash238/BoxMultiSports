@@ -260,16 +260,14 @@ export default function BookingWidget({
             opacity: 0,
             y: 24,
           }}
-          whileInView={{
+          animate={{
             opacity: 1,
             y: 0,
           }}
           transition={{
             duration: 0.65,
             ease: "easeOut",
-          }}
-          viewport={{
-            once: true,
+            delay: 0.1,
           }}
           className="
             mx-auto
@@ -363,7 +361,7 @@ export default function BookingWidget({
             y: 28,
             scale: 0.985,
           }}
-          whileInView={{
+          animate={{
             opacity: 1,
             y: 0,
             scale: 1,
@@ -371,9 +369,7 @@ export default function BookingWidget({
           transition={{
             duration: 0.7,
             ease: "easeOut",
-          }}
-          viewport={{
-            once: true,
+            delay: 0.25,
           }}
           className="
             relative
