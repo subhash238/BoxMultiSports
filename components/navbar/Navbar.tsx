@@ -32,7 +32,15 @@ export default function Navbar() {
         ? "/gym#gym-booking"
         : null;
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const mobileMenuToggleRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     if (!menuOpen) {
@@ -60,33 +68,39 @@ export default function Navbar() {
   }
 
   return (
-    <header className="fixed left-1/2 top-3 z-50 w-[calc(100%-1.5rem)] max-w-7xl -translate-x-1/2 lg:top-5 lg:w-[95%]">
-      <nav className="rounded-3xl border border-[#B6F000]/20 bg-black/45 shadow-[0_12px_40px_rgba(182,240,0,0.15)] backdrop-blur-2xl transition-all duration-300">
-        <div className="flex h-16 items-center justify-between gap-2 px-4 sm:px-6 lg:h-20 lg:px-8">
+    <header className="fixed left-1/2 top-3 z-50 w-[calc(100%-1.5rem)] max-w-6xl -translate-x-1/2 lg:top-4 lg:w-[92%]">
+      <nav
+        className={`rounded-full border backdrop-blur-2xl transition-all duration-500 ${
+          scrolled || menuOpen
+            ? "border-white/10 bg-[#050705]/85 shadow-[0_16px_48px_rgba(0,0,0,0.55)]"
+            : "border-white/[0.08] bg-[#050705]/50 shadow-[0_8px_32px_rgba(0,0,0,0.35)]"
+        }`}
+      >
+        <div className="flex h-14 items-center justify-between gap-3 pl-4 pr-2 sm:pl-5 lg:h-[60px] lg:pr-2.5">
           <Link
             href="/"
             onClick={() => setMenuOpen(false)}
-            className="flex min-w-0 shrink items-center gap-2 sm:gap-4"
+            className="flex min-w-0 shrink items-center gap-2.5"
           >
             <Image
               src="/logo/logo.png"
               alt="UNI TURF"
-              width={58}
-              height={58}
+              width={40}
+              height={40}
               priority
-              className="h-11 w-11 rounded-xl lg:h-[58px] lg:w-[58px]"
+              className="h-9 w-9 rounded-lg lg:h-10 lg:w-10"
             />
-            <div className="min-w-0">
-              <h1 className="truncate text-lg font-medium tracking-wide text-white lg:text-2xl">
-                UNI<span className="font-extrabold text-[#B6F000]">TURF</span>
-              </h1>
-              <p className="hidden text-xs uppercase tracking-[3px] text-gray-400 sm:block">
-                PLAY · IMPROVE · CONNECT
-              </p>
+            <div className="min-w-0 leading-none">
+              <span className="block text-base font-extrabold tracking-wide text-white lg:text-lg">
+                UNI<span className="text-[#B6F000]">TURF</span>
+              </span>
+              <span className="mt-1 hidden text-[9px] font-medium uppercase tracking-[0.28em] text-white/40 sm:block">
+                Play · Improve · Connect
+              </span>
             </div>
           </Link>
 
-          <ul className="hidden items-center gap-10 text-sm font-semibold lg:flex">
+          <ul className="hidden items-center gap-1 lg:flex">
             {navItems.map((item) => {
               const isActive = isNavItemActive(item.href);
 
@@ -95,13 +109,19 @@ export default function Navbar() {
                   <Link
                     href={item.href}
                     aria-current={isActive ? "page" : undefined}
-                    className={`relative transition-all duration-300 after:absolute after:-bottom-2 after:left-0 after:h-[2px] after:bg-[#B6F000] after:transition-all after:duration-300 ${
+                    className={`relative rounded-full px-4 py-2 text-[13px] font-medium tracking-wide transition-all duration-300 ${
                       isActive
-                        ? "text-[#B6F000] after:w-full"
-                        : "text-white hover:text-[#B6F000] after:w-0 hover:after:w-full"
+                        ? "text-[#B6F000]"
+                        : "text-white/70 hover:text-white"
                     }`}
                   >
                     {item.name}
+                    <span
+                      aria-hidden="true"
+                      className={`absolute inset-x-4 -bottom-0.5 h-px bg-gradient-to-r from-transparent via-[#B6F000] to-transparent transition-opacity duration-300 ${
+                        isActive ? "opacity-100" : "opacity-0"
+                      }`}
+                    />
                   </Link>
                 </li>
               );
@@ -113,14 +133,14 @@ export default function Navbar() {
               <Link
                 href={dedicatedBookingHref}
                 onClick={() => setMenuOpen(false)}
-                className="rounded-xl bg-[#B6F000] px-3 py-2 text-xs font-semibold text-black transition-all duration-300 hover:scale-105 hover:bg-[#C8FF1A] hover:shadow-[0_0_30px_rgba(182,240,0,0.45)] sm:px-4 lg:rounded-2xl lg:px-7 lg:py-3 lg:text-base"
+                className="rounded-full bg-[#B6F000] px-4 py-2 text-[13px] font-bold text-[#050705] transition-all duration-300 hover:-translate-y-px hover:bg-[#C8FF1A] hover:shadow-[0_0_28px_rgba(182,240,0,0.45)] sm:px-5 lg:px-6 lg:py-2.5"
               >
                 Book Now
               </Link>
             ) : (
               <BookNowTrigger
                 onClick={() => setMenuOpen(false)}
-                className="rounded-xl bg-[#B6F000] px-3 py-2 text-xs font-semibold text-black transition-all duration-300 hover:scale-105 hover:bg-[#C8FF1A] hover:shadow-[0_0_30px_rgba(182,240,0,0.45)] sm:px-4 lg:rounded-2xl lg:px-7 lg:py-3 lg:text-base"
+                className="rounded-full bg-[#B6F000] px-4 py-2 text-[13px] font-bold text-[#050705] transition-all duration-300 hover:-translate-y-px hover:bg-[#C8FF1A] hover:shadow-[0_0_28px_rgba(182,240,0,0.45)] sm:px-5 lg:px-6 lg:py-2.5"
               >
                 Book Now
               </BookNowTrigger>
@@ -132,13 +152,13 @@ export default function Navbar() {
               aria-expanded={menuOpen}
               aria-controls="mobile-navigation"
               onClick={() => setMenuOpen((open) => !open)}
-              className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/15 bg-white/[0.06] text-white transition hover:border-[#B6F000]/60 hover:text-[#B6F000] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B6F000] lg:hidden"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/[0.05] text-white transition hover:border-[#B6F000]/60 hover:text-[#B6F000] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B6F000] lg:hidden"
             >
               <span className="sr-only">Toggle navigation</span>
-              <span className="flex w-5 flex-col gap-1.5" aria-hidden="true">
-                <span className={`h-0.5 w-full bg-current transition ${menuOpen ? "translate-y-2 rotate-45" : ""}`} />
-                <span className={`h-0.5 w-full bg-current transition ${menuOpen ? "opacity-0" : ""}`} />
-                <span className={`h-0.5 w-full bg-current transition ${menuOpen ? "-translate-y-2 -rotate-45" : ""}`} />
+              <span className="flex w-[18px] flex-col gap-[5px]" aria-hidden="true">
+                <span className={`h-[1.5px] w-full bg-current transition ${menuOpen ? "translate-y-[6.5px] rotate-45" : ""}`} />
+                <span className={`h-[1.5px] w-full bg-current transition ${menuOpen ? "opacity-0" : ""}`} />
+                <span className={`h-[1.5px] w-full bg-current transition ${menuOpen ? "-translate-y-[6.5px] -rotate-45" : ""}`} />
               </span>
             </button>
           </div>
@@ -153,7 +173,7 @@ export default function Navbar() {
               animate={{ opacity: 1, height: "auto", y: 0 }}
               exit={{ opacity: 0, height: 0, y: -6 }}
               transition={{ duration: 0.2 }}
-              className="overflow-hidden border-t border-white/10 lg:hidden"
+              className="overflow-hidden rounded-b-[28px] border-t border-white/10 lg:hidden"
             >
               <div className="grid gap-1 px-3 pb-3 pt-2">
                 {navItems.map((item) => {
