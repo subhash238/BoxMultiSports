@@ -76,6 +76,7 @@ export async function POST(request: NextRequest) {
       duration: booking.duration,
       totalAmount: booking.totalAmount,
       status: booking.status,
+      paymentMethod: booking.paymentMethod,
     };
 
     // -----------------------------------------

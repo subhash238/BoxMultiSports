@@ -70,6 +70,7 @@ export class BookingService {
       customerEmail: data.email,
       customerMobile: data.mobile,
       specialRequest: data.specialRequest ?? null,
+      paymentMethod: data.paymentMethod ?? "ONLINE",
     };
 
     // -----------------------------------------

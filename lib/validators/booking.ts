@@ -58,6 +58,10 @@ export const createBookingSchema = z.object({
       "Please enter a valid Indian mobile number."
     ),
 
+  paymentMethod: z
+    .enum(["ONLINE", "PAY_AT_VENUE"])
+    .optional(),
+
   specialRequest: z
     .string()
     .trim()

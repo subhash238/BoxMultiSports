@@ -73,6 +73,7 @@ export type CreateBookingContext = {
   customerEmail: string;
   customerMobile: string;
   specialRequest: string | null;
+  paymentMethod: "ONLINE" | "PAY_AT_VENUE";
 };
 
 export type CreateBookingResult = {

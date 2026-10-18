@@ -23,6 +23,7 @@ export interface BookingData {
   email: string;
   mobile: string;
   specialRequest: string;
+  paymentMethod?: "ONLINE" | "PAY_AT_VENUE";
 }
 
 export interface CreatedBooking {
@@ -35,6 +36,7 @@ export interface CreatedBooking {
   duration: number;
   totalAmount: number | string;
   status: string;
+  paymentMethod?: string;
 }
 
 interface BookingWidgetProps {
@@ -58,6 +60,7 @@ export default function BookingWidget({
       email: "",
       mobile: "",
       specialRequest: "",
+      paymentMethod: "ONLINE",
     });
 
   const [createdBooking, setCreatedBooking] =
@@ -124,6 +127,12 @@ export default function BookingWidget({
     );
     setBookingError(null);
     setPaymentSuccess(false);
+
+    if (result.booking.paymentMethod === "PAY_AT_VENUE") {
+      setPaymentSuccess(true);
+      return;
+    }
+
     setPaymentOpen(true);
   };
 
@@ -515,7 +524,9 @@ export default function BookingWidget({
                     text-[#B6F000]
                   "
                 >
-                  Payment Successful
+                  {createdBooking.paymentMethod === "PAY_AT_VENUE"
+                    ? "Slot Reserved"
+                    : "Payment Successful"}
                 </p>
 
                 <h3
@@ -541,8 +552,9 @@ export default function BookingWidget({
                     text-white/50
                   "
                 >
-                  Your payment was successful and your turf booking is confirmed.
-                  Save your booking number for reference.
+                  {createdBooking.paymentMethod === "PAY_AT_VENUE"
+                    ? "Your slot is reserved. Pay by Cash or UPI when you arrive at the venue. Save your booking number for reference."
+                    : "Your payment was successful and your turf booking is confirmed. Save your booking number for reference."}
                 </p>
 
                 <div

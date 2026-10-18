@@ -142,6 +142,8 @@ model Booking {
   customerMobile String
   specialRequest String? @db.Text
 
+  paymentMethod String @default("ONLINE") @db.VarChar(20)
+
   guestPaymentTokenHash      String?   @unique @db.VarChar(64)
   guestPaymentTokenExpiresAt DateTime?
   reservationExpiresAt       DateTime?

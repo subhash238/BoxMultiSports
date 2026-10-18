@@ -596,6 +596,9 @@ export default function BookingForm({
             mobile:
               bookingData.mobile.replace(/\D/g, ""),
 
+            paymentMethod:
+              bookingData.paymentMethod ?? "ONLINE",
+
             ...(trimmedSpecialRequest
               ? {
                   specialRequest:
@@ -677,6 +680,9 @@ export default function BookingForm({
 
         status:
           booking.status,
+
+        paymentMethod:
+          booking.paymentMethod,
       };
 
       const guestPaymentToken =
@@ -1441,6 +1447,61 @@ export default function BookingForm({
             </div>
             </div>
           </section>
+
+          {/* ==================================
+              PAYMENT METHOD
+          ================================== */}
+
+          <div className={compact ? "mt-4" : "mt-8"}>
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/40">
+              Payment Method
+            </p>
+
+            <div className="grid grid-cols-2 gap-3">
+              {([
+                {
+                  value: "ONLINE",
+                  label: "Pay Online",
+                  hint: "UPI / Cards via Razorpay",
+                },
+                {
+                  value: "PAY_AT_VENUE",
+                  label: "Pay at Venue",
+                  hint: "Cash / UPI on arrival",
+                },
+              ] as const).map((option) => {
+                const selected =
+                  (bookingData.paymentMethod ?? "ONLINE") ===
+                  option.value;
+
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() =>
+                      updateField("paymentMethod", option.value)
+                    }
+                    className={`rounded-[14px] border px-3 py-3 text-left transition ${
+                      selected
+                        ? "border-[#B6F000]/70 bg-[#B6F000]/10"
+                        : "border-white/[0.10] bg-white/[0.035] hover:border-white/25"
+                    }`}
+                  >
+                    <p
+                      className={`text-sm font-semibold ${
+                        selected ? "text-[#B6F000]" : "text-white"
+                      }`}
+                    >
+                      {option.label}
+                    </p>
+                    <p className="mt-0.5 text-[11px] text-white/35">
+                      {option.hint}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
           {/* ==================================
               BOOKING HOLD NOTE
