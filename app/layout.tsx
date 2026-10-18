@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Footer from "@/components/footer/Footer";
-import Navbar from "@/components/navbar/Navbar";
+import Chrome from "@/components/layout/Chrome";
 import BookingModalProvider from "@/components/booking-widget/BookingModalProvider";
 
 export const metadata: Metadata = {
@@ -22,12 +21,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <BookingModalProvider>
-          <Navbar />
-          <div className="public-page-shell flex-1">
-            {children}
-          </div>
-
-          <Footer />
+          <Chrome>{children}</Chrome>
         </BookingModalProvider>
       </body>
     </html>
