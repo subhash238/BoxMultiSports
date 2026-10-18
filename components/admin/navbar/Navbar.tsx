@@ -1,54 +1,56 @@
-import {
-  Bell,
-  Search,
-  UserCircle,
-} from "lucide-react";
+"use client";
 
-export default function Navbar() {
+import { usePathname } from "next/navigation";
+import { Menu, Shield } from "lucide-react";
+
+const titles: Record<string, string> = {
+  "/admin/dashboard": "Dashboard",
+  "/admin/sports": "Sports",
+  "/admin/bookings": "Bookings",
+  "/admin/users": "Users",
+};
+
+interface NavbarProps {
+  onMenuToggle: () => void;
+}
+
+export default function Navbar({ onMenuToggle }: NavbarProps) {
+  const pathname = usePathname();
+
+  const title =
+    Object.entries(titles).find(
+      ([href]) =>
+        pathname === href || pathname.startsWith(`${href}/`)
+    )?.[1] ?? "Admin";
+
   return (
-    <header className="flex h-16 items-center justify-between border-b bg-white px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-black/[0.06] bg-white/85 px-4 backdrop-blur-md sm:px-6">
       {/* Left */}
-      <div>
-        <h1 className="text-xl font-semibold">
-          Dashboard
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={onMenuToggle}
+          aria-label="Toggle menu"
+          className="rounded-xl p-2 text-gray-600 hover:bg-gray-100 lg:hidden"
+        >
+          <Menu size={20} />
+        </button>
+
+        <h1 className="text-lg font-bold text-gray-900">
+          {title}
         </h1>
       </div>
 
       {/* Right */}
-      <div className="flex items-center gap-5">
-        {/* Search */}
-        <div className="hidden items-center rounded-lg border px-3 py-2 md:flex">
-          <Search
-            size={18}
-            className="mr-2 text-gray-500"
-          />
+      <div className="flex items-center gap-2">
+        <span className="hidden items-center gap-1.5 rounded-full bg-[#B6F000]/15 px-3 py-1 text-xs font-semibold text-[#5a7a00] sm:inline-flex">
+          <Shield size={13} />
+          Admin
+        </span>
 
-          <input
-            type="text"
-            placeholder="Search..."
-            className="outline-none"
-          />
+        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0a0f0a] text-sm font-bold text-[#B6F000]">
+          A
         </div>
-
-        {/* Notification */}
-        <button className="rounded-full p-2 hover:bg-gray-100">
-          <Bell size={20} />
-        </button>
-
-        {/* User */}
-        <button className="flex items-center gap-2 rounded-lg px-2 py-1 hover:bg-gray-100">
-          <UserCircle size={30} />
-
-          <div className="hidden text-left md:block">
-            <p className="text-sm font-semibold">
-              Admin
-            </p>
-
-            <p className="text-xs text-gray-500">
-              Administrator
-            </p>
-          </div>
-        </button>
       </div>
     </header>
   );

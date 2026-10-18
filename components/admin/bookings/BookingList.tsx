@@ -255,7 +255,7 @@ export default function BookingList() {
               Search
               ========================================== */}
 
-          <div>
+          <div className="flex flex-col sm:block">
             <label
               htmlFor="booking-search"
               className="text-sm font-medium text-gray-700"
@@ -273,7 +273,7 @@ export default function BookingList() {
                 )
               }
               placeholder="Booking number, name, mobile..."
-              className="ml-3 w-72 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-black"
+              className="mt-1 w-full rounded-lg sm:ml-3 sm:mt-0 sm:w-64 border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-black"
             />
           </div>
 
@@ -281,7 +281,7 @@ export default function BookingList() {
               Status Filter
               ========================================== */}
 
-          <div>
+          <div className="flex flex-col sm:block">
             <label
               htmlFor="status-filter"
               className="text-sm font-medium text-gray-700"
@@ -297,7 +297,7 @@ export default function BookingList() {
                   event.target.value
                 )
               }
-              className="ml-3 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-black"
+              className="mt-1 w-full rounded-lg sm:ml-3 sm:mt-0 sm:w-auto border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-black"
             >
               <option value="ALL">
                 All
@@ -325,7 +325,7 @@ export default function BookingList() {
               Date Filter
               ========================================== */}
 
-          <div>
+          <div className="flex flex-col sm:block">
             <label
               htmlFor="date-filter"
               className="text-sm font-medium text-gray-700"
@@ -341,7 +341,7 @@ export default function BookingList() {
                   event.target.value
                 )
               }
-              className="ml-3 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-black"
+              className="mt-1 w-full rounded-lg sm:ml-3 sm:mt-0 sm:w-auto border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-black"
             >
               <option value="ALL">
                 All Dates

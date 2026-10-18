@@ -298,7 +298,8 @@ export default function SportsList({
         <>
           {/* Table */}
 
-          <table className="w-full text-left text-sm">
+          <div className="-mx-6 overflow-x-auto px-6">
+          <table className="w-full min-w-[560px] text-left text-sm">
             <thead className="border-b text-xs text-gray-500">
               <tr>
                 <th className="px-4 py-3 font-medium">
@@ -399,11 +400,12 @@ export default function SportsList({
               })}
             </tbody>
           </table>
+          </div>
 
           {/* Pagination */}
 
           {totalPages > 1 && (
-            <div className="mt-5 flex items-center justify-between border-t pt-4">
+            <div className="mt-5 flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
               {/* Result Information */}
 
               <p className="text-sm text-gray-500">

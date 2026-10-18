@@ -22,7 +22,7 @@ export default async function DashboardPage() {
           Dashboard Header
           ========================================== */}
       <div>
-        <h1 className="text-3xl font-bold">
+        <h1 className="text-2xl font-bold sm:text-3xl">
           Dashboard
         </h1>
 
@@ -34,7 +34,7 @@ export default async function DashboardPage() {
       {/* ==========================================
           Statistics Cards
           ========================================== */}
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 xl:grid-cols-4">
         <StatCard
           title="Sports"
           value={stats.sports}
