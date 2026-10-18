@@ -11,6 +11,7 @@ import { logger } from "@/lib/logger";
 import { PAYMENT_MESSAGES } from "./payment.responses";
 
 import { BOOKING_CONFIG } from "../booking/booking.config";
+import { NotificationService } from "../notification/email.service";
 
 /**
  * ==========================================
@@ -226,6 +227,7 @@ export class PaymentWebhookService {
     }
 
     const maxAttempts = 3;
+    let confirmedBookingId: string | null = null;
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
@@ -297,6 +299,8 @@ export class PaymentWebhookService {
                   changedById: null,
                 },
               });
+
+              confirmedBookingId = booking.id;
             } else {
               // Money captured but the booking can
               // no longer be confirmed.
@@ -348,6 +352,12 @@ export class PaymentWebhookService {
           throw error;
         }
       }
+    }
+
+    if (confirmedBookingId) {
+      void NotificationService.sendBookingConfirmation(
+        confirmedBookingId
+      );
     }
 
     logger.info("Reconciled payment.captured webhook.", {

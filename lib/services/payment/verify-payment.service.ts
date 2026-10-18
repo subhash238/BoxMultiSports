@@ -13,6 +13,7 @@ import { PAYMENT_MESSAGES } from "./payment.responses";
 import { verifyGuestPaymentToken } from "./guest-payment-token";
 
 import { BOOKING_CONFIG } from "../booking/booking.config";
+import { NotificationService } from "../notification/email.service";
 
 export type VerifyPaymentAuthorization =
   | {
@@ -569,6 +570,12 @@ export class VerifyPaymentService {
       result.type === "RECOVERY_REPLAY"
     ) {
       throw new AppError(RECOVERY_MESSAGE, 409);
+    }
+
+    if (result.type === "SUCCESS") {
+      void NotificationService.sendBookingConfirmation(
+        result.booking.id
+      );
     }
 
     return {
