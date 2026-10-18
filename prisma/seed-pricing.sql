@@ -5,30 +5,12 @@
 WITH pricing_values("slug", "duration", "price") AS (
   VALUES
     -- Cricket
-    ('cricket', 60, 999),
-    ('cricket', 90, 1499),
-    ('cricket', 120, 1799),
-    ('cricket', 150, 2299),
-    ('cricket', 180, 2699),
-    ('cricket', 210, 3199),
-    ('cricket', 240, 3599),
-    ('cricket', 270, 4099),
-    ('cricket', 300, 4599),
-    ('cricket', 330, 5099),
-    ('cricket', 720, 9999),
+    ('cricket', 60, 800),
+    ('cricket', 120, 1500),
 
     -- Football
-    ('football', 60, 999),
-    ('football', 90, 1499),
-    ('football', 120, 1799),
-    ('football', 150, 2299),
-    ('football', 180, 2699),
-    ('football', 210, 3199),
-    ('football', 240, 3599),
-    ('football', 270, 4099),
-    ('football', 300, 4599),
-    ('football', 330, 5099),
-    ('football', 720, 9999),
+    ('football', 60, 800),
+    ('football', 120, 1500),
 
     -- Pickleball
     ('pickleball', 60, 999),
@@ -95,3 +77,12 @@ ON CONFLICT ("sportId", "duration") DO UPDATE SET
   "price" = EXCLUDED."price",
   "isActive" = true,
   "updatedAt" = NOW();
+
+-- Deactivate removed cricket/football durations
+-- (only 60min and 120min are bookable now).
+UPDATE sport_pricing sp
+SET "isActive" = false, "updatedAt" = NOW()
+FROM sports s
+WHERE sp."sportId" = s.id
+  AND s.slug IN ('cricket', 'football')
+  AND sp."duration" NOT IN (60, 120);

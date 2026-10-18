@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import Hero from "../components/hero/Hero";
 import BookingWidget from "../components/booking-widget/BookingWidget";
+import MembershipPlans from "../components/memberships/MembershipPlans";
 
 interface HomeClientProps {
   heroImageUrl?: string | null;
@@ -32,6 +33,8 @@ export default function HomeClient({
       <BookingWidget
         selectedSportSlug={selectedSportSlug}
       />
+
+      <MembershipPlans />
     </>
   );
 }
