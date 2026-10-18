@@ -1,13 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Trophy,
   CalendarDays,
   Users,
-  LogOut,
   X,
 } from "lucide-react";
 
@@ -25,19 +24,9 @@ interface SidebarProps {
 
 export default function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
 
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(`${href}/`);
-
-  const handleLogout = async () => {
-    try {
-      await fetch("/api/auth/logout", { method: "POST" });
-    } finally {
-      router.push("/login");
-      router.refresh();
-    }
-  };
 
   return (
     <>
@@ -51,7 +40,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-[#0a0f0a] text-white transition-transform duration-300 lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-[#0a0f0a] text-white transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -100,16 +89,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           })}
         </nav>
 
-        <div className="border-t border-white/10 p-3">
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-red-400 transition hover:bg-red-500/10"
-          >
-            <LogOut size={18} />
-            Logout
-          </button>
-        </div>
+
       </aside>
     </>
   );

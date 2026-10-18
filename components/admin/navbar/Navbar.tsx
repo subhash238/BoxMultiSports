@@ -1,7 +1,13 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-import { Menu, Shield } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  ChevronDown,
+  LogOut,
+  Menu,
+  Shield,
+} from "lucide-react";
 
 const titles: Record<string, string> = {
   "/admin/dashboard": "Dashboard",
@@ -16,6 +22,41 @@ interface NavbarProps {
 
 export default function Navbar({ onMenuToggle }: NavbarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(event.target as Node)
+      ) {
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () =>
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside
+      );
+  }, []);
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } finally {
+      router.push("/login");
+      router.refresh();
+    }
+  };
 
   const title =
     Object.entries(titles).find(
@@ -48,8 +89,46 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
           Admin
         </span>
 
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0a0f0a] text-sm font-bold text-[#B6F000]">
-          A
+        {/* Profile dropdown */}
+        <div className="relative" ref={menuRef}>
+          <button
+            type="button"
+            onClick={() => setMenuOpen((open) => !open)}
+            aria-label="Account menu"
+            className="flex items-center gap-1.5 rounded-full p-1 pr-2 hover:bg-gray-100"
+          >
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0a0f0a] text-sm font-bold text-[#B6F000]">
+              A
+            </div>
+            <ChevronDown
+              size={15}
+              className={`text-gray-500 transition-transform ${
+                menuOpen ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+
+          {menuOpen && (
+            <div className="absolute right-0 top-11 w-44 overflow-hidden rounded-xl border border-black/[0.06] bg-white py-1 shadow-lg">
+              <div className="border-b border-black/[0.06] px-4 py-2.5">
+                <p className="text-sm font-semibold text-gray-900">
+                  Admin
+                </p>
+                <p className="text-xs text-gray-400">
+                  Administrator
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50"
+              >
+                <LogOut size={15} />
+                Logout
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </header>
