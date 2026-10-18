@@ -25,7 +25,14 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
   const router = useRouter();
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const [lastPathname, setLastPathname] =
+    useState(pathname);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  if (pathname !== lastPathname) {
+    setLastPathname(pathname);
+    setMenuOpen(false);
+  }
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -44,10 +51,6 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
         handleClickOutside
       );
   }, []);
-
-  useEffect(() => {
-    setMenuOpen(false);
-  }, [pathname]);
 
   const handleLogout = async () => {
     try {
