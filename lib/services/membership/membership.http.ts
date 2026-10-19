@@ -29,7 +29,12 @@ export function membershipErrorResponse(error: unknown) {
   }
 
   logger.error("Unhandled membership route error.", {
-    error: error instanceof Error ? error.message : String(error),
+    error:
+      error instanceof Error
+        ? error.message
+        : typeof error === "object" && error !== null
+          ? JSON.stringify(error)
+          : String(error),
   });
 
   return NextResponse.json(
