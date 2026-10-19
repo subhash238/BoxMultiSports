@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
 import { enforceRateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
+import { AppError } from "@/lib/errors";
 import { AUTH_COOKIE_NAMES } from "@/lib/auth";
 
 const loginSchema = z.object({
@@ -123,7 +124,14 @@ export async function POST(request: NextRequest) {
 
     return response;
 
-  } catch {
+  } catch (error) {
+    if (error instanceof AppError) {
+      return NextResponse.json(
+        { success: false, message: error.message },
+        { status: error.statusCode }
+      );
+    }
+
     return NextResponse.json(
       {
         success: false,
