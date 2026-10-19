@@ -20,7 +20,8 @@ export default function Chrome({
 
   if (
     pathname.startsWith("/admin") ||
-    pathname === "/login"
+    pathname === "/login" ||
+    pathname === "/register"
   ) {
     return <>{children}</>;
   }

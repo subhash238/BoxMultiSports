@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import { UserRound } from "lucide-react";
 import BookNowTrigger from "@/components/booking-widget/BookNowTrigger";
 
 const navItems = [
@@ -32,6 +33,24 @@ export default function Navbar() {
         ? "/gym#gym-booking"
         : null;
   const [menuOpen, setMenuOpen] = useState(false);
+  const [authState, setAuthState] = useState<"unknown" | "guest" | "user">("unknown");
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/auth/me", { cache: "no-store" })
+      .then((res) => {
+        if (!cancelled) setAuthState(res.ok ? "user" : "guest");
+      })
+      .catch(() => {
+        if (!cancelled) setAuthState("guest");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname]);
+
+  const accountHref = authState === "user" ? "/account" : "/login";
+  const accountLabel = authState === "user" ? "My Account" : "Login";
   const [scrolled, setScrolled] = useState(false);
   const mobileMenuToggleRef = useRef<HTMLButtonElement>(null);
 
@@ -63,7 +82,11 @@ export default function Navbar() {
     setMenuOpen(false);
   }
 
-  if (pathname.startsWith("/admin") || pathname === "/login") {
+  if (
+    pathname.startsWith("/admin") ||
+    pathname === "/login" ||
+    pathname === "/register"
+  ) {
     return null;
   }
 
@@ -129,6 +152,19 @@ export default function Navbar() {
           </ul>
 
           <div className="flex shrink-0 items-center gap-2">
+            <Link
+              href={accountHref}
+              aria-label={accountLabel}
+              onClick={() => setMenuOpen(false)}
+              className={`hidden h-10 items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-semibold transition lg:inline-flex ${
+                pathname === "/account"
+                  ? "border-[#B6F000]/60 text-[#B6F000]"
+                  : "border-white/15 bg-white/[0.05] text-white/80 hover:border-[#B6F000]/60 hover:text-[#B6F000]"
+              }`}
+            >
+              <UserRound size={15} />
+              {accountLabel}
+            </Link>
             {dedicatedBookingHref ? (
               <Link
                 href={dedicatedBookingHref}
@@ -195,6 +231,18 @@ export default function Navbar() {
                     </Link>
                   );
                 })}
+                <Link
+                  href={accountHref}
+                  onClick={() => setMenuOpen(false)}
+                  className={`flex min-h-11 items-center gap-2 rounded-xl px-4 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B6F000] ${
+                    pathname === "/account"
+                      ? "bg-white/[0.08] text-[#B6F000]"
+                      : "text-white hover:bg-white/[0.08] hover:text-[#B6F000]"
+                  }`}
+                >
+                  <UserRound size={16} />
+                  {accountLabel}
+                </Link>
                 {dedicatedBookingHref ? (
                   <Link
                     href={dedicatedBookingHref}

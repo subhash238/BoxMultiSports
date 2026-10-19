@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CheckCircle2, X } from "lucide-react";
 
 import ModalPortal from "@/components/booking-widget/ModalPortal";
@@ -63,6 +63,25 @@ export default function MembershipModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<CreatedMembership | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/auth/me", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled || !data?.user) return;
+        setForm((prev) => ({
+          ...prev,
+          fullName: prev.fullName || data.user.name || "",
+          email: prev.email || data.user.email || "",
+          mobile: prev.mobile || data.user.mobile || "",
+        }));
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const price = Number(plan.price);
   const isAcademy = plan.slug.includes("academy") || plan.slug.includes("kids");

@@ -66,6 +66,25 @@ export default function BookingWidget({
   const [createdBooking, setCreatedBooking] =
     useState<CreatedBooking | null>(null);
 
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/auth/me", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled || !data?.user) return;
+        setBookingData((prev) => ({
+          ...prev,
+          fullName: prev.fullName || data.user.name || "",
+          email: prev.email || data.user.email || "",
+          mobile: prev.mobile || data.user.mobile || "",
+        }));
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const [
     guestPaymentToken,
     setGuestPaymentToken,

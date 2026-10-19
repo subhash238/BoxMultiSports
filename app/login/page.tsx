@@ -1,12 +1,26 @@
 "use client";
 
-import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
+import { FormEvent, Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Lock, Mail } from "lucide-react";
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<main className="min-h-screen bg-[#050705]" />}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectParam = searchParams.get("redirect");
+  const safeRedirect =
+    redirectParam && redirectParam.startsWith("/") && !redirectParam.startsWith("//")
+      ? redirectParam
+      : null;
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -57,7 +71,11 @@ export default function LoginPage() {
         return;
       }
 
-      router.push("/admin/dashboard");
+      const destination =
+        safeRedirect ??
+        (data.user?.role === "ADMIN" ? "/admin/dashboard" : "/account");
+
+      router.push(destination);
       router.refresh();
     } catch (error) {
       console.error(error);
@@ -114,10 +132,10 @@ export default function LoginPage() {
         <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] p-6 backdrop-blur-sm sm:p-8">
           <div className="mb-7 text-center">
             <h1 className="text-2xl font-bold text-white">
-              Admin Login
+              Welcome Back
             </h1>
             <p className="mt-1.5 text-sm text-white/45">
-              Sign in to access the dashboard
+              Sign in to see your bookings & memberships
             </p>
           </div>
 
@@ -150,7 +168,7 @@ export default function LoginPage() {
                   onChange={(event) =>
                     setEmail(event.target.value)
                   }
-                  placeholder="admin@uniturff.com"
+                  placeholder="you@example.com"
                   required
                   autoComplete="email"
                   className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] py-3 pl-10 pr-4 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-[#B6F000]/70 focus:ring-2 focus:ring-[#B6F000]/10"
@@ -197,6 +215,16 @@ export default function LoginPage() {
               {loading ? "Signing in..." : "Sign In"}
             </button>
           </form>
+
+          <p className="mt-6 text-center text-sm text-white/45">
+            New here?{" "}
+            <Link
+              href="/register"
+              className="font-semibold text-[#B6F000] hover:underline"
+            >
+              Create an account
+            </Link>
+          </p>
         </div>
 
         {/* Back link */}
