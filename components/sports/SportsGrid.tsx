@@ -418,10 +418,14 @@ export default function SportsGrid() {
                               className="flex items-center justify-between border-b border-white/10 py-2.5 text-sm last:border-b-0"
                             >
                               <span className="text-white/70">
-                                {pricing.duration ===
-                                1
-                                  ? "1 Hour"
-                                  : `${pricing.duration} Hours`}
+                                {pricing.duration >=
+                                720
+                                  ? "Full Day"
+                                  : pricing.duration %
+                                        60 ===
+                                      0
+                                    ? `${pricing.duration / 60} Hour${pricing.duration === 60 ? "" : "s"}`
+                                    : `${Math.floor(pricing.duration / 60)}h ${pricing.duration % 60}m`}
                               </span>
 
                               <span className="font-semibold text-[#B6F000]">
