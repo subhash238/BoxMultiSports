@@ -26,7 +26,25 @@ model User {
 
   bookingStatusChanges BookingStatusHistory[] @relation("BookingStatusChangedBy")
 
+  passwordResetTokens PasswordResetToken[]
+
   @@map("users")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  scope     String    @db.VarChar(16)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
 }
 
 // ==========================================

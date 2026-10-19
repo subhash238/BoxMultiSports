@@ -21,7 +21,9 @@ export default function Chrome({
   if (
     pathname.startsWith("/admin") ||
     pathname === "/login" ||
-    pathname === "/register"
+    pathname === "/register" ||
+    pathname === "/forgot-password" ||
+    pathname === "/reset-password"
   ) {
     return <>{children}</>;
   }

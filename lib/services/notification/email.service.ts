@@ -95,7 +95,63 @@ export interface EnquiryInput {
   message: string;
 }
 
+export interface PasswordResetMailInput {
+  to: string;
+  name: string;
+  link: string;
+  scope: "customer" | "admin";
+  expiresInMinutes: number;
+}
+
 export class NotificationService {
+  /**
+   * Emails a password reset link. Returns true when handed to SMTP.
+   */
+  static async sendPasswordReset(
+    input: PasswordResetMailInput
+  ): Promise<boolean> {
+    try {
+      const mailer = getTransporter();
+
+      if (!mailer) {
+        return false;
+      }
+
+      const from =
+        process.env.SMTP_FROM ??
+        `UniTurf <${process.env.SMTP_USER}>`;
+
+      const label = input.scope === "admin" ? "Admin Console" : "Account";
+
+      const html = `
+        <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;background:#0a0f0a;padding:32px;border-radius:16px;color:#fff">
+          <h1 style="margin:0;font-size:22px">UNI<span style="color:#B6F000">TURF</span></h1>
+          <p style="color:#B6F000;font-size:13px;letter-spacing:2px;text-transform:uppercase;margin:24px 0 8px">${label} · Password Reset</p>
+          <h2 style="margin:0 0 16px;font-size:20px">Hi ${escapeHtml(input.name)},</h2>
+          <p style="font-size:14px;color:#e5e5e5;line-height:1.6">We received a request to reset your password. Click the button below to choose a new one. This link is valid for ${input.expiresInMinutes} minutes.</p>
+          <p style="margin:24px 0"><a href="${input.link}" style="display:inline-block;background:#B6F000;color:#000;font-weight:bold;text-decoration:none;padding:12px 22px;border-radius:10px">Reset Password</a></p>
+          <p style="font-size:12px;color:#9ca3af;line-height:1.6">If the button doesn't work, copy this link:<br><a href="${input.link}" style="color:#B6F000;word-break:break-all">${input.link}</a></p>
+          <p style="margin-top:24px;font-size:12px;color:#9ca3af">Didn't request this? You can safely ignore this email — your password won't change.</p>
+        </div>`;
+
+      await mailer.sendMail({
+        from,
+        to: input.to,
+        subject: "Reset your UniTurf password",
+        html,
+      });
+
+      logger.info("Password reset email sent.", { to: input.to, scope: input.scope });
+      return true;
+    } catch (error) {
+      logger.error("Failed to send password reset email.", {
+        error:
+          error instanceof Error ? error.message : String(error),
+      });
+      return false;
+    }
+  }
+
   /**
    * Emails a contact-form enquiry to the venue inbox.
    * Returns true when the mail was handed to SMTP.
