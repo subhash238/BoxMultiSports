@@ -19,7 +19,12 @@ export default function RootLayout({
       lang="en"
       className="h-full antialiased"
     >
-      <body className="min-h-full flex flex-col">
+      {/* suppressHydrationWarning: browser extensions (Grammarly, ColorZilla, dark-mode)
+          inject attributes on <body> before React hydrates; ignore those. */}
+      <body
+        className="min-h-full flex flex-col"
+        suppressHydrationWarning
+      >
         <BookingModalProvider>
           <Chrome>{children}</Chrome>
         </BookingModalProvider>
