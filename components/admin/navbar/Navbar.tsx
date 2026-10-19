@@ -55,7 +55,7 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
 
   const handleLogout = async () => {
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
+      await fetch("/api/auth/logout?scope=admin", { method: "POST" });
     } finally {
       router.push("/admin/login");
       router.refresh();

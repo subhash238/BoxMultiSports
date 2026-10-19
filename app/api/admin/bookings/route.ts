@@ -13,7 +13,7 @@ import { ZodError } from "zod";
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getCurrentUser(request);
+    const user = await getCurrentUser(request, "admin");
 
     const body = await request.json();
 

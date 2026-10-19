@@ -47,6 +47,7 @@ function LoginForm() {
           body: JSON.stringify({
             email,
             password,
+            scope: "customer",
           }),
         }
       );
@@ -71,9 +72,7 @@ function LoginForm() {
         return;
       }
 
-      const destination =
-        safeRedirect ??
-        (data.user?.role === "ADMIN" ? "/admin/dashboard" : "/account");
+      const destination = safeRedirect ?? "/account";
 
       router.push(destination);
       router.refresh();

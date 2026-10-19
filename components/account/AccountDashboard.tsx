@@ -230,14 +230,6 @@ export default function AccountDashboard() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {user.role === "ADMIN" && (
-              <Link
-                href="/admin/dashboard"
-                className="rounded-full border border-white/15 px-4 py-2 text-xs font-semibold text-white/80 transition hover:border-[#B6F000]/60 hover:text-[#B6F000]"
-              >
-                Admin Panel
-              </Link>
-            )}
             <button
               type="button"
               onClick={handleLogout}

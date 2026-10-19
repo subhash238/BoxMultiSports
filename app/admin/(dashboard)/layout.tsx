@@ -6,6 +6,8 @@ import DashboardLayout from "@/components/admin/layout/DashboardLayout";
 
 import jwt from "jsonwebtoken";
 
+import { AUTH_COOKIE_NAMES } from "@/lib/auth";
+
 export const dynamic = "force-dynamic";
 
 interface AdminLayoutProps {
@@ -24,7 +26,7 @@ export default async function AdminLayout({
   const cookieStore = await cookies();
 
   const token =
-    cookieStore.get("auth_token")?.value;
+    cookieStore.get(AUTH_COOKIE_NAMES.admin)?.value;
 
   if (!token) {
     redirect("/admin/login");
@@ -37,7 +39,7 @@ export default async function AdminLayout({
     ) as AuthPayload;
 
     if (payload.role !== "ADMIN") {
-      redirect("/");
+      redirect("/admin/login");
     }
   } catch {
     redirect("/admin/login");

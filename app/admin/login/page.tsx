@@ -24,18 +24,12 @@ export default function AdminLoginPage() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, scope: "admin" }),
       });
       const data = await res.json();
 
       if (!res.ok || !data.success) {
         setError(data.message || "Invalid email or password.");
-        return;
-      }
-
-      if (data.user?.role !== "ADMIN") {
-        await fetch("/api/auth/logout", { method: "POST" }).catch(() => undefined);
-        setError("This account does not have admin access.");
         return;
       }
 

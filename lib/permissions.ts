@@ -40,7 +40,7 @@ export function requireRole(
  * AppError(403) non-admin.
  */
 export async function requireAdminUser(request: NextRequest) {
-  const user = await getCurrentUser(request);
+  const user = await getCurrentUser(request, "admin");
   requireAdmin({ id: user.id, email: user.email, role: user.role });
   return user;
 }
