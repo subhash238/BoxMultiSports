@@ -15,7 +15,8 @@ export default function AddSportForm({
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
   const [pricePerHour, setPricePerHour] = useState("");
-  const [maxPlayers, setMaxPlayers] = useState("");
+  // Player limit UI is hidden for now; keep a sane default for the API.
+  const [maxPlayers] = useState("22"); // restore setMaxPlayers when the field is re-enabled
   const [imageUrl, setImageUrl] = useState("");
   const [isActive, setIsActive] = useState(true);
 
@@ -235,8 +236,8 @@ onClose();
             />
           </div>
 
-          {/* Price + Maximum Players */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* Price (Maximum Players hidden for now) */}
+          <div className="grid gap-4">
             {/* Price Per Hour */}
             <div>
               <label
@@ -262,7 +263,7 @@ onClose();
               />
             </div>
 
-            {/* Maximum Players */}
+            {/* Maximum Players — hidden for now
             <div>
               <label
                 htmlFor="sport-max-players"
@@ -286,6 +287,7 @@ onClose();
                 className="w-full rounded-lg border px-4 py-2.5 text-sm outline-none focus:border-black disabled:bg-gray-100"
               />
             </div>
+            */}
           </div>
 
           {/* Image URL */}

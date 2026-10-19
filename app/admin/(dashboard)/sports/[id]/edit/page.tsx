@@ -372,8 +372,7 @@ export default function EditSportPage() {
             />
           </div>
 
-          {/* Max Players */}
-
+          {/* Max Players — hidden for now
           <div>
             <label
               htmlFor="sport-max-players"
@@ -396,6 +395,7 @@ export default function EditSportPage() {
               className="w-full rounded-lg border px-4 py-2.5 text-sm outline-none focus:border-black disabled:bg-gray-100"
             />
           </div>
+          */}
 
           {/* Image URL */}
 

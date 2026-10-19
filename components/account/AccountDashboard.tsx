@@ -9,7 +9,6 @@ import {
   Clock,
   LogOut,
   Ticket,
-  Users,
 } from "lucide-react";
 
 import BookNowTrigger from "@/components/booking-widget/BookNowTrigger";
@@ -373,10 +372,12 @@ function BookingCard({ booking: b }: { booking: AccountBooking }) {
           <Clock size={15} className="shrink-0 text-[#B6F000]" />
           {fmtTime(b.startTime)} – {fmtTime(b.endTime)} · {fmtDuration(b.duration)}
         </div>
+        {/* Player count hidden for now.
         <div className="flex items-center gap-2">
           <Users size={15} className="shrink-0 text-[#B6F000]" />
           {b.numberOfPlayers} {b.numberOfPlayers === 1 ? "player" : "players"}
         </div>
+        */}
       </div>
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-white/[0.06] pt-4">

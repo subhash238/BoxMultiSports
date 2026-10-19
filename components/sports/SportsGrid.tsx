@@ -333,8 +333,15 @@ export default function SportsGrid() {
                 Starting {displayPrice} / hour
               </p>
 
+              {/* Player limit hidden for now.
               <p className="mt-2 text-sm text-white/60">
                 Up to {sport.maxPlayers} players
+              </p>
+              */}
+
+              <p className="mt-2 text-[11px] leading-5 text-white/45">
+                <span className="font-semibold text-white/60">T&amp;C:</span>{" "}
+                Once booked, slots are non-refundable and cannot be cancelled.
               </p>
 
               <span className="mt-7 inline-flex items-center gap-2 text-sm font-bold tracking-wide text-[#B6F000]/90 transition-colors group-hover:text-[#B6F000]">
