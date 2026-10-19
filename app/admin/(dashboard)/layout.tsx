@@ -27,7 +27,7 @@ export default async function AdminLayout({
     cookieStore.get("auth_token")?.value;
 
   if (!token) {
-    redirect("/login");
+    redirect("/admin/login");
   }
 
   try {
@@ -40,7 +40,7 @@ export default async function AdminLayout({
       redirect("/");
     }
   } catch {
-    redirect("/login");
+    redirect("/admin/login");
   }
 
   return (

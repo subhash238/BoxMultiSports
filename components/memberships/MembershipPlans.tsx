@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { CalendarCheck, GraduationCap, Wallet } from "lucide-react";
 
+import LoginPrompt from "@/components/auth/LoginPrompt";
+import { useAuthUser } from "@/lib/client/useAuthUser";
+
 import MembershipModal from "./MembershipModal";
 
 export interface MembershipPlan {
@@ -26,6 +29,16 @@ export default function MembershipPlans() {
   const [plans, setPlans] = useState<MembershipPlan[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [selected, setSelected] = useState<MembershipPlan | null>(null);
+  const [loginFor, setLoginFor] = useState<MembershipPlan | null>(null);
+  const { status: authStatus } = useAuthUser();
+
+  const handleJoin = (plan: MembershipPlan) => {
+    if (authStatus !== "authenticated") {
+      setLoginFor(plan);
+      return;
+    }
+    setSelected(plan);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -46,6 +59,23 @@ export default function MembershipPlans() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (authStatus !== "authenticated" || plans.length === 0) return;
+    const params = new URLSearchParams(window.location.search);
+    const slug = params.get("join");
+    if (!slug) return;
+    params.delete("join");
+    const query = params.toString();
+    window.history.replaceState(
+      null,
+      "",
+      `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`
+    );
+    const plan = plans.find((p) => p.slug === slug);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (plan) setSelected(plan);
+  }, [authStatus, plans]);
 
   if (loaded && plans.length === 0) {
     return null;
@@ -123,7 +153,7 @@ export default function MembershipPlans() {
 
               <button
                 type="button"
-                onClick={() => setSelected(plan)}
+                onClick={() => handleJoin(plan)}
                 className="mt-6 inline-flex items-center justify-center rounded-full bg-[#B6F000] px-6 py-2.5 text-sm font-bold text-black transition hover:brightness-110"
               >
                 Join Now
@@ -139,6 +169,15 @@ export default function MembershipPlans() {
         <span className="font-semibold text-white">Cash</span> /
         <span className="font-semibold text-white">UPI</span> at the venue.
       </div>
+
+      {loginFor && (
+        <LoginPrompt
+          title="Sign in to join"
+          message="Sign in or create a free account to buy a monthly plan and track its validity in My Account."
+          redirectTo={`/?join=${encodeURIComponent(loginFor.slug)}#memberships`}
+          onClose={() => setLoginFor(null)}
+        />
+      )}
 
       {selected && (
         <MembershipModal plan={selected} onClose={() => setSelected(null)} />

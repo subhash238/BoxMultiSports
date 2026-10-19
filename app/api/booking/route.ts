@@ -28,21 +28,16 @@ export async function POST(request: NextRequest) {
     // Authentication
     // -----------------------------------------
 
-    const authToken =
-      request.cookies.get("auth_token")?.value;
+    const user = await getCurrentUser(request).catch((error) => {
+      if (
+        error instanceof AppError &&
+        (error.statusCode === 401 || error.statusCode === 404)
+      ) {
+        throw new AppError("Please sign in to book.", 401);
+      }
 
-    const user = authToken
-      ? await getCurrentUser(request).catch((error) => {
-          if (
-            error instanceof AppError &&
-            (error.statusCode === 401 || error.statusCode === 404)
-          ) {
-            return null;
-          }
-
-          throw error;
-        })
-      : null;
+      throw error;
+    });
 
     // -----------------------------------------
     // Read request body
@@ -61,7 +56,7 @@ export async function POST(request: NextRequest) {
     // -----------------------------------------
 
     const result = await BookingService.createBooking(
-      user?.id ?? null,
+      user.id,
       data
     );
 

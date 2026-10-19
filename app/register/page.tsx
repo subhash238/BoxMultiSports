@@ -1,7 +1,7 @@
 "use client";
 
-import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
+import { FormEvent, Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Lock, Mail, Phone, User } from "lucide-react";
 
@@ -9,7 +9,21 @@ const inputClass =
   "w-full rounded-xl border border-white/[0.10] bg-white/[0.04] py-3 pl-10 pr-4 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-[#B6F000]/70 focus:ring-2 focus:ring-[#B6F000]/10";
 
 export default function RegisterPage() {
+  return (
+    <Suspense fallback={<main className="min-h-screen bg-[#050705]" />}>
+      <RegisterForm />
+    </Suspense>
+  );
+}
+
+function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectParam = searchParams.get("redirect");
+  const safeRedirect =
+    redirectParam && redirectParam.startsWith("/") && !redirectParam.startsWith("//")
+      ? redirectParam
+      : "/account";
 
   const [form, setForm] = useState({
     name: "",
@@ -56,11 +70,11 @@ export default function RegisterPage() {
       });
 
       if (!loginRes.ok) {
-        router.push("/login?redirect=/account");
+        router.push(`/login?redirect=${encodeURIComponent(safeRedirect)}`);
         return;
       }
 
-      router.push("/account");
+      router.push(safeRedirect);
       router.refresh();
     } catch {
       setError("Unable to connect to the server.");
@@ -166,7 +180,10 @@ export default function RegisterPage() {
 
           <p className="mt-6 text-center text-sm text-white/45">
             Already have an account?{" "}
-            <Link href="/login" className="font-semibold text-[#B6F000] hover:underline">
+            <Link
+              href={`/login?redirect=${encodeURIComponent(safeRedirect)}`}
+              className="font-semibold text-[#B6F000] hover:underline"
+            >
               Sign in
             </Link>
           </p>

@@ -219,7 +219,11 @@ function LoginForm() {
           <p className="mt-6 text-center text-sm text-white/45">
             New here?{" "}
             <Link
-              href="/register"
+              href={
+                safeRedirect
+                  ? `/register?redirect=${encodeURIComponent(safeRedirect)}`
+                  : "/register"
+              }
               className="font-semibold text-[#B6F000] hover:underline"
             >
               Create an account

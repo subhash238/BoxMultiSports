@@ -19,24 +19,21 @@ export async function POST(request: NextRequest) {
       RATE_LIMITS.BOOKING_CREATE
     );
 
-    const authToken = request.cookies.get("auth_token")?.value;
+    const user = await getCurrentUser(request).catch((error) => {
+      if (
+        error instanceof AppError &&
+        (error.statusCode === 401 || error.statusCode === 404)
+      ) {
+        throw new AppError("Please sign in to join a plan.", 401);
+      }
 
-    const user = authToken
-      ? await getCurrentUser(request).catch((error) => {
-          if (
-            error instanceof AppError &&
-            (error.statusCode === 401 || error.statusCode === 404)
-          ) {
-            return null;
-          }
-          throw error;
-        })
-      : null;
+      throw error;
+    });
 
     const data = createMembershipSchema.parse(await request.json());
 
     const result = await MembershipService.createMembership(
-      user?.id ?? null,
+      user.id,
       data
     );
 

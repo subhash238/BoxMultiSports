@@ -57,7 +57,7 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
     } finally {
-      router.push("/login");
+      router.push("/admin/login");
       router.refresh();
     }
   };
