@@ -57,6 +57,16 @@ export class SportQueryService {
         where: {
           id,
         },
+        include: {
+          pricing: {
+            where: { isActive: true },
+            orderBy: { duration: "asc" },
+            select: {
+              duration: true,
+              price: true,
+            },
+          },
+        },
       });
 
     if (!sport) {

@@ -1,5 +1,18 @@
 import { z } from "zod";
 
+export const sportPricingItemSchema = z.object({
+  // Duration in minutes.
+  duration: z.coerce
+    .number()
+    .int()
+    .positive()
+    .max(720, "Duration cannot exceed 720 minutes."),
+
+  price: z.coerce
+    .number()
+    .positive("Price must be greater than zero"),
+});
+
 export const createSportSchema = z.object({
   name: z
     .string()
@@ -41,7 +54,21 @@ export const createSportSchema = z.object({
   isActive: z
     .boolean()
     .optional(),
+
+  // Duration-based pricing shown on the site and used for bookings.
+  pricing: z
+    .array(sportPricingItemSchema)
+    .max(20)
+    .optional()
+    .refine(
+      (rows) =>
+        !rows ||
+        new Set(rows.map((r) => r.duration)).size === rows.length,
+      { message: "Each duration can only be priced once." }
+    ),
 });
+
+export type SportPricingItemInput = z.infer<typeof sportPricingItemSchema>;
 
 export const updateSportSchema =
   createSportSchema.partial();

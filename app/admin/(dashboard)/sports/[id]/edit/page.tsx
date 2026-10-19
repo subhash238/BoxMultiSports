@@ -12,6 +12,23 @@ interface Sport {
   maxPlayers: number | string;
   imageUrl?: string | null;
   isActive: boolean;
+  pricing?: { duration: number; price: number | string }[];
+}
+
+interface PricingRow {
+  duration: string;
+  price: string;
+}
+
+const DURATION_OPTIONS = [
+  30, 60, 90, 120, 150, 180, 210, 240, 300, 360, 480, 720,
+];
+
+function formatDuration(minutes: number) {
+  if (minutes >= 720) return "Full Day (12h)";
+  if (minutes % 60 === 0)
+    return `${minutes / 60} Hour${minutes === 60 ? "" : "s"}`;
+  return `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
 }
 
 export default function EditSportPage() {
@@ -25,7 +42,7 @@ export default function EditSportPage() {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
-  const [pricePerHour, setPricePerHour] = useState("");
+  const [pricingRows, setPricingRows] = useState<PricingRow[]>([]);
   const [maxPlayers, setMaxPlayers] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [isActive, setIsActive] = useState(true);
@@ -71,8 +88,18 @@ export default function EditSportPage() {
         setDescription(
           loadedSport.description ?? ""
         );
-        setPricePerHour(
-          String(loadedSport.pricePerHour ?? "")
+        setPricingRows(
+          loadedSport.pricing && loadedSport.pricing.length > 0
+            ? loadedSport.pricing.map((row) => ({
+                duration: String(row.duration),
+                price: String(row.price),
+              }))
+            : [
+                {
+                  duration: "60",
+                  price: String(loadedSport.pricePerHour ?? ""),
+                },
+              ]
         );
         setMaxPlayers(
           String(loadedSport.maxPlayers ?? "")
@@ -110,6 +137,26 @@ export default function EditSportPage() {
 
     setError("");
     setSuccess("");
+
+    const pricing = pricingRows.map((row) => ({
+      duration: Number(row.duration),
+      price: Number(row.price),
+    }));
+
+    if (pricing.length === 0) {
+      setError("Add at least one pricing option.");
+      return;
+    }
+
+    if (pricing.some((row) => !row.duration || !(row.price > 0))) {
+      setError("Every pricing row needs a duration and a price above zero.");
+      return;
+    }
+
+    if (new Set(pricing.map((row) => row.duration)).size !== pricing.length) {
+      setError("Each duration can only be priced once.");
+      return;
+    }
     setSaving(true);
 
     try {
@@ -124,7 +171,7 @@ export default function EditSportPage() {
             name,
             slug,
             description,
-            pricePerHour: Number(pricePerHour),
+            pricing,
             maxPlayers: Number(maxPlayers),
             imageUrl,
             isActive,
@@ -347,29 +394,104 @@ export default function EditSportPage() {
             />
           </div>
 
-          {/* Price */}
+          {/* Pricing */}
 
           <div>
-            <label
-              htmlFor="sport-price"
-              className="mb-2 block text-sm font-medium"
-            >
-              Price Per Hour
-            </label>
+            <div className="mb-2 flex items-center justify-between">
+              <label className="block text-sm font-medium">
+                Pricing (by duration)
+              </label>
+              <button
+                type="button"
+                onClick={() =>
+                  setPricingRows((rows) => {
+                    const used = new Set(rows.map((r) => r.duration));
+                    const next = DURATION_OPTIONS.find(
+                      (d) => !used.has(String(d))
+                    );
+                    return [
+                      ...rows,
+                      { duration: String(next ?? 60), price: "" },
+                    ];
+                  })
+                }
+                disabled={saving || pricingRows.length >= DURATION_OPTIONS.length}
+                className="rounded-lg border px-3 py-1.5 text-xs font-medium hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                + Add option
+              </button>
+            </div>
 
-            <input
-              id="sport-price"
-              type="number"
-              min="0"
-              step="0.01"
-              value={pricePerHour}
-              onChange={(event) =>
-                setPricePerHour(event.target.value)
-              }
-              required
-              disabled={saving}
-              className="w-full rounded-lg border px-4 py-2.5 text-sm outline-none focus:border-black disabled:bg-gray-100"
-            />
+            <p className="mb-3 text-xs text-gray-500">
+              These prices show on the website and are charged at booking.
+              The 1 Hour price is used as the &quot;Starting&quot; price.
+            </p>
+
+            <div className="space-y-2">
+              {pricingRows.map((row, index) => (
+                <div
+                  key={index}
+                  className="flex flex-col gap-2 rounded-lg border p-3 sm:flex-row sm:items-center"
+                >
+                  <select
+                    value={row.duration}
+                    onChange={(event) =>
+                      setPricingRows((rows) =>
+                        rows.map((r, i) =>
+                          i === index
+                            ? { ...r, duration: event.target.value }
+                            : r
+                        )
+                      )
+                    }
+                    disabled={saving}
+                    className="rounded-lg border px-3 py-2 text-sm outline-none focus:border-black disabled:bg-gray-100 sm:w-44"
+                  >
+                    {DURATION_OPTIONS.map((d) => (
+                      <option key={d} value={String(d)}>
+                        {formatDuration(d)}
+                      </option>
+                    ))}
+                  </select>
+
+                  <div className="flex flex-1 items-center gap-2">
+                    <span className="text-sm text-gray-500">₹</span>
+                    <input
+                      type="number"
+                      min="1"
+                      step="1"
+                      value={row.price}
+                      onChange={(event) =>
+                        setPricingRows((rows) =>
+                          rows.map((r, i) =>
+                            i === index
+                              ? { ...r, price: event.target.value }
+                              : r
+                          )
+                        )
+                      }
+                      placeholder="e.g. 800"
+                      required
+                      disabled={saving}
+                      className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-black disabled:bg-gray-100"
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPricingRows((rows) =>
+                        rows.filter((_, i) => i !== index)
+                      )
+                    }
+                    disabled={saving || pricingRows.length <= 1}
+                    className="rounded-lg px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Max Players — hidden for now

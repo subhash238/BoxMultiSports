@@ -54,6 +54,11 @@ export class SportCreateService {
     // Create Sport
     // -----------------------------------------
 
+    const pricingRows =
+      data.pricing && data.pricing.length > 0
+        ? data.pricing
+        : [{ duration: 60, price: data.pricePerHour }];
+
     return prisma.sport.create({
       data: {
         name: data.name,
@@ -68,6 +73,18 @@ export class SportCreateService {
           data.imageUrl ?? null,
         isActive:
           data.isActive ?? true,
+        pricing: {
+          create: pricingRows.map((row) => ({
+            duration: row.duration,
+            price: row.price,
+            isActive: true,
+          })),
+        },
+      },
+      include: {
+        pricing: {
+          orderBy: { duration: "asc" },
+        },
       },
     });
   }

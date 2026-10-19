@@ -87,14 +87,76 @@ export class SportUpdateService {
     // Update Sport
     // -----------------------------------------
 
-    const updatedSport =
-      await prisma.sport.update({
+    const { pricing, ...sportData } = data;
+
+    if (!pricing) {
+      return prisma.sport.update({
         where: {
           id: sportId,
         },
-        data,
+        data: sportData,
+        include: {
+          pricing: {
+            where: { isActive: true },
+            orderBy: { duration: "asc" },
+          },
+        },
+      });
+    }
+
+    // Keep the legacy pricePerHour in sync with the 1-hour (or cheapest) row
+    // so "Starting ₹X / hour" on the site always reflects the pricing table.
+    const hourRow =
+      pricing.find((row) => row.duration === 60) ??
+      [...pricing].sort((a, b) => a.price - b.price)[0];
+
+    const durations = pricing.map((row) => row.duration);
+
+    return prisma.$transaction(async (tx) => {
+      await tx.sportPricing.deleteMany({
+        where: {
+          sportId,
+          duration: { notIn: durations },
+        },
       });
 
-    return updatedSport;
+      for (const row of pricing) {
+        await tx.sportPricing.upsert({
+          where: {
+            sportId_duration: {
+              sportId,
+              duration: row.duration,
+            },
+          },
+          update: {
+            price: row.price,
+            isActive: true,
+          },
+          create: {
+            sportId,
+            duration: row.duration,
+            price: row.price,
+            isActive: true,
+          },
+        });
+      }
+
+      return tx.sport.update({
+        where: {
+          id: sportId,
+        },
+        data: {
+          ...sportData,
+          pricePerHour:
+            sportData.pricePerHour ?? hourRow?.price ?? sport.pricePerHour,
+        },
+        include: {
+          pricing: {
+            where: { isActive: true },
+            orderBy: { duration: "asc" },
+          },
+        },
+      });
+    });
   }
 }
