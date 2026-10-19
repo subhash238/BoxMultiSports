@@ -12,6 +12,9 @@
  *   SMTP_USER   sender account
  *   SMTP_PASS   password / app password
  *   SMTP_FROM   "UniTurf <no-reply@uniturff.com>"
+ *   ADMIN_NOTIFY_EMAIL  (optional) venue inbox that gets a copy of every
+ *               confirmation and receives contact-form enquiries.
+ *               Defaults to SMTP_USER.
  *
  * Best-effort: when SMTP is not configured
  * the calls log and no-op so booking flow
@@ -73,7 +76,75 @@ function formatTime(date: Date): string {
   });
 }
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function getAdminInbox(): string | undefined {
+  return process.env.ADMIN_NOTIFY_EMAIL || process.env.SMTP_USER;
+}
+
+export interface EnquiryInput {
+  name: string;
+  mobile: string;
+  email?: string;
+  message: string;
+}
+
 export class NotificationService {
+  /**
+   * Emails a contact-form enquiry to the venue inbox.
+   * Returns true when the mail was handed to SMTP.
+   */
+  static async sendEnquiry(input: EnquiryInput): Promise<boolean> {
+    try {
+      const mailer = getTransporter();
+      const to = getAdminInbox();
+
+      if (!mailer || !to) {
+        return false;
+      }
+
+      const from =
+        process.env.SMTP_FROM ??
+        `UniTurf <${process.env.SMTP_USER}>`;
+
+      const html = `
+        <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;background:#0a0f0a;padding:32px;border-radius:16px;color:#fff">
+          <h1 style="margin:0;font-size:22px">UNI<span style="color:#B6F000">TURF</span></h1>
+          <p style="color:#B6F000;font-size:13px;letter-spacing:2px;text-transform:uppercase;margin:24px 0 8px">New Enquiry</p>
+          <table style="width:100%;border-collapse:collapse;font-size:14px;color:#e5e5e5">
+            <tr><td style="padding:8px 0;color:#9ca3af">Name</td><td style="padding:8px 0;text-align:right;font-weight:bold">${escapeHtml(input.name)}</td></tr>
+            <tr><td style="padding:8px 0;color:#9ca3af">Mobile</td><td style="padding:8px 0;text-align:right"><a style="color:#B6F000" href="tel:${escapeHtml(input.mobile)}">${escapeHtml(input.mobile)}</a></td></tr>
+            ${input.email ? `<tr><td style="padding:8px 0;color:#9ca3af">Email</td><td style="padding:8px 0;text-align:right">${escapeHtml(input.email)}</td></tr>` : ""}
+          </table>
+          <p style="margin:16px 0 4px;color:#9ca3af;font-size:13px">Message</p>
+          <p style="margin:0;white-space:pre-wrap;font-size:14px;color:#e5e5e5">${escapeHtml(input.message)}</p>
+        </div>`;
+
+      await mailer.sendMail({
+        from,
+        to,
+        replyTo: input.email || undefined,
+        subject: `New enquiry from ${input.name} (${input.mobile})`,
+        html,
+      });
+
+      logger.info("Enquiry email sent.", { to, mobile: input.mobile });
+      return true;
+    } catch (error) {
+      logger.error("Failed to send enquiry email.", {
+        error:
+          error instanceof Error ? error.message : String(error),
+      });
+      return false;
+    }
+  }
+
   /**
    * Sends the booking confirmation email to the
    * customer. Fire-and-forget safe: never throws.
@@ -123,6 +194,7 @@ export class NotificationService {
       await mailer.sendMail({
         from,
         to: booking.customerEmail,
+        bcc: getAdminInbox(),
         subject: `Booking Confirmed — ${booking.sport.name} on ${formatDate(booking.bookingDate)} (${booking.bookingNumber})`,
         html,
       });
@@ -193,6 +265,7 @@ export class NotificationService {
       await mailer.sendMail({
         from,
         to: membership.customerEmail,
+        bcc: getAdminInbox(),
         subject: `Membership Active — ${membership.plan.name} (${membership.membershipNumber})`,
         html,
       });

@@ -34,6 +34,7 @@ export const RATE_LIMITS = {
   AUTH: { limit: 5, windowSeconds: 60 },
   BOOKING_CREATE: { limit: 10, windowSeconds: 60 },
   PAYMENT: { limit: 10, windowSeconds: 60 },
+  CONTACT: { limit: 3, windowSeconds: 300 },
 } as const satisfies Record<string, RateLimitBucketConfig>;
 
 function pruneOldEntries(now: number): void {

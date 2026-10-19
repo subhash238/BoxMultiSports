@@ -26,11 +26,14 @@ export default function ContactPage() {
   const [mobile, setMobile] = useState("");
   const [message, setMessage] = useState("");
   const [formError, setFormError] = useState("");
+  const [formSuccess, setFormSuccess] = useState("");
+  const [sending, setSending] = useState(false);
 
-  const handleWhatsAppEnquiry = (
+  const handleWhatsAppEnquiry = async (
     event: FormEvent<HTMLFormElement>
   ) => {
     event.preventDefault();
+    setFormSuccess("");
 
     const trimmedName = name.trim();
     const trimmedMobile = mobile.trim();
@@ -48,6 +51,43 @@ export default function ContactPage() {
     }
 
     setFormError("");
+    setSending(true);
+
+    // Email the enquiry to the venue inbox (best effort),
+    // then continue on WhatsApp as before.
+    let emailed = false;
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: trimmedName,
+          mobile: trimmedMobile,
+          message: trimmedMessage,
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      if (res.status === 429) {
+        setSending(false);
+        setFormError(
+          data?.message || "Too many enquiries. Please try again in a few minutes."
+        );
+        return;
+      }
+      emailed = Boolean(res.ok && data?.emailed);
+    } catch {
+      emailed = false;
+    }
+    setSending(false);
+
+    if (emailed) {
+      setFormSuccess(
+        "Enquiry sent! We'll get back to you shortly. Opening WhatsApp too…"
+      );
+      setName("");
+      setMobile("");
+      setMessage("");
+    }
 
     const enquiryMessage = [
       "Hello UniTurf,",
@@ -303,8 +343,8 @@ export default function ContactPage() {
                 </h2>
 
                 <p className="mt-1 text-sm text-white/45">
-                  Fill in the details and continue
-                  directly on WhatsApp.
+                  Fill in the details — we get it by
+                  email and you continue on WhatsApp.
                 </p>
               </div>
             </div>
@@ -442,6 +482,24 @@ export default function ContactPage() {
                 />
               </div>
 
+              {formSuccess && (
+                <p
+                  role="status"
+                  className="
+                    rounded-xl
+                    border
+                    border-[#B6F000]/25
+                    bg-[#B6F000]/[0.08]
+                    px-4
+                    py-3
+                    text-sm
+                    text-[#B6F000]
+                  "
+                >
+                  {formSuccess}
+                </p>
+              )}
+
               {formError && (
                 <p
                   role="alert"
@@ -462,9 +520,12 @@ export default function ContactPage() {
 
               <button
                 type="submit"
+                disabled={sending}
                 className="
                   flex
                   w-full
+                  disabled:cursor-wait
+                  disabled:opacity-60
                   items-center
                   justify-center
                   gap-2
@@ -481,12 +542,12 @@ export default function ContactPage() {
                 "
               >
                 <Send size={17} />
-                Send Enquiry on WhatsApp
+                {sending ? "Sending…" : "Send Enquiry"}
               </button>
 
               <p className="text-center text-xs leading-5 text-white/30">
-                Your enquiry will open in WhatsApp.
-                Nothing is submitted to our database.
+                We&apos;ll receive your enquiry by email and
+                it will also open in WhatsApp.
               </p>
             </form>
           </div>
