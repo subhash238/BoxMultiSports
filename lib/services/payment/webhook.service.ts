@@ -12,6 +12,7 @@ import { PAYMENT_MESSAGES } from "./payment.responses";
 
 import { BOOKING_CONFIG } from "../booking/booking.config";
 import { NotificationService } from "../notification/email.service";
+import { MembershipService } from "../membership/membership.service";
 
 /**
  * ==========================================
@@ -178,6 +179,17 @@ export class PaymentWebhookService {
     });
 
     if (!payment) {
+      const handledAsMembership =
+        await MembershipService.handleWebhookCapture({
+          id: entity.id,
+          order_id: entity.order_id,
+          amount: entity.amount,
+        });
+
+      if (handledAsMembership) {
+        return;
+      }
+
       // Order not created through this system, or
       // local persistence failed after order
       // creation — either way it needs eyes on it.

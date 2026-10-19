@@ -1,35 +1,56 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { CalendarCheck, GraduationCap, Wallet } from "lucide-react";
 
-const plans = [
-  {
-    icon: CalendarCheck,
-    name: "Pickleball Membership",
-    price: "₹3,000",
-    period: "/month",
-    description:
-      "Unlimited pickleball access for the whole month. Perfect for regular players.",
-    features: ["Unlimited play sessions", "Priority slot booking", "All days access"],
-  },
-  {
-    icon: GraduationCap,
-    name: "Kids Training Academy",
-    price: "₹2,000",
-    period: "/month",
-    description:
-      "Professional coaching for kids — cricket and football, every week.",
-    features: [
-      "Training 5 PM – 7 PM",
-      "4 days Cricket / week",
-      "2 days Football / week",
-      "Certified coaches",
-    ],
-  },
-];
+import MembershipModal from "./MembershipModal";
+
+export interface MembershipPlan {
+  id: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  price: string | number;
+  durationDays: number;
+  features: string[];
+}
+
+function planIcon(slug: string) {
+  return slug.includes("academy") || slug.includes("kids")
+    ? GraduationCap
+    : CalendarCheck;
+}
 
 export default function MembershipPlans() {
+  const [plans, setPlans] = useState<MembershipPlan[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  const [selected, setSelected] = useState<MembershipPlan | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetch("/api/memberships/plans")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled && data?.success) {
+          setPlans(data.plans ?? []);
+        }
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (!cancelled) setLoaded(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (loaded && plans.length === 0) {
+    return null;
+  }
+
   return (
     <section id="memberships" className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
       <div className="text-center">
@@ -41,21 +62,29 @@ export default function MembershipPlans() {
         </h2>
         <p className="mx-auto mt-3 max-w-xl text-sm text-white/50">
           Train more, pay less. Monthly memberships for regular players and
-          young athletes.
+          young athletes — book and pay online in a minute.
         </p>
       </div>
 
       <div className="mt-10 grid gap-6 sm:grid-cols-2">
+        {!loaded &&
+          [0, 1].map((i) => (
+            <div
+              key={i}
+              className="h-72 animate-pulse rounded-2xl border border-white/10 bg-white/[0.03]"
+            />
+          ))}
+
         {plans.map((plan) => {
-          const Icon = plan.icon;
+          const Icon = planIcon(plan.slug);
           return (
             <motion.div
-              key={plan.name}
+              key={plan.id}
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-60px" }}
               transition={{ duration: 0.5 }}
-              className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 backdrop-blur-sm sm:p-8"
+              className="flex flex-col rounded-2xl border border-white/10 bg-white/[0.04] p-6 backdrop-blur-sm sm:p-8"
             >
               <div className="flex items-center gap-3">
                 <div className="rounded-xl bg-[#B6F000]/15 p-3 text-[#B6F000]">
@@ -64,15 +93,23 @@ export default function MembershipPlans() {
                 <div>
                   <h3 className="text-lg font-bold text-white">{plan.name}</h3>
                   <p className="text-sm text-[#B6F000]">
-                    <span className="text-2xl font-extrabold">{plan.price}</span>
-                    <span className="text-white/50">{plan.period}</span>
+                    <span className="text-2xl font-extrabold">
+                      ₹{Number(plan.price).toLocaleString("en-IN")}
+                    </span>
+                    <span className="text-white/50">
+                      {plan.durationDays === 30
+                        ? "/month"
+                        : ` / ${plan.durationDays} days`}
+                    </span>
                   </p>
                 </div>
               </div>
 
-              <p className="mt-4 text-sm text-white/60">{plan.description}</p>
+              {plan.description && (
+                <p className="mt-4 text-sm text-white/60">{plan.description}</p>
+              )}
 
-              <ul className="mt-4 space-y-2">
+              <ul className="mt-4 flex-1 space-y-2">
                 {plan.features.map((feature) => (
                   <li
                     key={feature}
@@ -84,22 +121,28 @@ export default function MembershipPlans() {
                 ))}
               </ul>
 
-              <a
-                href="#booking"
+              <button
+                type="button"
+                onClick={() => setSelected(plan)}
                 className="mt-6 inline-flex items-center justify-center rounded-full bg-[#B6F000] px-6 py-2.5 text-sm font-bold text-black transition hover:brightness-110"
               >
-                Enquire Now
-              </a>
+                Join Now
+              </button>
             </motion.div>
           );
         })}
       </div>
 
-      <div className="mt-8 flex items-center justify-center gap-2 text-sm text-white/50">
+      <div className="mt-8 flex flex-wrap items-center justify-center gap-2 text-sm text-white/50">
         <Wallet size={16} className="text-[#B6F000]" />
-        We accept <span className="font-semibold text-white">Cash</span> and
-        <span className="font-semibold text-white">UPI</span> payments at the venue.
+        Pay online (UPI / Cards) or with
+        <span className="font-semibold text-white">Cash</span> /
+        <span className="font-semibold text-white">UPI</span> at the venue.
       </div>
+
+      {selected && (
+        <MembershipModal plan={selected} onClose={() => setSelected(null)} />
+      )}
     </section>
   );
 }

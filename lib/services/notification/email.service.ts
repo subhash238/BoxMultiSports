@@ -140,4 +140,74 @@ export class NotificationService {
       });
     }
   }
+
+  /**
+   * Sends the membership activation email.
+   * Fire-and-forget safe: never throws.
+   */
+  static async sendMembershipConfirmation(
+    membershipId: string
+  ): Promise<void> {
+    try {
+      const mailer = getTransporter();
+
+      if (!mailer) {
+        return;
+      }
+
+      const membership = await prisma.membership.findUnique({
+        where: { id: membershipId },
+        include: { plan: { select: { name: true } } },
+      });
+
+      if (!membership) {
+        return;
+      }
+
+      const from =
+        process.env.SMTP_FROM ??
+        `UniTurf <${process.env.SMTP_USER}>`;
+
+      const amount = `₹${Number(membership.amount).toLocaleString("en-IN")}`;
+      const paidVia =
+        membership.paymentMethod === "PAY_AT_VENUE"
+          ? "Cash / UPI at venue"
+          : "Online (Razorpay)";
+
+      const html = `
+        <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;background:#0a0f0a;padding:32px;border-radius:16px;color:#fff">
+          <h1 style="margin:0;font-size:22px">UNI<span style="color:#B6F000">TURF</span></h1>
+          <p style="color:#B6F000;font-size:13px;letter-spacing:2px;text-transform:uppercase;margin:24px 0 8px">Membership Active</p>
+          <h2 style="margin:0 0 16px;font-size:20px">Welcome aboard, ${membership.customerName}!</h2>
+          <table style="width:100%;border-collapse:collapse;font-size:14px;color:#e5e5e5">
+            <tr><td style="padding:8px 0;color:#9ca3af">Membership #</td><td style="padding:8px 0;text-align:right;font-weight:bold">${membership.membershipNumber}</td></tr>
+            <tr><td style="padding:8px 0;color:#9ca3af">Plan</td><td style="padding:8px 0;text-align:right">${membership.plan.name}</td></tr>
+            <tr><td style="padding:8px 0;color:#9ca3af">Valid From</td><td style="padding:8px 0;text-align:right">${formatDate(membership.startDate)}</td></tr>
+            <tr><td style="padding:8px 0;color:#9ca3af">Valid Till</td><td style="padding:8px 0;text-align:right">${formatDate(membership.endDate)}</td></tr>
+            <tr><td style="padding:8px 0;color:#9ca3af">Payment</td><td style="padding:8px 0;text-align:right">${paidVia}</td></tr>
+            <tr><td style="padding:8px 0;color:#9ca3af;border-top:1px solid #333">Amount</td><td style="padding:8px 0;text-align:right;border-top:1px solid #333;color:#B6F000;font-weight:bold">${amount}</td></tr>
+          </table>
+          <p style="margin-top:24px;font-size:12px;color:#9ca3af">Show this email at the venue. See you on the turf!</p>
+        </div>`;
+
+      await mailer.sendMail({
+        from,
+        to: membership.customerEmail,
+        subject: `Membership Active — ${membership.plan.name} (${membership.membershipNumber})`,
+        html,
+      });
+
+      logger.info("Membership confirmation email sent.", {
+        membershipId,
+        membershipNumber: membership.membershipNumber,
+        to: membership.customerEmail,
+      });
+    } catch (error) {
+      logger.error("Failed to send membership confirmation email.", {
+        membershipId,
+        error:
+          error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
 }

@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   Trophy,
   CalendarDays,
+  BadgeCheck,
   Users,
   X,
 } from "lucide-react";
@@ -14,6 +15,7 @@ const menuItems = [
   { title: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
   { title: "Sports", href: "/admin/sports", icon: Trophy },
   { title: "Bookings", href: "/admin/bookings", icon: CalendarDays },
+  { title: "Memberships", href: "/admin/memberships", icon: BadgeCheck },
   { title: "Users", href: "/admin/users", icon: Users },
 ];
 

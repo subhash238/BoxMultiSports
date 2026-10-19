@@ -13,6 +13,7 @@ const titles: Record<string, string> = {
   "/admin/dashboard": "Dashboard",
   "/admin/sports": "Sports",
   "/admin/bookings": "Bookings",
+  "/admin/memberships": "Memberships",
   "/admin/users": "Users",
 };
 
