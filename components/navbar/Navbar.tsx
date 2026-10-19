@@ -38,8 +38,9 @@ export default function Navbar() {
   useEffect(() => {
     let cancelled = false;
     fetch("/api/auth/me", { cache: "no-store" })
-      .then((res) => {
-        if (!cancelled) setAuthState(res.ok ? "user" : "guest");
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled) setAuthState(data?.user ? "user" : "guest");
       })
       .catch(() => {
         if (!cancelled) setAuthState("guest");
