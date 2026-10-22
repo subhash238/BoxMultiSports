@@ -3,22 +3,27 @@
  * Email Notification Service
  * ==========================================
  *
- * Sends transactional emails (booking
- * confirmations) over SMTP. Configured via
- * env vars:
+ * Sends transactional emails (booking /
+ * membership confirmations, enquiries,
+ * password resets). Provider is picked from
+ * env, first match wins:
  *
- *   SMTP_HOST   e.g. smtp.gmail.com
- *   SMTP_PORT   465 (secure) or 587 (starttls)
- *   SMTP_USER   sender account
- *   SMTP_PASS   password / app password
- *   SMTP_FROM   "UniTurf <no-reply@uniturff.com>"
- *   ADMIN_NOTIFY_EMAIL  (optional) venue inbox that gets a copy of every
- *               confirmation and receives contact-form enquiries.
- *               Defaults to SMTP_USER.
+ *   RESEND_API_KEY   Resend HTTPS API (works where
+ *                    SMTP ports are blocked, e.g.
+ *                    DigitalOcean droplets)
+ *   BREVO_API_KEY    Brevo HTTPS API
+ *   SMTP_HOST/USER/PASS (+ SMTP_PORT)  Nodemailer SMTP
  *
- * Best-effort: when SMTP is not configured
- * the calls log and no-op so booking flow
- * never breaks on a missing mailer.
+ * Common:
+ *   SMTP_FROM           "UniTurf <no-reply@uniturff.com>"
+ *                       (used by every provider)
+ *   ADMIN_NOTIFY_EMAIL  (optional) venue inbox that gets a copy of
+ *                       every confirmation and receives contact-form
+ *                       enquiries. Defaults to SMTP_USER.
+ *
+ * Best-effort: when no provider is configured
+ * the calls log and no-op so booking flow never
+ * breaks on a missing mailer.
  */
 
 import nodemailer, { Transporter } from "nodemailer";
@@ -26,35 +31,159 @@ import nodemailer, { Transporter } from "nodemailer";
 import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 
+interface MailMessage {
+  to: string;
+  subject: string;
+  html: string;
+  bcc?: string;
+  replyTo?: string;
+}
+
+type MailProvider = "resend" | "brevo" | "smtp" | null;
+
 let transporter: Transporter | null | undefined;
+let warnedUnconfigured = false;
+
+function getProvider(): MailProvider {
+  if (process.env.RESEND_API_KEY) return "resend";
+  if (process.env.BREVO_API_KEY) return "brevo";
+  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+    return "smtp";
+  }
+  return null;
+}
+
+function getFrom(): string {
+  return (
+    process.env.SMTP_FROM ??
+    (process.env.SMTP_USER ? `UniTurf <${process.env.SMTP_USER}>` : "UniTurf <no-reply@uniturff.com>")
+  );
+}
+
+/** Splits `Name <addr>` into its parts (Brevo wants them separate). */
+function parseAddress(value: string): { name?: string; email: string } {
+  const match = value.match(/^\s*"?([^"<]*)"?\s*<([^>]+)>\s*$/);
+  if (match) {
+    return { name: match[1].trim() || undefined, email: match[2].trim() };
+  }
+  return { email: value.trim() };
+}
 
 function getTransporter(): Transporter | null {
   if (transporter !== undefined) {
     return transporter;
   }
 
-  const host = process.env.SMTP_HOST;
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
   const port = Number(process.env.SMTP_PORT ?? 465);
 
-  if (!host || !user || !pass) {
-    logger.warn(
-      "SMTP is not configured; booking emails are disabled.",
-      { missing: [!host && "SMTP_HOST", !user && "SMTP_USER", !pass && "SMTP_PASS"].filter(Boolean) }
-    );
-    transporter = null;
-    return null;
-  }
-
   transporter = nodemailer.createTransport({
-    host,
+    host: process.env.SMTP_HOST,
     port,
     secure: port === 465,
-    auth: { user, pass },
+    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
   });
 
   return transporter;
+}
+
+/**
+ * Returns false (after logging once) when no mail
+ * provider is configured. Callers skip DB work then.
+ */
+function isMailConfigured(): boolean {
+  if (getProvider()) {
+    return true;
+  }
+
+  if (!warnedUnconfigured) {
+    warnedUnconfigured = true;
+    logger.warn(
+      "No email provider configured; transactional emails are disabled.",
+      { expected: "RESEND_API_KEY, BREVO_API_KEY or SMTP_HOST/SMTP_USER/SMTP_PASS" }
+    );
+  }
+
+  return false;
+}
+
+async function postJson(
+  url: string,
+  headers: Record<string, string>,
+  body: unknown
+): Promise<void> {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...headers },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => "");
+    throw new Error(`${response.status} ${response.statusText}: ${text.slice(0, 300)}`);
+  }
+}
+
+/**
+ * Delivers a message through the configured provider.
+ * Throws on failure; callers catch and log.
+ */
+async function deliverMail(message: MailMessage): Promise<void> {
+  const provider = getProvider();
+  const from = getFrom();
+
+  switch (provider) {
+    case "resend": {
+      await postJson(
+        "https://api.resend.com/emails",
+        { Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
+        {
+          from,
+          to: [message.to],
+          bcc: message.bcc ? [message.bcc] : undefined,
+          reply_to: message.replyTo,
+          subject: message.subject,
+          html: message.html,
+        }
+      );
+      return;
+    }
+
+    case "brevo": {
+      const sender = parseAddress(from);
+      await postJson(
+        "https://api.brevo.com/v3/smtp/email",
+        { "api-key": process.env.BREVO_API_KEY as string },
+        {
+          sender,
+          to: [{ email: message.to }],
+          bcc: message.bcc ? [{ email: message.bcc }] : undefined,
+          replyTo: message.replyTo ? { email: message.replyTo } : undefined,
+          subject: message.subject,
+          htmlContent: message.html,
+        }
+      );
+      return;
+    }
+
+    case "smtp": {
+      const mailer = getTransporter();
+      if (!mailer) {
+        throw new Error("SMTP transporter unavailable.");
+      }
+      await mailer.sendMail({
+        from,
+        to: message.to,
+        bcc: message.bcc,
+        replyTo: message.replyTo,
+        subject: message.subject,
+        html: message.html,
+      });
+      return;
+    }
+
+    default:
+      throw new Error("No email provider configured.");
+  }
 }
 
 function formatDate(date: Date): string {
@@ -111,15 +240,10 @@ export class NotificationService {
     input: PasswordResetMailInput
   ): Promise<boolean> {
     try {
-      const mailer = getTransporter();
-
-      if (!mailer) {
+      if (!isMailConfigured()) {
         return false;
       }
 
-      const from =
-        process.env.SMTP_FROM ??
-        `UniTurf <${process.env.SMTP_USER}>`;
 
       const label = input.scope === "admin" ? "Admin Console" : "Account";
 
@@ -134,8 +258,7 @@ export class NotificationService {
           <p style="margin-top:24px;font-size:12px;color:#9ca3af">Didn't request this? You can safely ignore this email — your password won't change.</p>
         </div>`;
 
-      await mailer.sendMail({
-        from,
+      await deliverMail({
         to: input.to,
         subject: "Reset your UniTurf password",
         html,
@@ -158,16 +281,12 @@ export class NotificationService {
    */
   static async sendEnquiry(input: EnquiryInput): Promise<boolean> {
     try {
-      const mailer = getTransporter();
       const to = getAdminInbox();
 
-      if (!mailer || !to) {
+      if (!isMailConfigured() || !to) {
         return false;
       }
 
-      const from =
-        process.env.SMTP_FROM ??
-        `UniTurf <${process.env.SMTP_USER}>`;
 
       const html = `
         <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;background:#0a0f0a;padding:32px;border-radius:16px;color:#fff">
@@ -182,8 +301,7 @@ export class NotificationService {
           <p style="margin:0;white-space:pre-wrap;font-size:14px;color:#e5e5e5">${escapeHtml(input.message)}</p>
         </div>`;
 
-      await mailer.sendMail({
-        from,
+      await deliverMail({
         to,
         replyTo: input.email || undefined,
         subject: `New enquiry from ${input.name} (${input.mobile})`,
@@ -209,9 +327,7 @@ export class NotificationService {
     bookingId: string
   ): Promise<void> {
     try {
-      const mailer = getTransporter();
-
-      if (!mailer) {
+      if (!isMailConfigured()) {
         return;
       }
 
@@ -224,9 +340,6 @@ export class NotificationService {
         return;
       }
 
-      const from =
-        process.env.SMTP_FROM ??
-        `UniTurf <${process.env.SMTP_USER}>`;
 
       const slot = `${formatTime(booking.startTime)} - ${formatTime(booking.endTime)}`;
       const amount = `₹${Number(booking.totalAmount).toLocaleString("en-IN")}`;
@@ -247,8 +360,7 @@ export class NotificationService {
           <p style="margin-top:24px;font-size:12px;color:#9ca3af">Show this email at the venue. See you on the turf!</p>
         </div>`;
 
-      await mailer.sendMail({
-        from,
+      await deliverMail({
         to: booking.customerEmail,
         bcc: getAdminInbox(),
         subject: `Booking Confirmed — ${booking.sport.name} on ${formatDate(booking.bookingDate)} (${booking.bookingNumber})`,
@@ -277,9 +389,7 @@ export class NotificationService {
     membershipId: string
   ): Promise<void> {
     try {
-      const mailer = getTransporter();
-
-      if (!mailer) {
+      if (!isMailConfigured()) {
         return;
       }
 
@@ -292,9 +402,6 @@ export class NotificationService {
         return;
       }
 
-      const from =
-        process.env.SMTP_FROM ??
-        `UniTurf <${process.env.SMTP_USER}>`;
 
       const amount = `₹${Number(membership.amount).toLocaleString("en-IN")}`;
       const paidVia =
@@ -318,8 +425,7 @@ export class NotificationService {
           <p style="margin-top:24px;font-size:12px;color:#9ca3af">Show this email at the venue. See you on the turf!</p>
         </div>`;
 
-      await mailer.sendMail({
-        from,
+      await deliverMail({
         to: membership.customerEmail,
         bcc: getAdminInbox(),
         subject: `Membership Active — ${membership.plan.name} (${membership.membershipNumber})`,
