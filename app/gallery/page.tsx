@@ -184,6 +184,7 @@ export default function GalleryPage() {
                   {...reel}
                   permalink={reel.permalink ?? INSTAGRAM_PROFILE_URL}
                   thumbnailUrl={reel.thumbnailUrl ?? null}
+                  mediaType={reel.mediaType}
                 />
               </StaggerItem>
             ))}

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { PINNED_INSTAGRAM_REELS } from "@/config/instagram-gallery";
+import { getInstagramToken } from "./token";
 import {
   InstagramMediaItem,
   InstagramMediaResponse,
@@ -55,19 +56,22 @@ function isPinnedReel(
 function mapReels(items: InstagramMediaItem[]): InstagramReel[] {
   try {
     return items
+      // Everything posted to the account: reels,
+      // videos, photos and carousels.
       .filter(
         (item) =>
-          item.media_product_type === "REELS" &&
-          item.media_type === "VIDEO" &&
-          typeof item.id === "string"
+          typeof item.id === "string" &&
+          (item.media_type === "VIDEO" ||
+            item.media_type === "IMAGE" ||
+            item.media_type === "CAROUSEL_ALBUM")
       )
       .map((item) => ({
         id: item.id as string,
         caption: item.caption ?? null,
         mediaType: item.media_type as string,
         mediaProductType:
-          item.media_product_type as string,
-        thumbnailUrl: item.thumbnail_url ?? null,
+          (item.media_product_type as string | undefined) ?? "FEED",
+        thumbnailUrl: item.thumbnail_url ?? item.media_url ?? null,
         permalink: item.permalink ?? null,
         timestamp: item.timestamp ?? null,
       }));
@@ -141,7 +145,7 @@ export async function getInstagramReels(
   },
   legacyAfter?: string
 ): Promise<InstagramReelsResult> {
-  const token = process.env.INSTAGRAM_ACCESS_TOKEN;
+  const token = await getInstagramToken();
 
   if (!token) {
     throw new Error("Instagram configuration is missing.");

@@ -389,3 +389,15 @@ enum MembershipStatus {
   ACTIVE
   CANCELLED
 }
+
+// ==========================================
+// App Settings (runtime key/value)
+// ==========================================
+
+model AppSetting {
+  key       String   @id @db.VarChar(100)
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@map("app_settings")
+}
