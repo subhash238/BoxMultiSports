@@ -108,6 +108,9 @@ export class BookingTransactionService {
             specialRequest:
               context.specialRequest,
 
+            paymentMethod:
+              context.paymentMethod,
+
             status: "PENDING",
 
             userId:
@@ -123,13 +126,18 @@ export class BookingTransactionService {
           },
           });
 
+        // Pay-at-venue bookings stay reserved
+        // until the slot starts; online payments
+        // expire after the checkout hold.
         const reservationExpiresAt =
-          new Date(
-            createdBooking.createdAt.getTime() +
-              BOOKING_CONFIG.PAYMENT_HOLD_MINUTES *
-                60 *
-                1000
-          );
+          context.paymentMethod === "PAY_AT_VENUE"
+            ? context.bookingTime.startDateTime
+            : new Date(
+                createdBooking.createdAt.getTime() +
+                  BOOKING_CONFIG.PAYMENT_HOLD_MINUTES *
+                    60 *
+                    1000
+              );
 
         const finalBooking =
           await tx.booking.update({

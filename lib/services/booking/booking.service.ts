@@ -1,5 +1,4 @@
 import {
-  Booking,
   BookingStatus,
 } from "@prisma/client";
 
@@ -21,6 +20,7 @@ import { BookingPricingService } from "./booking-pricing.service";
 import { BookingTransactionService } from "./booking-transaction.service";
 import { BookingQueryService } from "./booking-query.service";
 import { BookingCancellationService } from "./booking-cancellation.service";
+import { NotificationService } from "../notification/email.service";
 
 export class BookingService {
   /**
@@ -71,15 +71,28 @@ export class BookingService {
       customerEmail: data.email,
       customerMobile: data.mobile,
       specialRequest: data.specialRequest ?? null,
+      paymentMethod: data.paymentMethod ?? "ONLINE",
     };
 
     // -----------------------------------------
     // Create Booking Transaction
     // -----------------------------------------
 
-    return BookingTransactionService.create(
-      context
-    );
+    const result =
+      await BookingTransactionService.create(
+        context
+      );
+
+    // Online bookings are emailed once payment
+    // is captured; pay-at-venue bookings are
+    // reserved immediately, so email now.
+    if (context.paymentMethod === "PAY_AT_VENUE") {
+      void NotificationService.sendBookingConfirmation(
+        result.booking.id
+      );
+    }
+
+    return result;
   }
 
   /**
@@ -433,6 +446,12 @@ export class BookingService {
           return updatedBooking;
         }
       );
+
+    if (newStatus === "CONFIRMED") {
+      void NotificationService.sendBookingConfirmation(
+        result.id
+      );
+    }
 
     return result;
   }

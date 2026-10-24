@@ -3,14 +3,20 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
+import { enforceRateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
+import { AppError } from "@/lib/errors";
+import { AUTH_COOKIE_NAMES } from "@/lib/auth";
 
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
+  scope: z.enum(["customer", "admin"]).default("customer"),
 });
 
 export async function POST(request: NextRequest) {
   try {
+    enforceRateLimit("auth", getClientIp(request), RATE_LIMITS.AUTH);
+
     const body = await request.json();
 
     const result = loginSchema.safeParse(body);
@@ -25,7 +31,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email, password } = result.data;
+    const { email, password, scope } = result.data;
 
     const user = await prisma.user.findUnique({
       where: {
@@ -58,6 +64,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (scope === "admin" && user.role !== "ADMIN") {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "This account does not have admin access.",
+        },
+        { status: 403 }
+      );
+    }
+
+    if (scope === "customer" && user.role === "ADMIN") {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "This is an admin account. Please sign in from the admin login page.",
+        },
+        { status: 403 }
+      );
+    }
+
     // Generate JWT Token
     const token = jwt.sign(
       {
@@ -86,7 +113,7 @@ export async function POST(request: NextRequest) {
 
     // Store JWT in HTTP-only Cookie
     response.cookies.set({
-      name: "auth_token",
+      name: AUTH_COOKIE_NAMES[scope],
       value: token,
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -98,6 +125,13 @@ export async function POST(request: NextRequest) {
     return response;
 
   } catch (error) {
+    if (error instanceof AppError) {
+      return NextResponse.json(
+        { success: false, message: error.message },
+        { status: error.statusCode }
+      );
+    }
+
     return NextResponse.json(
       {
         success: false,

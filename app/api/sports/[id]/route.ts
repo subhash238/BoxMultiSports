@@ -69,7 +69,7 @@ export async function PATCH(
 ) {
   try {
     // Authentication
-    const user = await getCurrentUser(request);
+    const user = await getCurrentUser(request, "admin");
 
     if (user.role !== "ADMIN") {
       return NextResponse.json(
@@ -156,7 +156,7 @@ export async function DELETE(
 ) {
   try {
     // Check authentication
-    const user = await getCurrentUser(request);
+    const user = await getCurrentUser(request, "admin");
 
     // Allow only ADMIN
     if (user.role !== "ADMIN") {

@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -25,7 +26,25 @@ model User {
 
   bookingStatusChanges BookingStatusHistory[] @relation("BookingStatusChangedBy")
 
+  passwordResetTokens PasswordResetToken[]
+
   @@map("users")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  scope     String    @db.VarChar(16)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
 }
 
 // ==========================================
@@ -33,9 +52,9 @@ model User {
 // ==========================================
 
 model Sport {
-  id          String   @id @default(cuid())
-  name        String   @unique @db.VarChar(100)
-  slug        String   @unique @db.VarChar(100)
+  id          String  @id @default(cuid())
+  name        String  @unique @db.VarChar(100)
+  slug        String  @unique @db.VarChar(100)
   description String?
 
   // KEEP TEMPORARILY.
@@ -111,9 +130,7 @@ model SportPricing {
   // Cricket + 12 hours
   //
   @@unique([sportId, duration])
-
   @@index([sportId])
-
   @@map("sport_pricing")
 }
 
@@ -122,8 +139,8 @@ model SportPricing {
 // ==========================================
 
 model Booking {
-  id            String        @id @default(cuid())
-  bookingNumber String        @unique @db.VarChar(30)
+  id            String @id @default(cuid())
+  bookingNumber String @unique @db.VarChar(30)
 
   bookingDate DateTime @db.Date
 
@@ -131,8 +148,8 @@ model Booking {
   endTime   DateTime @db.Timestamptz(6)
 
   duration        Int
-  numberOfPlayers Int      @default(1)
-  totalAmount     Decimal  @db.Decimal(10, 2)
+  numberOfPlayers Int     @default(1)
+  totalAmount     Decimal @db.Decimal(10, 2)
 
   status BookingStatus @default(PENDING)
 
@@ -140,6 +157,8 @@ model Booking {
   customerEmail  String? @db.VarChar(255)
   customerMobile String
   specialRequest String? @db.Text
+
+  paymentMethod String @default("ONLINE") @db.VarChar(20)
 
   guestPaymentTokenHash      String?   @unique @db.VarChar(64)
   guestPaymentTokenExpiresAt DateTime?
@@ -164,7 +183,6 @@ model Booking {
   @@index([userId])
   @@index([sportId])
   @@index([bookingDate, status])
-
   @@map("bookings")
 }
 
@@ -173,13 +191,13 @@ model Booking {
 // ==========================================
 
 model BookingStatusHistory {
-  id          String        @id @default(cuid())
+  id          String                 @id @default(cuid())
   bookingId   String
   fromStatus  BookingStatus?
   toStatus    BookingStatus
   actorType   BookingStatusActorType
   changedById String?
-  createdAt   DateTime      @default(now())
+  createdAt   DateTime               @default(now())
 
   booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
@@ -189,7 +207,6 @@ model BookingStatusHistory {
   @@index([changedById])
   @@index([createdAt])
   @@index([actorType])
-
   @@map("booking_status_history")
 }
 
@@ -225,7 +242,6 @@ model Payment {
   @@index([status])
   @@index([razorpayOrderId])
   @@index([razorpayPaymentId])
-
   @@map("payments")
 }
 
@@ -291,4 +307,97 @@ model BookingCounter {
   updatedAt DateTime @updatedAt
 
   @@map("booking_counters")
+}
+
+// ==========================================
+// MEMBERSHIP PLANS
+// ==========================================
+//
+// Monthly plans (Pickleball membership, Kids
+// Training Academy) sold independently of the
+// hourly slot booking flow.
+// ==========================================
+
+model MembershipPlan {
+  id          String  @id @default(cuid())
+  slug        String  @unique @db.VarChar(100)
+  name        String  @db.VarChar(100)
+  description String?
+  price       Decimal @db.Decimal(10, 2)
+
+  // Validity window granted per purchase.
+  durationDays Int @default(30)
+
+  features  String[] @default([])
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships Membership[]
+
+  @@map("membership_plans")
+}
+
+model Membership {
+  id               String @id @default(cuid())
+  membershipNumber String @unique @db.VarChar(30)
+
+  planId String
+
+  customerName   String  @db.VarChar(100)
+  customerEmail  String  @db.VarChar(255)
+  customerMobile String  @db.VarChar(15)
+  // Free-form: child's name / age for the academy,
+  // preferred days, etc.
+  notes          String? @db.Text
+
+  startDate DateTime @db.Date
+  endDate   DateTime @db.Date
+
+  amount Decimal          @db.Decimal(10, 2)
+  status MembershipStatus @default(PENDING)
+
+  paymentMethod String        @default("ONLINE") @db.VarChar(20)
+  paymentStatus PaymentStatus @default(PENDING)
+
+  razorpayOrderId   String?   @unique
+  razorpayPaymentId String?   @unique
+  razorpaySignature String?
+  paidAt            DateTime?
+
+  paymentTokenHash      String?   @unique @db.VarChar(64)
+  paymentTokenExpiresAt DateTime?
+
+  userId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  plan MembershipPlan @relation(fields: [planId], references: [id])
+
+  @@index([planId])
+  @@index([status])
+  @@index([customerMobile])
+  @@index([endDate])
+  @@map("memberships")
+}
+
+enum MembershipStatus {
+  PENDING
+  ACTIVE
+  CANCELLED
+}
+
+// ==========================================
+// App Settings (runtime key/value)
+// ==========================================
+
+model AppSetting {
+  key       String   @id @db.VarChar(100)
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@map("app_settings")
 }

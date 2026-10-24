@@ -4,6 +4,7 @@ import { BookingService } from "@/lib/services/booking/booking.service";
 import { AppError } from "@/lib/errors";
 import { createBookingSchema } from "@/lib/validators/booking";
 import { getCurrentUser } from "@/lib/auth";
+import { requireAdminUser } from "@/lib/permissions";
 import { ZodError } from "zod";
 
 // ==========================================
@@ -12,7 +13,7 @@ import { ZodError } from "zod";
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getCurrentUser(request);
+    const user = await getCurrentUser(request, "admin");
 
     const body = await request.json();
 
@@ -81,23 +82,7 @@ export async function GET(request: NextRequest) {
     // Authentication
     // -----------------------------------------
 
-    const user = await getCurrentUser(request);
-
-    // -----------------------------------------
-    // Admin Authorization
-    // -----------------------------------------
-
-    if (user.role !== "ADMIN") {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Access denied.",
-        },
-        {
-          status: 403,
-        }
-      );
-    }
+    await requireAdminUser(request);
 
     // -----------------------------------------
     // Query Parameters

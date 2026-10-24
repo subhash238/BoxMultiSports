@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { requireAdminUser } from "@/lib/permissions";
 
 import { BookingService } from "@/lib/services/booking/booking.service";
 
@@ -24,23 +24,7 @@ export async function GET(
     // Get Current User
     // ==========================================
 
-    const user = await getCurrentUser(request);
-
-    // ==========================================
-    // Check Admin Permission
-    // ==========================================
-
-    if (user.role !== "ADMIN") {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Access denied.",
-        },
-        {
-          status: 403,
-        }
-      );
-    }
+    await requireAdminUser(request);
 
     // ==========================================
     // Get Booking ID
@@ -233,23 +217,7 @@ export async function PATCH(
     // Get Current User
     // ==========================================
 
-    const user = await getCurrentUser(request);
-
-    // ==========================================
-    // Admin Authorization
-    // ==========================================
-
-    if (user.role !== "ADMIN") {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Admin access required.",
-        },
-        {
-          status: 403,
-        }
-      );
-    }
+    const user = await requireAdminUser(request);
 
     // ==========================================
     // Get Booking ID

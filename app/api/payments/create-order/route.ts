@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { AppError } from "@/lib/errors";
+import { enforceRateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
 
 import { PaymentService } from "@/lib/services/payment/payment.service";
 
@@ -17,6 +18,12 @@ export async function POST(
     // ==========================================
     // Read Request Body
     // ==========================================
+
+    enforceRateLimit(
+      "payment",
+      getClientIp(request),
+      RATE_LIMITS.PAYMENT
+    );
 
     const body =
       await request.json();

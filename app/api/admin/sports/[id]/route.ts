@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { SportService } from "@/lib/services/sport/sport.service";
 import { updateSportSchema } from "@/lib/validators/sport";
 import { AppError } from "@/lib/errors";
-import { getCurrentUser } from "@/lib/auth";
+import { requireAdminUser } from "@/lib/permissions";
 
 interface RouteParams {
   params: Promise<{
@@ -19,19 +19,8 @@ export async function GET(
   { params }: RouteParams
 ) {
   try {
-    // Check authentication
-    const user = await getCurrentUser(request);
-
-    // Allow only admins
-    if (user.role !== "ADMIN") {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Access denied.",
-        },
-        { status: 403 }
-      );
-    }
+    // Check authentication + admin role
+    await requireAdminUser(request);
 
     // Get sport ID
     const { id } = await params;
@@ -76,19 +65,8 @@ export async function PUT(
   { params }: RouteParams
 ) {
   try {
-    // Check authentication
-    const user = await getCurrentUser(request);
-
-    // Allow only admins
-    if (user.role !== "ADMIN") {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Access denied.",
-        },
-        { status: 403 }
-      );
-    }
+    // Check authentication + admin role
+    await requireAdminUser(request);
 
     // Get sport ID
     const { id } = await params;
@@ -154,19 +132,8 @@ export async function DELETE(
   { params }: RouteParams
 ) {
   try {
-    // Check authentication
-    const user = await getCurrentUser(request);
-
-    // Allow only admins
-    if (user.role !== "ADMIN") {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Access denied.",
-        },
-        { status: 403 }
-      );
-    }
+    // Check authentication + admin role
+    await requireAdminUser(request);
 
     // Get sport ID
     const { id } = await params;

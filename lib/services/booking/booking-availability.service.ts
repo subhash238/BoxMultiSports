@@ -16,6 +16,7 @@ import {
   buildIstDateTimeForBookingDate,
   normalizeDate,
 } from "./booking.utils";
+import { BookingExpiryService } from "./booking-expiry.service";
 
 const MAIN_START_TIME_INTERVAL_MINUTES = 30;
 
@@ -62,6 +63,10 @@ export class BookingAvailabilityService {
   static async getMainSportAvailability(
     input: MainBookingAvailabilityInput
   ): Promise<MainBookingAvailabilityResult> {
+    // Expire stale holds first so availability
+    // reflects released slots immediately.
+    await BookingExpiryService.expireStalePendingBookings();
+
     if (
       !Number.isInteger(input.durationMinutes) ||
       input.durationMinutes <= 0 ||

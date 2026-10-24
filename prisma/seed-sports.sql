@@ -4,8 +4,8 @@
 INSERT INTO sports
   ("id", "name", "slug", "pricePerHour", "maxPlayers", "isActive", "createdAt", "updatedAt")
 VALUES
-  (gen_random_uuid()::text, 'Cricket', 'cricket', 999, 23, true, NOW(), NOW()),
-  (gen_random_uuid()::text, 'Football', 'football', 999, 23, true, NOW(), NOW()),
+  (gen_random_uuid()::text, 'Cricket', 'cricket', 800, 23, true, NOW(), NOW()),
+  (gen_random_uuid()::text, 'Football', 'football', 800, 23, true, NOW(), NOW()),
   (gen_random_uuid()::text, 'Pickleball', 'pickleball', 999, 23, true, NOW(), NOW()),
   (gen_random_uuid()::text, 'Badminton', 'badminton', 999, 23, true, NOW(), NOW()),
   (gen_random_uuid()::text, 'Net Practice', 'net-practice', 299, 25, true, NOW(), NOW()),

@@ -4,6 +4,8 @@ import { BookingService } from "@/lib/services/booking/booking.service";
 import { AppError } from "@/lib/errors";
 import { createBookingSchema } from "@/lib/validators/booking";
 import { getCurrentUser } from "@/lib/auth";
+import { requireAdminUser } from "@/lib/permissions";
+import { enforceRateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
 import { ZodError } from "zod";
 
 // ==========================================
@@ -13,24 +15,29 @@ import { ZodError } from "zod";
 export async function POST(request: NextRequest) {
   try {
     // -----------------------------------------
+    // Rate Limiting
+    // -----------------------------------------
+
+    enforceRateLimit(
+      "booking-create",
+      getClientIp(request),
+      RATE_LIMITS.BOOKING_CREATE
+    );
+
+    // -----------------------------------------
     // Authentication
     // -----------------------------------------
 
-    const authToken =
-      request.cookies.get("auth_token")?.value;
+    const user = await getCurrentUser(request).catch((error) => {
+      if (
+        error instanceof AppError &&
+        (error.statusCode === 401 || error.statusCode === 404)
+      ) {
+        throw new AppError("Please sign in to book.", 401);
+      }
 
-    const user = authToken
-      ? await getCurrentUser(request).catch((error) => {
-          if (
-            error instanceof AppError &&
-            (error.statusCode === 401 || error.statusCode === 404)
-          ) {
-            return null;
-          }
-
-          throw error;
-        })
-      : null;
+      throw error;
+    });
 
     // -----------------------------------------
     // Read request body
@@ -49,7 +56,7 @@ export async function POST(request: NextRequest) {
     // -----------------------------------------
 
     const result = await BookingService.createBooking(
-      user?.id ?? null,
+      user.id,
       data
     );
 
@@ -64,6 +71,7 @@ export async function POST(request: NextRequest) {
       duration: booking.duration,
       totalAmount: booking.totalAmount,
       status: booking.status,
+      paymentMethod: booking.paymentMethod,
     };
 
     // -----------------------------------------
@@ -131,23 +139,7 @@ export async function GET(request: NextRequest) {
     // Authentication
     // -----------------------------------------
 
-    const user = await getCurrentUser(request);
-
-    // -----------------------------------------
-    // Admin Authorization
-    // -----------------------------------------
-
-    if (user.role !== "ADMIN") {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Access denied.",
-        },
-        {
-          status: 403,
-        }
-      );
-    }
+    await requireAdminUser(request);
 
     // -----------------------------------------
     // Query Parameters

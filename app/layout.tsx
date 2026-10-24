@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Footer from "@/components/footer/Footer";
-import Navbar from "@/components/navbar/Navbar";
+import Chrome from "@/components/layout/Chrome";
 import BookingModalProvider from "@/components/booking-widget/BookingModalProvider";
 
 export const metadata: Metadata = {
@@ -20,14 +19,14 @@ export default function RootLayout({
       lang="en"
       className="h-full antialiased"
     >
-      <body className="min-h-full flex flex-col">
+      {/* suppressHydrationWarning: browser extensions (Grammarly, ColorZilla, dark-mode)
+          inject attributes on <body> before React hydrates; ignore those. */}
+      <body
+        className="min-h-full flex flex-col"
+        suppressHydrationWarning
+      >
         <BookingModalProvider>
-          <Navbar />
-          <div className="public-page-shell flex-1">
-            {children}
-          </div>
-
-          <Footer />
+          <Chrome>{children}</Chrome>
         </BookingModalProvider>
       </body>
     </html>

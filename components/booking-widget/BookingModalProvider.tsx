@@ -11,6 +11,9 @@ import {
 import { X } from "lucide-react";
 import { usePathname } from "next/navigation";
 
+import LoginPrompt from "@/components/auth/LoginPrompt";
+import { useAuthUser } from "@/lib/client/useAuthUser";
+
 import BookingWidget from "./BookingWidget";
 
 type BookingModalContextValue = {
@@ -66,8 +69,11 @@ function BookingModalRouteState({
   isBookingAllowed: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [loginPromptSlug, setLoginPromptSlug] =
+    useState<string | null | false>(false);
   const [selectedSportSlug, setSelectedSportSlug] =
     useState<string | null>(null);
+  const { status: authStatus } = useAuthUser([pathname]);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
   const focusFallbackRef = useRef<HTMLElement | null>(null);
@@ -77,7 +83,35 @@ function BookingModalRouteState({
     // into another public route or an excluded admin/login route.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsOpen(false);
+    setLoginPromptSlug(false);
   }, [pathname]);
+
+  // After signing in we land back here with ?book=1 — resume the booking.
+  useEffect(() => {
+    if (!isBookingAllowed || authStatus !== "authenticated") {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+
+    if (params.get("book") !== "1") {
+      return;
+    }
+
+    const sport = params.get("sport");
+    params.delete("book");
+    params.delete("sport");
+    const query = params.toString();
+    window.history.replaceState(
+      null,
+      "",
+      `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`
+    );
+
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSelectedSportSlug(sport || null);
+    setIsOpen(true);
+  }, [authStatus, isBookingAllowed, pathname]);
 
   const openBookingModal = useCallback(
     (
@@ -90,11 +124,24 @@ function BookingModalRouteState({
 
       triggerRef.current = document.activeElement as HTMLElement | null;
       focusFallbackRef.current = focusFallback ?? null;
+
+      if (authStatus !== "authenticated") {
+        setLoginPromptSlug(sportSlug ?? null);
+        return;
+      }
+
       setSelectedSportSlug(sportSlug ?? null);
       setIsOpen(true);
     },
-    [isBookingAllowed]
+    [authStatus, isBookingAllowed]
   );
+
+  const loginRedirect = (() => {
+    if (loginPromptSlug === false) return "/";
+    const params = new URLSearchParams({ book: "1" });
+    if (loginPromptSlug) params.set("sport", loginPromptSlug);
+    return `${pathname}?${params.toString()}`;
+  })();
 
   const closeBookingModal = useCallback(() => {
     setIsOpen(false);
@@ -134,6 +181,14 @@ function BookingModalRouteState({
   return (
     <BookingModalContext.Provider value={{ openBookingModal }}>
       {children}
+
+      {isBookingAllowed && loginPromptSlug !== false && (
+        <LoginPrompt
+          title="Sign in to book"
+          redirectTo={loginRedirect}
+          onClose={() => setLoginPromptSlug(false)}
+        />
+      )}
 
       {isBookingAllowed && isOpen && (
         <div

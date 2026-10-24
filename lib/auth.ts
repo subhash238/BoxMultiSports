@@ -3,6 +3,18 @@ import { prisma } from "./prisma";
 import { AppError } from "./errors";
 import jwt from "jsonwebtoken";
 
+export type AuthScope = "customer" | "admin";
+
+/**
+ * Customers and admins use separate session cookies so an admin
+ * signed in to the console is never treated as a customer on the
+ * public site (and vice versa).
+ */
+export const AUTH_COOKIE_NAMES: Record<AuthScope, string> = {
+  customer: "auth_token",
+  admin: "admin_token",
+};
+
 export interface AuthPayload {
   id: string;
   email: string;
@@ -25,8 +37,11 @@ export function verifyToken(token: string): AuthPayload | null {
 /**
  * Get authenticated user's JWT payload
  */
-export function getAuthPayload(request: NextRequest): AuthPayload {
-  const token = request.cookies.get("auth_token")?.value;
+export function getAuthPayload(
+  request: NextRequest,
+  scope: AuthScope = "customer"
+): AuthPayload {
+  const token = request.cookies.get(AUTH_COOKIE_NAMES[scope])?.value;
 
   if (!token) {
     throw new AppError("Authentication required.", 401);
@@ -38,14 +53,21 @@ export function getAuthPayload(request: NextRequest): AuthPayload {
     throw new AppError("Invalid or expired token.", 401);
   }
 
+  if (scope === "admin" && payload.role !== "ADMIN") {
+    throw new AppError("Access denied. Admin privileges required.", 403);
+  }
+
   return payload;
 }
 
 /**
  * Get current authenticated user from database
  */
-export async function getCurrentUser(request: NextRequest) {
-  const auth = getAuthPayload(request);
+export async function getCurrentUser(
+  request: NextRequest,
+  scope: AuthScope = "customer"
+) {
+  const auth = getAuthPayload(request, scope);
 
   const user = await prisma.user.findUnique({
     where: {

@@ -8,7 +8,7 @@ export async function POST(request: NextRequest)
 {
   try {
     // Check authentication
-    const user = await getCurrentUser(request);
+    const user = await getCurrentUser(request, "admin");
 
     // Allow only admins
     if (user.role !== "ADMIN") {

@@ -23,6 +23,7 @@ export interface BookingData {
   email: string;
   mobile: string;
   specialRequest: string;
+  paymentMethod?: "ONLINE" | "PAY_AT_VENUE";
 }
 
 export interface CreatedBooking {
@@ -35,6 +36,7 @@ export interface CreatedBooking {
   duration: number;
   totalAmount: number | string;
   status: string;
+  paymentMethod?: string;
 }
 
 interface BookingWidgetProps {
@@ -58,10 +60,30 @@ export default function BookingWidget({
       email: "",
       mobile: "",
       specialRequest: "",
+      paymentMethod: "ONLINE",
     });
 
   const [createdBooking, setCreatedBooking] =
     useState<CreatedBooking | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/auth/me", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled || !data?.user) return;
+        setBookingData((prev) => ({
+          ...prev,
+          fullName: prev.fullName || data.user.name || "",
+          email: prev.email || data.user.email || "",
+          mobile: prev.mobile || data.user.mobile || "",
+        }));
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const [
     guestPaymentToken,
@@ -124,6 +146,12 @@ export default function BookingWidget({
     );
     setBookingError(null);
     setPaymentSuccess(false);
+
+    if (result.booking.paymentMethod === "PAY_AT_VENUE") {
+      setPaymentSuccess(true);
+      return;
+    }
+
     setPaymentOpen(true);
   };
 
@@ -260,16 +288,14 @@ export default function BookingWidget({
             opacity: 0,
             y: 24,
           }}
-          whileInView={{
+          animate={{
             opacity: 1,
             y: 0,
           }}
           transition={{
             duration: 0.65,
             ease: "easeOut",
-          }}
-          viewport={{
-            once: true,
+            delay: 0.1,
           }}
           className="
             mx-auto
@@ -363,7 +389,7 @@ export default function BookingWidget({
             y: 28,
             scale: 0.985,
           }}
-          whileInView={{
+          animate={{
             opacity: 1,
             y: 0,
             scale: 1,
@@ -371,9 +397,7 @@ export default function BookingWidget({
           transition={{
             duration: 0.7,
             ease: "easeOut",
-          }}
-          viewport={{
-            once: true,
+            delay: 0.25,
           }}
           className="
             relative
@@ -519,7 +543,9 @@ export default function BookingWidget({
                     text-[#B6F000]
                   "
                 >
-                  Payment Successful
+                  {createdBooking.paymentMethod === "PAY_AT_VENUE"
+                    ? "Slot Reserved"
+                    : "Payment Successful"}
                 </p>
 
                 <h3
@@ -545,8 +571,9 @@ export default function BookingWidget({
                     text-white/50
                   "
                 >
-                  Your payment was successful and your turf booking is confirmed.
-                  Save your booking number for reference.
+                  {createdBooking.paymentMethod === "PAY_AT_VENUE"
+                    ? "Your slot is reserved. Pay by Cash or UPI when you arrive at the venue. Save your booking number for reference."
+                    : "Your payment was successful and your turf booking is confirmed. Save your booking number for reference."}
                 </p>
 
                 <div

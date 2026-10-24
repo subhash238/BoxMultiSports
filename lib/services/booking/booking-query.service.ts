@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
-import { BookingStatus } from "@prisma/client";
+import { BookingStatus, Prisma } from "@prisma/client";
 import { normalizeDate } from "./booking.utils";
+import { BookingExpiryService } from "./booking-expiry.service";
 
 import {
   BookingListQuery,
@@ -84,6 +85,10 @@ export class BookingQueryService {
 
     const skip = (page - 1) * limit;
 
+    // Lazily reconcile expired reservations so
+    // the admin list shows real status.
+    await BookingExpiryService.expireStalePendingBookings();
+
     // ==========================================
     // Date Filter
     // ==========================================
@@ -104,7 +109,7 @@ export class BookingQueryService {
     // Build Where
     // ==========================================
 
-    const where: any = {};
+    const where: Prisma.BookingWhereInput = {};
 
     // ==========================================
     // Status Filter
