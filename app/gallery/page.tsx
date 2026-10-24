@@ -2,20 +2,13 @@
 
 import { useEffect, useState } from "react";
 
-import InstagramCard from "@/components/gallery/InstagramCard";
+import InstagramCard, { GalleryItem } from "@/components/gallery/InstagramCard";
+import GalleryLightbox from "@/components/gallery/GalleryLightbox";
 import { Reveal, Stagger, StaggerItem, TextReveal } from "@/components/motion/Motion";
 
 const INSTAGRAM_PROFILE_URL = "https://www.instagram.com/uni_.turf/";
 
-type GalleryReel = {
-  id: string;
-  caption: string | null;
-  mediaType: string;
-  mediaProductType: string;
-  thumbnailUrl: string | null;
-  permalink: string | null;
-  timestamp: string | null;
-};
+type GalleryReel = GalleryItem;
 
 type GalleryResponse = {
   success?: boolean;
@@ -64,7 +57,7 @@ function appendUniqueReels(
 
 function GallerySkeleton() {
   return (
-    <div className="aspect-[9/16] animate-pulse rounded-[1.75rem] border border-white/10 bg-white/[0.06]" />
+    <div className="aspect-[4/5] animate-pulse rounded-2xl border border-white/10 bg-white/[0.06]" />
   );
 }
 
@@ -75,6 +68,7 @@ export default function GalleryPage() {
   const [hasError, setHasError] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [loadMoreError, setLoadMoreError] = useState(false);
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -82,7 +76,7 @@ export default function GalleryPage() {
     async function loadReels() {
       try {
         const response = await fetch(
-          "/api/instagram/media?limit=6",
+          "/api/instagram/media?limit=12",
           { signal: controller.signal }
         );
         const payload =
@@ -120,7 +114,7 @@ export default function GalleryPage() {
 
     try {
       const params = new URLSearchParams({
-        limit: "6",
+        limit: "12",
         after: nextCursor,
       });
       const response = await fetch(
@@ -167,8 +161,8 @@ export default function GalleryPage() {
         </div>
 
         {isLoading ? (
-          <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 3 }, (_, index) => (
+          <div className="mt-12 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+            {Array.from({ length: 8 }, (_, index) => (
               <GallerySkeleton key={index} />
             ))}
           </div>
@@ -177,14 +171,15 @@ export default function GalleryPage() {
         ) : reels.length === 0 ? (
           <GalleryFallback empty />
         ) : (
-          <Stagger className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {reels.map((reel) => (
-              <StaggerItem key={reel.id} y={40}>
+          <Stagger
+            stagger={0.05}
+            className="mt-12 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4"
+          >
+            {reels.map((reel, index) => (
+              <StaggerItem key={reel.id} y={24}>
                 <InstagramCard
-                  {...reel}
-                  permalink={reel.permalink ?? INSTAGRAM_PROFILE_URL}
-                  thumbnailUrl={reel.thumbnailUrl ?? null}
-                  mediaType={reel.mediaType}
+                  item={reel}
+                  onOpen={() => setOpenIndex(index)}
                 />
               </StaggerItem>
             ))}
@@ -215,6 +210,13 @@ export default function GalleryPage() {
           </div>
         ) : null}
       </section>
+
+      <GalleryLightbox
+        items={reels}
+        index={openIndex}
+        onClose={() => setOpenIndex(null)}
+        onNavigate={setOpenIndex}
+      />
     </main>
   );
 }

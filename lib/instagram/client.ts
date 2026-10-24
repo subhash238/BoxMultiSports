@@ -28,7 +28,7 @@ const INSTAGRAM_MEDIA_FIELDS = [
 ].join(",");
 const DEFAULT_PAGE_SIZE = 6;
 const MAX_PAGE_SIZE = 100;
-const MAX_SCAN_PAGES = 10;
+const MAX_SCAN_PAGES = 3;
 
 function canonicalPermalink(permalink: string): string {
   return permalink.replace(/\/$/, "");
@@ -71,6 +71,7 @@ function mapReels(items: InstagramMediaItem[]): InstagramReel[] {
         mediaType: item.media_type as string,
         mediaProductType:
           (item.media_product_type as string | undefined) ?? "FEED",
+        mediaUrl: item.media_url ?? null,
         thumbnailUrl: item.thumbnail_url ?? item.media_url ?? null,
         permalink: item.permalink ?? null,
         timestamp: item.timestamp ?? null,
@@ -175,78 +176,55 @@ export async function getInstagramReels(
     MAX_PAGE_SIZE
   );
 
-  const candidates: InstagramReel[] = [];
-  const seenKeys = new Set<string>();
-  let cursor = initialAfter;
-  let nextCursor: string | null = null;
+  // First page: one Graph API page, with the pinned
+  // post(s) moved to the front (scanning a couple of
+  // extra pages only to locate them). Later pages
+  // ("Load more") are returned exactly as Instagram
+  // paginates them so nothing is skipped.
+  const firstPage = await fetchMediaPage(token, normalizedLimit, initialAfter);
+  const pageItems = dedupe(mapReels(firstPage.data ?? []));
+  const nextCursor = firstPage.paging?.cursors?.after ?? null;
 
-  for (let page = 0; page < MAX_SCAN_PAGES; page += 1) {
-    const payload = await fetchMediaPage(
-      token,
-      normalizedLimit,
-      cursor
-    );
-    const pageReels = mapReels(payload.data ?? []);
-
-    for (const reel of pageReels) {
-      if (reelKey(reel).some((key) => seenKeys.has(key))) {
-        continue;
-      }
-
-      reelKey(reel).forEach((key) => seenKeys.add(key));
-      candidates.push(reel);
-    }
-
-    nextCursor = payload.paging?.cursors?.after ?? null;
-    const pinnedFound = PINNED_INSTAGRAM_REELS.every((identifier) =>
-      candidates.some((reel) => isPinnedReel(reel, identifier))
-    );
-
-    if (
-      candidates.length >= normalizedLimit &&
-      pinnedFound
-    ) {
-      break;
-    }
-
-    if (!nextCursor) {
-      break;
-    }
-
-    cursor = nextCursor;
+  if (initialAfter || PINNED_INSTAGRAM_REELS.length === 0) {
+    return { reels: pageItems, nextCursor };
   }
 
   const pinned: InstagramReel[] = [];
-  const pinnedKeys = new Set<string>();
+  const pool: InstagramReel[] = [...pageItems];
+  let cursor = nextCursor;
 
-  for (const identifier of PINNED_INSTAGRAM_REELS) {
-    const reel = candidates.find((item) =>
-      isPinnedReel(item, identifier)
-    );
-
-    if (!reel) {
-      continue;
+  for (let page = 0; page < MAX_SCAN_PAGES; page += 1) {
+    for (const identifier of PINNED_INSTAGRAM_REELS) {
+      const found = pool.find((item) => isPinnedReel(item, identifier));
+      if (found && !pinned.includes(found)) pinned.push(found);
     }
+    if (pinned.length >= PINNED_INSTAGRAM_REELS.length || !cursor) break;
 
-    const keys = reelKey(reel);
-
-    if (keys.some((key) => pinnedKeys.has(key))) {
-      continue;
+    try {
+      const more = await fetchMediaPage(token, MAX_PAGE_SIZE, cursor);
+      pool.push(...mapReels(more.data ?? []));
+      cursor = more.paging?.cursors?.after ?? null;
+    } catch {
+      break;
     }
-
-    keys.forEach((key) => pinnedKeys.add(key));
-    pinned.push(reel);
   }
 
-  const latestRemaining = candidates.filter(
-    (reel) => !reelKey(reel).some((key) => pinnedKeys.has(key))
+  const pinnedKeys = new Set(pinned.flatMap(reelKey));
+  const rest = pageItems.filter(
+    (item) => !reelKey(item).some((key) => pinnedKeys.has(key))
   );
 
-  return {
-    reels: [...pinned, ...latestRemaining].slice(
-      0,
-      normalizedLimit
-    ),
-    nextCursor,
-  };
+  return { reels: [...pinned, ...rest], nextCursor };
+}
+
+function dedupe(items: InstagramReel[]): InstagramReel[] {
+  const seen = new Set<string>();
+  const out: InstagramReel[] = [];
+  for (const item of items) {
+    const keys = reelKey(item);
+    if (keys.some((key) => seen.has(key))) continue;
+    keys.forEach((key) => seen.add(key));
+    out.push(item);
+  }
+  return out;
 }

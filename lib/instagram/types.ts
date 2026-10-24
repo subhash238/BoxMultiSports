@@ -23,6 +23,7 @@ export type InstagramReel = {
   caption: string | null;
   mediaType: string;
   mediaProductType: string;
+  mediaUrl: string | null;
   thumbnailUrl: string | null;
   permalink: string | null;
   timestamp: string | null;
