@@ -3,6 +3,7 @@
 
 import Link from "next/link";
 import BookNowTrigger from "@/components/booking-widget/BookNowTrigger";
+import { Reveal } from "@/components/motion/Motion";
 
 import {
   ArrowUpRight,
@@ -114,7 +115,8 @@ export default function Footer() {
             TOP BRAND ROW
         ================================================== */}
 
-        <div
+        <Reveal
+          y={40}
           className="
             mb-14
             grid
@@ -458,13 +460,15 @@ export default function Footer() {
               <ExternalLink size={14} />
             </a>
           </div>
-        </div>
+        </Reveal>
 
         {/* ==================================================
             LINK COLUMNS
         ================================================== */}
 
-        <div
+        <Reveal
+          y={40}
+          delay={0.1}
           className="
             grid
             gap-10
@@ -906,7 +910,7 @@ export default function Footer() {
               </div>
             </a>
           </div>
-        </div>
+        </Reveal>
 
         {/* ==================================================
             BOTTOM BAR

@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { Reveal } from "@/components/motion/Motion";
 
 export const authInputClass =
   "w-full rounded-xl border border-white/[0.10] bg-white/[0.04] py-3 pl-10 pr-4 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-[#B6F000]/70 focus:ring-2 focus:ring-[#B6F000]/10";
@@ -35,7 +36,7 @@ export default function AuthShell({
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#050705] px-4">
       <div className="pointer-events-none absolute left-1/2 top-1/3 h-[420px] w-[640px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#B6F000]/[0.06] blur-[120px]" />
 
-      <div className="relative w-full max-w-md">
+      <Reveal immediate y={28} className="relative w-full max-w-md">
         <div className="mb-8 text-center">
           <Link href="/" className="inline-flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#B6F000] text-sm font-extrabold text-black">
@@ -75,7 +76,7 @@ export default function AuthShell({
             {backLabel}
           </Link>
         </div>
-      </div>
+      </Reveal>
     </main>
   );
 }

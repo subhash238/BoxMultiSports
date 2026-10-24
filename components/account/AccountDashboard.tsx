@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import BookNowTrigger from "@/components/booking-widget/BookNowTrigger";
+import { Reveal, Stagger, StaggerItem } from "@/components/motion/Motion";
 
 interface AccountUser {
   id: string;
@@ -213,7 +214,7 @@ export default function AccountDashboard() {
     <main className="min-h-screen bg-[#050705] px-4 pb-20 pt-28 sm:px-6">
       <div className="mx-auto max-w-5xl">
         {/* Header */}
-        <div className="flex flex-col gap-4 rounded-3xl border border-white/[0.08] bg-white/[0.04] p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
+        <Reveal immediate className="flex flex-col gap-4 rounded-3xl border border-white/[0.08] bg-white/[0.04] p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
           <div className="flex items-center gap-4">
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#B6F000] text-xl font-black text-black">
               {user.name.charAt(0).toUpperCase()}
@@ -237,25 +238,26 @@ export default function AccountDashboard() {
               <LogOut size={14} /> Logout
             </button>
           </div>
-        </div>
+        </Reveal>
 
         {/* Quick stats */}
-        <div className="mt-4 grid grid-cols-3 gap-3">
+        <Stagger immediate delay={0.2} className="mt-4 grid grid-cols-3 gap-3">
           {[
             { label: "Upcoming", value: upcoming.length, icon: CalendarDays },
             { label: "Total bookings", value: bookings.length, icon: Ticket },
             { label: "Active plans", value: activeMemberships.length, icon: BadgeCheck },
           ].map((s) => (
-            <div
+            <StaggerItem
               key={s.label}
+              lift
               className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4"
             >
               <s.icon size={16} className="text-[#B6F000]" />
               <p className="mt-2 text-2xl font-extrabold text-white">{s.value}</p>
               <p className="text-[11px] uppercase tracking-wider text-white/40">{s.label}</p>
-            </div>
+            </StaggerItem>
           ))}
-        </div>
+        </Stagger>
 
         {/* Tabs */}
         <div className="mt-8 flex gap-1 overflow-x-auto rounded-full border border-white/[0.08] bg-white/[0.03] p-1">
@@ -279,7 +281,7 @@ export default function AccountDashboard() {
         </div>
 
         {/* Content */}
-        <div className="mt-5 space-y-3">
+        <Stagger key={tab} immediate delay={0} stagger={0.07} className="mt-5 space-y-3">
           {tab !== "memberships" &&
             ((tab === "upcoming" ? upcoming : past).length === 0 ? (
               <EmptyState
@@ -293,7 +295,9 @@ export default function AccountDashboard() {
               />
             ) : (
               (tab === "upcoming" ? upcoming : past).map((b) => (
-                <BookingCard key={b.id} booking={b} />
+                <StaggerItem key={b.id} y={20}>
+                  <BookingCard booking={b} />
+                </StaggerItem>
               ))
             ))}
 
@@ -306,9 +310,13 @@ export default function AccountDashboard() {
                 hrefLabel="View Plans"
               />
             ) : (
-              memberships.map((m) => <MembershipCard key={m.id} membership={m} />)
+              memberships.map((m) => (
+                <StaggerItem key={m.id} y={20}>
+                  <MembershipCard membership={m} />
+                </StaggerItem>
+              ))
             ))}
-        </div>
+        </Stagger>
       </div>
     </main>
   );

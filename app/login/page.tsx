@@ -4,6 +4,7 @@ import { FormEvent, Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Lock, Mail } from "lucide-react";
+import { Reveal } from "@/components/motion/Motion";
 
 export default function LoginPage() {
   return (
@@ -106,7 +107,7 @@ function LoginForm() {
         "
       />
 
-      <div className="relative w-full max-w-md">
+      <Reveal immediate y={28} className="relative w-full max-w-md">
         {/* Brand */}
         <div className="mb-8 text-center">
           <Link
@@ -249,7 +250,7 @@ function LoginForm() {
             Back to site
           </Link>
         </div>
-      </div>
+      </Reveal>
     </main>
   );
 }

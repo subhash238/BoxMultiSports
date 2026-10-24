@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import InstagramCard from "@/components/gallery/InstagramCard";
+import { Reveal, Stagger, StaggerItem, TextReveal } from "@/components/motion/Motion";
 
 const INSTAGRAM_PROFILE_URL = "https://www.instagram.com/uni_.turf/";
 
@@ -147,16 +148,22 @@ export default function GalleryPage() {
     <main className="min-h-screen bg-[#0d0c0a] px-6 pb-24 pt-32 text-white sm:pt-40">
       <section className="mx-auto max-w-6xl">
         <div className="max-w-2xl">
-          <p className="text-xs font-bold uppercase tracking-[0.34em] text-amber-200/80">
-            From @uni_.turf
-          </p>
-          <h1 className="mt-5 text-5xl font-semibold tracking-[-0.06em] sm:text-6xl">
-            The UniTurf gallery.
-          </h1>
-          <p className="mt-5 text-base leading-7 text-white/60 sm:text-lg">
-            Feel the energy, the competition, and the moments that happen on
-            our courts.
-          </p>
+          <Reveal immediate>
+            <p className="text-xs font-bold uppercase tracking-[0.34em] text-amber-200/80">
+              From @uni_.turf
+            </p>
+          </Reveal>
+          <TextReveal
+            text="The UniTurf gallery."
+            delay={0.1}
+            className="mt-5 text-5xl font-semibold tracking-[-0.06em] sm:text-6xl"
+          />
+          <Reveal immediate delay={0.35}>
+            <p className="mt-5 text-base leading-7 text-white/60 sm:text-lg">
+              Feel the energy, the competition, and the moments that happen on
+              our courts.
+            </p>
+          </Reveal>
         </div>
 
         {isLoading ? (
@@ -170,16 +177,17 @@ export default function GalleryPage() {
         ) : reels.length === 0 ? (
           <GalleryFallback empty />
         ) : (
-          <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <Stagger className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {reels.map((reel) => (
-              <InstagramCard
-                key={reel.id}
-                {...reel}
-                permalink={reel.permalink ?? INSTAGRAM_PROFILE_URL}
-                thumbnailUrl={reel.thumbnailUrl ?? null}
-              />
+              <StaggerItem key={reel.id} y={40}>
+                <InstagramCard
+                  {...reel}
+                  permalink={reel.permalink ?? INSTAGRAM_PROFILE_URL}
+                  thumbnailUrl={reel.thumbnailUrl ?? null}
+                />
+              </StaggerItem>
             ))}
-          </div>
+          </Stagger>
         )}
 
         {!isLoading && !hasError && reels.length > 0 && nextCursor ? (

@@ -10,6 +10,13 @@ import {
   Send,
 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
+import {
+  Reveal,
+  Stagger,
+  StaggerItem,
+  TextReveal,
+  FloatingBlob,
+} from "@/components/motion/Motion";
 
 const PHONE_DISPLAY = "+91 90310 17884";
 const PHONE_LINK = "tel:+919031017884";
@@ -134,7 +141,7 @@ export default function ContactPage() {
           lg:px-8
         "
       >
-        <div
+        <FloatingBlob
           className="
             pointer-events-none
             absolute
@@ -150,19 +157,23 @@ export default function ContactPage() {
         />
 
         <div className="relative mx-auto max-w-5xl text-center">
-          <span
-            className="
-              text-[10px]
-              font-bold
-              uppercase
-              tracking-[0.3em]
-              text-[#B6F000]
-            "
-          >
-            Contact UniTurf
-          </span>
+          <Reveal immediate>
+            <span
+              className="
+                text-[10px]
+                font-bold
+                uppercase
+                tracking-[0.3em]
+                text-[#B6F000]
+              "
+            >
+              Contact UniTurf
+            </span>
+          </Reveal>
 
-          <h1
+          <TextReveal
+            text="We're Here to Help."
+            delay={0.1}
             className="
               mt-5
               text-4xl
@@ -171,25 +182,25 @@ export default function ContactPage() {
               sm:text-5xl
               lg:text-6xl
             "
-          >
-            We&apos;re Here to Help.
-          </h1>
+          />
 
-          <p
-            className="
-              mx-auto
-              mt-5
-              max-w-2xl
-              text-sm
-              leading-7
-              text-white/50
-              sm:text-base
-            "
-          >
-            Need help with a booking, sports
-            availability or anything else? Call,
-            WhatsApp or send us a quick enquiry.
-          </p>
+          <Reveal immediate delay={0.35}>
+            <p
+              className="
+                mx-auto
+                mt-5
+                max-w-2xl
+                text-sm
+                leading-7
+                text-white/50
+                sm:text-base
+              "
+            >
+              Need help with a booking, sports
+              availability or anything else? Call,
+              WhatsApp or send us a quick enquiry.
+            </p>
+          </Reveal>
         </div>
       </section>
 
@@ -212,7 +223,7 @@ export default function ContactPage() {
               CONTACT DETAILS
           ============================================== */}
 
-          <div className="space-y-4">
+          <Stagger className="space-y-4">
             <ContactCard
               icon={<Phone size={20} />}
               label="Call Us"
@@ -299,13 +310,15 @@ export default function ContactPage() {
                 →
               </span>
             </a>
-          </div>
+          </Stagger>
 
           {/* ==============================================
               QUICK ENQUIRY
           ============================================== */}
 
-          <div
+          <Reveal
+            delay={0.15}
+            y={40}
             className="
               rounded-[28px]
               border
@@ -550,7 +563,7 @@ export default function ContactPage() {
                 it will also open in WhatsApp.
               </p>
             </form>
-          </div>
+          </Reveal>
         </div>
       </section>
     </main>
@@ -606,10 +619,15 @@ function ContactCard({
     "flex items-center gap-4 rounded-[22px] border border-white/[0.09] bg-gradient-to-br from-[#101310] to-[#080a08] p-5 transition hover:border-[#B6F000]/30";
 
   if (!href) {
-    return <div className={className}>{content}</div>;
+    return (
+      <StaggerItem lift>
+        <div className={className}>{content}</div>
+      </StaggerItem>
+    );
   }
 
   return (
+    <StaggerItem lift>
     <a
       href={href}
       target={external ? "_blank" : undefined}
@@ -622,5 +640,6 @@ function ContactCard({
     >
       {content}
     </a>
+    </StaggerItem>
   );
 }
