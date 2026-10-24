@@ -20,12 +20,42 @@ const navItems = [
 
 export default function Navbar() {
   const pathname = usePathname();
+  const [hash, setHash] = useState("");
+
+  useEffect(() => {
+    const syncHash = () => setHash(window.location.hash);
+    syncHash();
+    window.addEventListener("hashchange", syncHash);
+    return () => window.removeEventListener("hashchange", syncHash);
+  }, [pathname]);
+
   const isNavItemActive = (href: string) => {
+    const [hrefPath, hrefHash] = href.split("#");
+
+    if (hrefHash) {
+      return pathname === hrefPath && hash === `#${hrefHash}`;
+    }
+
     if (href === "/") {
-      return pathname === "/";
+      return pathname === "/" && !navItems.some((i) => i.href === `/${hash}`);
     }
 
     return pathname === href || pathname.startsWith(`${href}/`);
+  };
+
+  // Same-page hash links: scroll ourselves so the fixed
+  // navbar doesn't cover the section heading.
+  const handleNavClick = (href: string) => (event: React.MouseEvent) => {
+    const [hrefPath, hrefHash] = href.split("#");
+    if (!hrefHash || pathname !== hrefPath) return;
+
+    const target = document.getElementById(hrefHash);
+    if (!target) return;
+
+    event.preventDefault();
+    scrollToSection(target);
+    window.history.pushState(null, "", `#${hrefHash}`);
+    setHash(`#${hrefHash}`);
   };
   const dedicatedBookingHref =
     pathname === "/yoga"
@@ -134,6 +164,7 @@ export default function Navbar() {
                   <Link
                     href={item.href}
                     aria-current={isActive ? "page" : undefined}
+                    onClick={handleNavClick(item.href)}
                     className={`relative rounded-full px-4 py-2 text-[13px] font-medium tracking-wide transition-all duration-300 ${
                       isActive
                         ? "text-[#B6F000]"
@@ -222,7 +253,10 @@ export default function Navbar() {
                       key={item.name}
                       href={item.href}
                       aria-current={isActive ? "page" : undefined}
-                      onClick={() => setMenuOpen(false)}
+                      onClick={(event) => {
+                        handleNavClick(item.href)(event);
+                        setMenuOpen(false);
+                      }}
                       className={`flex min-h-11 items-center rounded-xl px-4 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B6F000] ${
                         isActive
                           ? "bg-white/[0.08] text-[#B6F000]"
@@ -269,4 +303,12 @@ export default function Navbar() {
       </nav>
     </header>
   );
+}
+
+const NAV_SCROLL_OFFSET = 96;
+
+export function scrollToSection(target: HTMLElement) {
+  const top =
+    target.getBoundingClientRect().top + window.scrollY - NAV_SCROLL_OFFSET;
+  window.scrollTo({ top: Math.max(top, 0), behavior: "smooth" });
 }

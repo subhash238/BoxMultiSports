@@ -1,8 +1,9 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { scrollToSection } from "@/components/navbar/Navbar";
 import {
   GraduationCap,
   Clock,
@@ -37,6 +38,16 @@ export default function KidsAcademy() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  // Arriving from another page via /#academy: the section
+  // mounts after the page shell, so re-scroll once rendered.
+  useEffect(() => {
+    if (window.location.hash !== "#academy") return;
+    const target = document.getElementById("academy");
+    if (!target) return;
+    const timer = window.setTimeout(() => scrollToSection(target), 150);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
