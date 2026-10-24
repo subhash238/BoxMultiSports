@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getInstagramReels } from "@/lib/instagram/client";
+import { logger } from "@/lib/logger";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -30,7 +31,11 @@ export async function GET(request: NextRequest) {
       reels: result.reels,
       nextCursor: result.nextCursor,
     });
-  } catch {
+  } catch (error) {
+    logger.error("Instagram gallery fetch failed.", {
+      error: error instanceof Error ? error.message : String(error),
+    });
+
     return NextResponse.json(
       {
         success: false,

@@ -117,7 +117,15 @@ async function fetchMediaPage(
   }
 
   if (!response.ok) {
-    throw new Error("Instagram request returned an error.");
+    const body = (await response.json().catch(() => null)) as
+      | { error?: { message?: string; type?: string; code?: number } }
+      | null;
+    const detail = body?.error
+      ? `${body.error.type ?? "Error"} (${body.error.code ?? "?"}): ${body.error.message ?? ""}`
+      : "";
+    throw new Error(
+      `Instagram request returned HTTP ${response.status}. ${detail}`.trim()
+    );
   }
 
   let payload: InstagramMediaResponse;
