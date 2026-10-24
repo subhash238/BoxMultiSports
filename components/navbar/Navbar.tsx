@@ -11,6 +11,7 @@ import BookNowTrigger from "@/components/booking-widget/BookNowTrigger";
 const navItems = [
   { name: "Home", href: "/" },
   { name: "Sports", href: "/sports" },
+  { name: "Academy", href: "/#academy" },
   { name: "Yoga", href: "/yoga" },
   { name: "Gym", href: "/gym" },
   { name: "Gallery", href: "/gallery" },
