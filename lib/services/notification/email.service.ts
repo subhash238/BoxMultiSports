@@ -412,16 +412,23 @@ export class NotificationService {
 
 
       const amount = `₹${Number(membership.amount).toLocaleString("en-IN")}`;
-      const paidVia =
-        membership.paymentMethod === "PAY_AT_VENUE"
+      const payAtVenue = membership.paymentMethod === "PAY_AT_VENUE";
+      const isActive = membership.status === "ACTIVE";
+      const heading = isActive ? "Membership Active" : "Membership Request Received";
+      const intro = isActive
+        ? `Welcome aboard, ${escapeHtml(membership.customerName)}!`
+        : `Thanks, ${escapeHtml(membership.customerName)} — your plan is reserved.`;
+      const paidVia = payAtVenue
+        ? isActive
           ? "Cash / UPI at venue"
-          : "Online (Razorpay)";
+          : "Pay by cash / UPI at the venue to activate"
+        : "Online (Razorpay)";
 
       const html = `
         <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;background:#0a0f0a;padding:32px;border-radius:16px;color:#fff">
           <h1 style="margin:0;font-size:22px">UNI<span style="color:#B6F000">TURF</span></h1>
-          <p style="color:#B6F000;font-size:13px;letter-spacing:2px;text-transform:uppercase;margin:24px 0 8px">Membership Active</p>
-          <h2 style="margin:0 0 16px;font-size:20px">Welcome aboard, ${membership.customerName}!</h2>
+          <p style="color:#B6F000;font-size:13px;letter-spacing:2px;text-transform:uppercase;margin:24px 0 8px">${heading}</p>
+          <h2 style="margin:0 0 16px;font-size:20px">${intro}</h2>
           <table style="width:100%;border-collapse:collapse;font-size:14px;color:#e5e5e5">
             <tr><td style="padding:8px 0;color:#9ca3af">Membership #</td><td style="padding:8px 0;text-align:right;font-weight:bold">${membership.membershipNumber}</td></tr>
             <tr><td style="padding:8px 0;color:#9ca3af">Plan</td><td style="padding:8px 0;text-align:right">${membership.plan.name}</td></tr>
@@ -436,7 +443,7 @@ export class NotificationService {
       await deliverMail({
         to: membership.customerEmail,
         bcc: getAdminInbox(),
-        subject: `Membership Active — ${membership.plan.name} (${membership.membershipNumber})`,
+        subject: `${heading} — ${membership.plan.name} (${membership.membershipNumber})`,
         html,
       });
 

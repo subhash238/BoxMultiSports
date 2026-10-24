@@ -198,6 +198,12 @@ export class MembershipService {
           paymentMethod,
         });
 
+        // Online plans are emailed once payment is
+        // captured; pay-at-venue requests are emailed now.
+        if (paymentMethod === "PAY_AT_VENUE") {
+          void NotificationService.sendMembershipConfirmation(membership.id);
+        }
+
         return { membership, paymentToken: rawToken };
       } catch (error) {
         const isUniqueConflict =
