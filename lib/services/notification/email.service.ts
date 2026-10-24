@@ -343,27 +343,35 @@ export class NotificationService {
 
       const slot = `${formatTime(booking.startTime)} - ${formatTime(booking.endTime)}`;
       const amount = `₹${Number(booking.totalAmount).toLocaleString("en-IN")}`;
+      const payAtVenue = booking.paymentMethod === "PAY_AT_VENUE";
+      const isConfirmed = booking.status === "CONFIRMED" || booking.status === "COMPLETED";
+      const heading = isConfirmed ? "Booking Confirmed" : "Booking Received";
+      const amountLabel = payAtVenue ? "Amount (pay at venue)" : "Amount Paid";
+      const paymentLine = payAtVenue
+        ? "Pay by cash/UPI at the venue before your slot starts."
+        : "Paid online.";
 
       const html = `
         <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;background:#0a0f0a;padding:32px;border-radius:16px;color:#fff">
           <h1 style="margin:0;font-size:22px">UNI<span style="color:#B6F000">TURF</span></h1>
-          <p style="color:#B6F000;font-size:13px;letter-spacing:2px;text-transform:uppercase;margin:24px 0 8px">Booking Confirmed</p>
-          <h2 style="margin:0 0 16px;font-size:20px">Hey ${booking.customerName}, your slot is booked!</h2>
+          <p style="color:#B6F000;font-size:13px;letter-spacing:2px;text-transform:uppercase;margin:24px 0 8px">${heading}</p>
+          <h2 style="margin:0 0 16px;font-size:20px">Hey ${escapeHtml(booking.customerName)}, your slot is booked!</h2>
           <table style="width:100%;border-collapse:collapse;font-size:14px;color:#e5e5e5">
             <tr><td style="padding:8px 0;color:#9ca3af">Booking #</td><td style="padding:8px 0;text-align:right;font-weight:bold">${booking.bookingNumber}</td></tr>
             <tr><td style="padding:8px 0;color:#9ca3af">Sport</td><td style="padding:8px 0;text-align:right">${booking.sport.name}</td></tr>
             <tr><td style="padding:8px 0;color:#9ca3af">Date</td><td style="padding:8px 0;text-align:right">${formatDate(booking.bookingDate)}</td></tr>
             <tr><td style="padding:8px 0;color:#9ca3af">Time</td><td style="padding:8px 0;text-align:right">${slot}</td></tr>
             <tr><td style="padding:8px 0;color:#9ca3af">Players</td><td style="padding:8px 0;text-align:right">${booking.numberOfPlayers}</td></tr>
-            <tr><td style="padding:8px 0;color:#9ca3af;border-top:1px solid #333">Amount Paid</td><td style="padding:8px 0;text-align:right;border-top:1px solid #333;color:#B6F000;font-weight:bold">${amount}</td></tr>
+            <tr><td style="padding:8px 0;color:#9ca3af;border-top:1px solid #333">${amountLabel}</td><td style="padding:8px 0;text-align:right;border-top:1px solid #333;color:#B6F000;font-weight:bold">${amount}</td></tr>
+            <tr><td style="padding:8px 0;color:#9ca3af">Payment</td><td style="padding:8px 0;text-align:right">${paymentLine}</td></tr>
           </table>
-          <p style="margin-top:24px;font-size:12px;color:#9ca3af">Show this email at the venue. See you on the turf!</p>
+          <p style="margin-top:24px;font-size:12px;color:#9ca3af">Show this email at the venue. Once booked, slots are non-refundable and cannot be cancelled. See you on the turf!</p>
         </div>`;
 
       await deliverMail({
         to: booking.customerEmail,
         bcc: getAdminInbox(),
-        subject: `Booking Confirmed — ${booking.sport.name} on ${formatDate(booking.bookingDate)} (${booking.bookingNumber})`,
+        subject: `${heading} — ${booking.sport.name} on ${formatDate(booking.bookingDate)} (${booking.bookingNumber})`,
         html,
       });
 
